@@ -1,0 +1,84 @@
+import React from 'react';
+import { TouchableOpacity, Text, ActivityIndicator, StyleSheet } from 'react-native';
+import LinearGradient from 'react-native-linear-gradient';
+import { COLORS } from '../../theme/colors';
+import { TYPOGRAPHY } from '../../theme/typography';
+import { SPACING, RADIUS } from '../../theme/spacing';
+
+export const Button = ({ title, onPress, variant = 'primary', loading, disabled, style, icon }) => {
+  if (variant === 'primary') {
+    return (
+      <TouchableOpacity onPress={onPress} disabled={disabled || loading} activeOpacity={0.8}>
+        <LinearGradient
+          colors={COLORS.gradient.gold}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={[styles.primary, disabled && styles.disabled, style]}
+        >
+          {loading ? <ActivityIndicator color={COLORS.black} /> : (
+            <>
+              {icon}
+              <Text style={styles.primaryText}>{title}</Text>
+            </>
+          )}
+        </LinearGradient>
+      </TouchableOpacity>
+    );
+  }
+
+  if (variant === 'outline') {
+    return (
+      <TouchableOpacity
+        onPress={onPress}
+        disabled={disabled || loading}
+        style={[styles.outline, disabled && styles.disabledOutline, style]}
+        activeOpacity={0.8}
+      >
+        {loading ? <ActivityIndicator color={COLORS.gold} /> : (
+          <>
+            {icon}
+            <Text style={styles.outlineText}>{title}</Text>
+          </>
+        )}
+      </TouchableOpacity>
+    );
+  }
+
+  if (variant === 'ghost') {
+    return (
+      <TouchableOpacity onPress={onPress} disabled={disabled || loading} style={[styles.ghost, style]} activeOpacity={0.7}>
+        {loading ? <ActivityIndicator color={COLORS.gold} /> : <Text style={styles.ghostText}>{title}</Text>}
+      </TouchableOpacity>
+    );
+  }
+
+  return null;
+};
+
+const styles = StyleSheet.create({
+  primary: {
+    height: 52,
+    borderRadius: RADIUS.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  primaryText: { ...TYPOGRAPHY.button, color: COLORS.black },
+  outline: {
+    height: 52,
+    borderRadius: RADIUS.md,
+    borderWidth: 1.5,
+    borderColor: COLORS.gold,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: 'transparent',
+  },
+  outlineText: { ...TYPOGRAPHY.button, color: COLORS.gold },
+  ghost: { height: 44, alignItems: 'center', justifyContent: 'center' },
+  ghostText: { ...TYPOGRAPHY.button, color: COLORS.gold },
+  disabled: { opacity: 0.5 },
+  disabledOutline: { opacity: 0.4, borderColor: COLORS.greyDark },
+});

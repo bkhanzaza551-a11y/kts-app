@@ -1,0 +1,36 @@
+import axios from 'axios';
+import { storage } from '../utils/storage';
+
+const API_BASE = __DEV__
+  ? 'http://10.0.2.2:8000/api/v1'
+  : 'https://api.kts10pipsbots.com/api/v1';
+
+const client = axios.create({
+  baseURL: API_BASE,
+  timeout: 15000,
+  headers: {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+  },
+});
+
+client.interceptors.request.use(async (config) => {
+  const token = await storage.getToken();
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+client.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    if (error.response?.status === 401) {
+      await storage.clearAll();
+    }
+    const message = error.response?.data?.message || error.message || 'Network error';
+    return Promise.reject(new Error(message));
+  }
+);
+
+export default client;
