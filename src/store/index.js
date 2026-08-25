@@ -7,6 +7,7 @@ import paymentReducer from './paymentSlice';
 import educationReducer from './educationSlice';
 import notificationReducer from './notificationSlice';
 import notificationSettingsReducer from './notificationSettingsSlice';
+import aiChatReducer from './aiChatSlice';
 
 export const store = configureStore({
   reducer: {
@@ -18,6 +19,7 @@ export const store = configureStore({
     education: educationReducer,
     notifications: notificationReducer,
     notificationSettings: notificationSettingsReducer,
+    aiChat: aiChatReducer,
   },
 });
 

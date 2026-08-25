@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, TouchableOpacity, Alert } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
@@ -10,10 +10,7 @@ import { Input } from '../../components/common/Input';
 import { login, googleLogin, clearError } from '../../store/authSlice';
 import { validateEmail, validatePassword } from '../../utils/validators';
 
-GoogleSignin.configure({
-  webClientId: 'YOUR_GOOGLE_WEB_CLIENT_ID.apps.googleusercontent.com',
-  offlineAccess: true,
-});
+const GOOGLE_WEB_CLIENT_ID = 'YOUR_GOOGLE_WEB_CLIENT_ID.apps.googleusercontent.com';
 
 export const LoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
@@ -22,6 +19,12 @@ export const LoginScreen = ({ navigation }) => {
   const [googleLoading, setGoogleLoading] = useState(false);
   const dispatch = useDispatch();
   const { isLoading, error } = useSelector(s => s.auth);
+
+  useEffect(() => {
+    if (GOOGLE_WEB_CLIENT_ID && !GOOGLE_WEB_CLIENT_ID.includes('YOUR_GOOGLE')) {
+      GoogleSignin.configure({ webClientId: GOOGLE_WEB_CLIENT_ID, offlineAccess: true });
+    }
+  }, []);
 
   const handleLogin = () => {
     const emailErr = validateEmail(email);

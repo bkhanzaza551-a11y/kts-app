@@ -8,6 +8,7 @@ import { SignalNavigator } from './SignalNavigator';
 import { ChatNavigator } from './ChatNavigator';
 import { BotNavigator } from './BotNavigator';
 import { MoreNavigator } from './MoreNavigator';
+import { AiChatNavigator } from './AiChatNavigator';
 
 const Tab = createBottomTabNavigator();
 
@@ -40,8 +41,11 @@ export const MainTabNavigator = () => (
       tabBarIcon: ({ focused }) => <TabIcon icon="💬" focused={focused} />,
       tabBarBadge: undefined,
     }} />
-    <Tab.Screen name="Bots" component={BotNavigator} options={{
+    <Tab.Screen name="AI" component={AiChatNavigator} options={{
       tabBarIcon: ({ focused }) => <TabIcon icon="🤖" focused={focused} />,
+    }} />
+    <Tab.Screen name="Bots" component={BotNavigator} options={{
+      tabBarIcon: ({ focused }) => <TabIcon icon="⚙️" focused={focused} />,
     }} />
     <Tab.Screen name="More" component={MoreNavigator} options={{
       tabBarIcon: ({ focused }) => <TabIcon icon="⋯" focused={focused} />,

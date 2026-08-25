@@ -10,10 +10,7 @@ import { Input } from '../../components/common/Input';
 import { register, googleLogin, clearError } from '../../store/authSlice';
 import { validateName, validateEmail, validatePassword, validateConfirmPassword } from '../../utils/validators';
 
-GoogleSignin.configure({
-  webClientId: 'YOUR_GOOGLE_WEB_CLIENT_ID.apps.googleusercontent.com',
-  offlineAccess: true,
-});
+const GOOGLE_WEB_CLIENT_ID = 'YOUR_GOOGLE_WEB_CLIENT_ID.apps.googleusercontent.com';
 
 export const RegisterScreen = ({ navigation }) => {
   const [name, setName] = useState('');
@@ -30,6 +27,12 @@ export const RegisterScreen = ({ navigation }) => {
       navigation.replace('OtpVerification', { emailVerification: true, email: pendingEmail });
     }
   }, [isEmailVerificationPending, pendingEmail]);
+
+  useEffect(() => {
+    if (GOOGLE_WEB_CLIENT_ID && !GOOGLE_WEB_CLIENT_ID.includes('YOUR_GOOGLE')) {
+      GoogleSignin.configure({ webClientId: GOOGLE_WEB_CLIENT_ID, offlineAccess: true });
+    }
+  }, []);
 
   const handleRegister = () => {
     const errs = {
