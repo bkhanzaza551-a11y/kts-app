@@ -43,10 +43,14 @@ const aiChatSlice = createSlice({
       .addCase(sendMessage.pending, (state) => { state.loading = true; state.error = null; })
       .addCase(sendMessage.fulfilled, (state, action) => {
         state.loading = false;
-        state.messages.push(
-          { role: 'user', content: action.payload.user_message, timestamp: action.payload.timestamp },
-          { role: 'assistant', content: action.payload.response, timestamp: action.payload.timestamp, model: action.payload.model }
-        );
+        if (action.payload) {
+          if (action.payload.user_message) {
+            state.messages.push({ role: 'user', content: action.payload.user_message, timestamp: action.payload.timestamp });
+          }
+          if (action.payload.response) {
+            state.messages.push({ role: 'assistant', content: action.payload.response, timestamp: action.payload.timestamp, model: action.payload.model });
+          }
+        }
       })
       .addCase(sendMessage.rejected, (state, action) => { state.loading = false; state.error = action.payload; })
       .addCase(fetchChatStatus.fulfilled, (state, action) => { state.status = action.payload; });

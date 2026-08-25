@@ -27,7 +27,7 @@ export const ChangePasswordScreen = ({ navigation }) => {
     }
     setLoading(true);
     try {
-      await client.put('/profile', { current_password: currentPassword, password: newPassword, password_confirmation: confirmPassword });
+      await client.put('/change-password', { current_password: currentPassword, password: newPassword, password_confirmation: confirmPassword });
       Alert.alert('Success', 'Password changed successfully', [{ text: 'OK', onPress: () => navigation.goBack() }]);
     } catch (e) {
       Alert.alert('Error', e.response?.data?.message || 'Failed to change password');

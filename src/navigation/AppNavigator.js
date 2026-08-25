@@ -14,14 +14,18 @@ export const AppNavigator = () => {
 
   useEffect(() => {
     const init = async () => {
-      const onboarded = await storage.isOnboarded();
-      setShowOnboarding(!onboarded);
+      try {
+        const onboarded = await storage.isOnboarded();
+        setShowOnboarding(!onboarded);
+      } catch (e) {
+        setShowOnboarding(false);
+      }
       setTimeout(() => setIsReady(false), 2000);
     };
     init();
   }, []);
 
-  if (isReady) return     <SplashScreen />;
+  if (isReady) return <SplashScreen />;
 
   return (
     <NavigationContainer>
