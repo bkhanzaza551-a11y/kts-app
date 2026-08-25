@@ -1,28 +1,36 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, RefreshControl } from 'react-native';
+import { useDispatch, useSelector } from 'react-redux';
 import { COLORS } from '../../theme/colors';
 import { TYPOGRAPHY } from '../../theme/typography';
 import { SPACING } from '../../theme/spacing';
 import { Card } from '../../components/common/Card';
-import client from '../../api/client';
+import { EmptyState } from '../../components/common/EmptyState';
+import { fetchCourses, fetchCategories } from '../../store/educationSlice';
+import { useCurrency } from '../../context/CurrencyContext';
 
 export const EducationScreen = ({ navigation }) => {
-  const [courses, setCourses] = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [refreshing, setRefreshing] = useState(false);
+  const dispatch = useDispatch();
+  const { courses, categories, isLoading } = useSelector(s => s.education);
+  const [refreshing, setRefreshing] = React.useState(false);
+  const { formatAmount } = useCurrency();
 
-  const load = () => {
-    client.get('/courses').then(r => setCourses(r.data.data?.data || r.data.data || [])).catch(() => {});
-    client.get('/education/categories').then(r => setCategories(r.data.data || [])).catch(() => {});
+  useEffect(() => {
+    dispatch(fetchCourses());
+    dispatch(fetchCategories());
+  }, [dispatch]);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await Promise.all([dispatch(fetchCourses()), dispatch(fetchCategories())]);
+    setRefreshing(false);
   };
-
-  useEffect(() => { load(); }, []);
 
   const DIFFICULTY_COLORS = { beginner: COLORS.green, intermediate: COLORS.orange, advanced: COLORS.red };
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={async () => { setRefreshing(true); load(); setRefreshing(false); }} tintColor={COLORS.gold} />}>
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.gold} />}>
       <Text style={styles.headerTitle}>Education</Text>
 
       {categories.length > 0 && (
@@ -46,12 +54,12 @@ export const EducationScreen = ({ navigation }) => {
               <Text style={styles.courseTitle}>{course.title}</Text>
               <Text style={styles.courseMeta}>{course.estimated_hours}h • {course.lessons_count || 0} lessons</Text>
             </View>
-            <Text style={styles.price}>{course.is_free ? 'FREE' : `$${course.price}`}</Text>
+            <Text style={styles.price}>{course.is_free ? 'FREE' : formatAmount(course.price)}</Text>
           </View>
           <Text style={styles.courseDesc} numberOfLines={2}>{course.description}</Text>
         </Card>
       ))}
-      {courses.length === 0 && <Text style={styles.empty}>No courses available yet</Text>}
+      {!isLoading && courses.length === 0 && <EmptyState icon="🎓" title="No Courses" message="No courses available yet" />}
     </ScrollView>
   );
 };
@@ -72,5 +80,4 @@ const styles = StyleSheet.create({
   courseMeta: { ...TYPOGRAPHY.caption, color: COLORS.grey, marginTop: 2 },
   price: { ...TYPOGRAPHY.body1, color: COLORS.gold, fontWeight: '700' },
   courseDesc: { ...TYPOGRAPHY.body3, color: COLORS.silver, lineHeight: 18 },
-  empty: { ...TYPOGRAPHY.body2, color: COLORS.grey, textAlign: 'center', marginTop: 40 },
 });

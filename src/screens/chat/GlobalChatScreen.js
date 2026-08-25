@@ -6,6 +6,7 @@ import { TYPOGRAPHY } from '../../theme/typography';
 import { SPACING, RADIUS } from '../../theme/spacing';
 import { formatRelativeTime } from '../../utils/formatters';
 import client from '../../api/client';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export const GlobalChatScreen = ({ navigation }) => {
   const { user } = useSelector(s => s.auth);
@@ -13,6 +14,7 @@ export const GlobalChatScreen = ({ navigation }) => {
   const [text, setText] = useState('');
   const [loading, setLoading] = useState(true);
   const flatListRef = useRef();
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     client.get('/chat/rooms').then(r => {
@@ -51,7 +53,7 @@ export const GlobalChatScreen = ({ navigation }) => {
 
   return (
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={90}>
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
         <Text style={styles.headerTitle}>💬 Global Chat</Text>
         <Text style={styles.headerSub}>Community conversation</Text>
       </View>

@@ -25,8 +25,12 @@ const paymentSlice = createSlice({
       .addCase(fetchPlans.pending, (s) => { s.isLoading = true; })
       .addCase(fetchPlans.fulfilled, (s, a) => { s.isLoading = false; s.plans = a.payload.data; })
       .addCase(fetchPlans.rejected, (s, a) => { s.isLoading = false; s.error = a.payload; })
-      .addCase(fetchHistory.fulfilled, (s, a) => { s.transactions = a.payload.data; })
-      .addCase(fetchSubscription.fulfilled, (s, a) => { s.subscription = a.payload.data; });
+      .addCase(fetchHistory.pending, (s) => { s.isLoading = true; })
+      .addCase(fetchHistory.fulfilled, (s, a) => { s.isLoading = false; s.transactions = a.payload.data; })
+      .addCase(fetchHistory.rejected, (s, a) => { s.isLoading = false; s.error = a.payload; })
+      .addCase(fetchSubscription.pending, (s) => { s.isLoading = true; })
+      .addCase(fetchSubscription.fulfilled, (s, a) => { s.isLoading = false; s.subscription = a.payload.data; })
+      .addCase(fetchSubscription.rejected, (s, a) => { s.isLoading = false; s.error = a.payload; });
   },
 });
 

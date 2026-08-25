@@ -6,6 +6,7 @@ import botReducer from './botSlice';
 import paymentReducer from './paymentSlice';
 import educationReducer from './educationSlice';
 import notificationReducer from './notificationSlice';
+import notificationSettingsReducer from './notificationSettingsSlice';
 
 export const store = configureStore({
   reducer: {
@@ -16,6 +17,7 @@ export const store = configureStore({
     payments: paymentReducer,
     education: educationReducer,
     notifications: notificationReducer,
+    notificationSettings: notificationSettingsReducer,
   },
 });
 

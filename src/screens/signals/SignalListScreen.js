@@ -10,6 +10,7 @@ import { EmptyState } from '../../components/common/EmptyState';
 import { fetchSignals, fetchCategories, clearSignals } from '../../store/signalSlice';
 import { formatPrice } from '../../utils/formatters';
 import { useCurrency } from '../../context/CurrencyContext';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export const SignalListScreen = ({ navigation, route }) => {
   const dispatch = useDispatch();
@@ -17,12 +18,13 @@ export const SignalListScreen = ({ navigation, route }) => {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
   const { formatAmount } = useCurrency();
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     dispatch(clearSignals());
     dispatch(fetchSignals({ page: 1 }));
     dispatch(fetchCategories());
-  }, []);
+  }, [dispatch]);
 
   const loadMore = () => { if (page <= lastPage && !isLoading) dispatch(fetchSignals({ page })); };
   const onRefresh = async () => { setRefreshing(true); await dispatch(clearSignals()); dispatch(fetchSignals({ page: 1 })); setRefreshing(false); };
@@ -77,17 +79,17 @@ export const SignalListScreen = ({ navigation, route }) => {
         <View style={styles.priceRow}>
           <View style={styles.priceCol}>
             <Text style={styles.priceLabel}>ENTRY</Text>
-            <Text style={styles.priceValue}>{formatPrice(item.entry_price)}</Text>
+            <Text style={styles.priceValue}>{formatAmount(item.entry_price)}</Text>
           </View>
           <View style={styles.priceDivider} />
           <View style={styles.priceCol}>
             <Text style={styles.priceLabel}>TP</Text>
-            <Text style={[styles.priceValue, { color: COLORS.green }]}>{formatPrice(item.take_profit)}</Text>
+            <Text style={[styles.priceValue, { color: COLORS.green }]}>{formatAmount(item.take_profit)}</Text>
           </View>
           <View style={styles.priceDivider} />
           <View style={styles.priceCol}>
             <Text style={styles.priceLabel}>SL</Text>
-            <Text style={[styles.priceValue, { color: COLORS.red }]}>{formatPrice(item.stop_loss)}</Text>
+            <Text style={[styles.priceValue, { color: COLORS.red }]}>{formatAmount(item.stop_loss)}</Text>
           </View>
         </View>
 
@@ -111,7 +113,7 @@ export const SignalListScreen = ({ navigation, route }) => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
         <Text style={styles.headerTitle}>Signals</Text>
         <Text style={styles.headerSub}>{filteredItems.length} signals</Text>
       </View>

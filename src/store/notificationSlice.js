@@ -20,7 +20,8 @@ const notificationSlice = createSlice({
       .addCase(fetchNotifications.pending, (s) => { s.isLoading = true; })
       .addCase(fetchNotifications.fulfilled, (s, a) => { s.isLoading = false; s.items = a.payload.data?.data || a.payload.data || []; })
       .addCase(fetchNotifications.rejected, (s, a) => { s.isLoading = false; s.error = a.payload; })
-      .addCase(fetchUnreadCount.fulfilled, (s, a) => { s.unreadCount = a.payload.data?.count || 0; });
+      .addCase(fetchUnreadCount.fulfilled, (s, a) => { s.unreadCount = a.payload.data?.count || 0; })
+      .addCase(fetchUnreadCount.rejected, (s, a) => { s.error = a.payload; });
   },
 });
 

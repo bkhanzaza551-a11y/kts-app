@@ -5,6 +5,12 @@ const API_BASE = __DEV__
   ? 'http://10.0.2.2:8000/api/v1'
   : 'https://api.kts10pipsbots.com/api/v1';
 
+let logoutCallback = null;
+
+export const setLogoutCallback = (cb) => {
+  logoutCallback = cb;
+};
+
 const client = axios.create({
   baseURL: API_BASE,
   timeout: 15000,
@@ -27,6 +33,9 @@ client.interceptors.response.use(
   async (error) => {
     if (error.response?.status === 401) {
       await storage.clearAll();
+      if (logoutCallback) {
+        logoutCallback();
+      }
     }
     const message = error.response?.data?.message || error.message || 'Network error';
     return Promise.reject(new Error(message));

@@ -1,17 +1,15 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Alert } from 'react-native';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { COLORS } from '../../theme/colors';
 import { TYPOGRAPHY } from '../../theme/typography';
 import { SPACING, RADIUS } from '../../theme/spacing';
 import { Card } from '../../components/common/Card';
 import { Input } from '../../components/common/Input';
 import { Button } from '../../components/common/Button';
-import { logout } from '../../store/authSlice';
 import client from '../../api/client';
 
 export const DemoAccountScreen = () => {
-  const dispatch = useDispatch();
   const { user } = useSelector(s => s.auth);
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');

@@ -24,7 +24,9 @@ export const toggleAutoTrade = createAsyncThunk('bots/toggleAuto', async (id, { 
 const botSlice = createSlice({
   name: 'bots',
   initialState: { bots: [], currentBot: null, trades: {}, isLoading: false, error: null },
-  reducers: {},
+  reducers: {
+    clearCurrentBot: (s) => { s.currentBot = null; },
+  },
   extraReducers: (builder) => {
     builder
       .addCase(fetchBots.pending, (s) => { s.isLoading = true; })
@@ -35,8 +37,10 @@ const botSlice = createSlice({
       .addCase(toggleAutoTrade.fulfilled, (s, a) => {
         const idx = s.bots.findIndex(b => b.id === a.payload.id);
         if (idx >= 0) s.bots[idx].auto_trade = a.payload.data.auto_trade;
+        if (s.currentBot?.id === a.payload.id) s.currentBot.auto_trade = a.payload.data.auto_trade;
       });
   },
 });
 
+export const { clearCurrentBot } = botSlice.actions;
 export default botSlice.reducer;

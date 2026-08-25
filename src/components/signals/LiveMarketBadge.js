@@ -4,10 +4,12 @@ import { COLORS } from '../../theme/colors';
 import { TYPOGRAPHY } from '../../theme/typography';
 import { SPACING, RADIUS } from '../../theme/spacing';
 import client from '../../api/client';
+import { useCurrency } from '../../context/CurrencyContext';
 
 export const LiveMarketBadge = ({ symbol, onPriceUpdate }) => {
   const [data, setData] = useState(null);
   const [error, setError] = useState(false);
+  const { formatAmount } = useCurrency();
 
   useEffect(() => {
     if (!symbol) return;
@@ -38,7 +40,7 @@ export const LiveMarketBadge = ({ symbol, onPriceUpdate }) => {
   return (
     <View style={styles.container}>
       <View style={styles.priceRow}>
-        <Text style={styles.price}>${parseFloat(price).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</Text>
+        <Text style={styles.price}>{formatAmount(price)}</Text>
         <View style={[styles.changeBadge, isUp ? styles.changeUp : styles.changeDown]}>
           <Text style={styles.changeIcon}>{isUp ? '▲' : '▼'}</Text>
           <Text style={[styles.changeText, isUp ? styles.changeTextUp : styles.changeTextDown]}>
@@ -49,11 +51,11 @@ export const LiveMarketBadge = ({ symbol, onPriceUpdate }) => {
       <View style={styles.statsRow}>
         <View style={styles.stat}>
           <Text style={styles.statLabel}>24h High</Text>
-          <Text style={styles.statValue}>${parseFloat(data?.high_24h || 0).toFixed(2)}</Text>
+          <Text style={styles.statValue}>{formatAmount(data?.high_24h || 0)}</Text>
         </View>
         <View style={styles.stat}>
           <Text style={styles.statLabel}>24h Low</Text>
-          <Text style={styles.statValue}>${parseFloat(data?.low_24h || 0).toFixed(2)}</Text>
+          <Text style={styles.statValue}>{formatAmount(data?.low_24h || 0)}</Text>
         </View>
         <View style={styles.stat}>
           <Text style={styles.statLabel}>Volume</Text>
@@ -69,10 +71,11 @@ export const LiveMarketBadge = ({ symbol, onPriceUpdate }) => {
 };
 
 const formatVol = (vol) => {
-  if (vol >= 1e9) return (vol / 1e9).toFixed(1) + 'B';
-  if (vol >= 1e6) return (vol / 1e6).toFixed(1) + 'M';
-  if (vol >= 1e3) return (vol / 1e3).toFixed(1) + 'K';
-  return vol.toFixed(0);
+  const num = parseFloat(vol) || 0;
+  if (num >= 1e9) return (num / 1e9).toFixed(1) + 'B';
+  if (num >= 1e6) return (num / 1e6).toFixed(1) + 'M';
+  if (num >= 1e3) return (num / 1e3).toFixed(1) + 'K';
+  return num.toFixed(0);
 };
 
 const styles = StyleSheet.create({

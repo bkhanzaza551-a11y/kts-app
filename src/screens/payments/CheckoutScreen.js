@@ -6,6 +6,7 @@ import { SPACING, RADIUS } from '../../theme/spacing';
 import { Card } from '../../components/common/Card';
 import { Input } from '../../components/common/Input';
 import { Button } from '../../components/common/Button';
+import { useCurrency } from '../../context/CurrencyContext';
 
 const PAYMENT_METHODS = [
   { id: 'card', icon: '💳', name: 'Credit/Debit Card' },
@@ -20,6 +21,7 @@ export const CheckoutScreen = ({ route, navigation }) => {
   const [expiry, setExpiry] = useState('');
   const [cvv, setCvv] = useState('');
   const [coupon, setCoupon] = useState('');
+  const { formatAmount } = useCurrency();
 
   const amount = bot?.price || (plan === 'vip' ? 99 : plan === 'pro' ? 49 : 29);
   const name = bot?.name || `${plan?.toUpperCase()} Plan`;
@@ -32,7 +34,7 @@ export const CheckoutScreen = ({ route, navigation }) => {
         <Text style={styles.summaryTitle}>{name}</Text>
         <View style={styles.summaryRow}>
           <Text style={styles.summaryLabel}>Amount</Text>
-          <Text style={styles.summaryValue}>${amount}.00</Text>
+          <Text style={styles.summaryValue}>{formatAmount(amount)}</Text>
         </View>
         {plan && <View style={styles.summaryRow}><Text style={styles.summaryLabel}>Billing</Text><Text style={styles.summaryValue}>Monthly</Text></View>}
       </Card>
@@ -61,10 +63,10 @@ export const CheckoutScreen = ({ route, navigation }) => {
 
       <View style={styles.totalRow}>
         <Text style={styles.totalLabel}>Total</Text>
-        <Text style={styles.totalValue}>${amount}.00</Text>
+        <Text style={styles.totalValue}>{formatAmount(amount)}</Text>
       </View>
 
-      <Button title={`Pay $${amount}.00`} onPress={() => navigation.navigate('PaymentSuccess', { amount, name })} />
+      <Button title={`Pay ${formatAmount(amount)}`} onPress={() => navigation.navigate('PaymentSuccess', { amount, name })} />
     </ScrollView>
   );
 };

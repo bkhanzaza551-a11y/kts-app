@@ -7,6 +7,7 @@ import { SPACING, RADIUS } from '../../theme/spacing';
 import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
 import { fetchPlans } from '../../store/paymentSlice';
+import { useCurrency } from '../../context/CurrencyContext';
 
 const PLANS = [
   { id: 'basic', name: 'Basic', price: 29, period: 'month', features: ['1 Bot', 'Basic Signals', 'Email Support', 'Community Access'], color: COLORS.silver },
@@ -18,8 +19,9 @@ export const PaymentPlansScreen = ({ navigation }) => {
   const dispatch = useDispatch();
   const { plans } = useSelector(s => s.payments);
   const [selected, setSelected] = React.useState('pro');
+  const { formatAmount } = useCurrency();
 
-  useEffect(() => { dispatch(fetchPlans()); }, []);
+  useEffect(() => { dispatch(fetchPlans()); }, [dispatch]);
 
   useEffect(() => { if (plans.length && !plans.find(p => p.id === selected)) setSelected(plans[0]?.id); }, [plans]);
 
@@ -38,7 +40,7 @@ export const PaymentPlansScreen = ({ navigation }) => {
           {plan.popular && <View style={styles.popularBadge}><Text style={styles.popularText}>MOST POPULAR</Text></View>}
           <Text style={[styles.planName, { color: plan.color }]}>{plan.name}</Text>
           <View style={styles.priceRow}>
-            <Text style={styles.price}>${plan.price}</Text>
+            <Text style={styles.price}>{formatAmount(plan.price)}</Text>
             <Text style={styles.period}>/{plan.period}</Text>
           </View>
           <View style={styles.features}>

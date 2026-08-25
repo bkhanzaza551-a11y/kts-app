@@ -12,6 +12,8 @@ import { DemoAccountScreen } from '../screens/demo/DemoAccountScreen';
 import { PaymentPlansScreen } from '../screens/payments/PaymentPlansScreen';
 import { PaymentHistoryScreen } from '../screens/payments/PaymentHistoryScreen';
 import { LegalScreen } from '../screens/more/LegalScreen';
+import { ChangePasswordScreen } from '../screens/profile/ChangePasswordScreen';
+import { ChangeSecurityCodeScreen } from '../screens/profile/ChangeSecurityCodeScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -35,5 +37,7 @@ export const MoreNavigator = () => (
     <Stack.Screen name="Payments" component={PaymentPlansScreen} options={{ title: 'Plans' }} />
     <Stack.Screen name="PaymentHistory" component={PaymentHistoryScreen} options={{ title: 'Payment History' }} />
     <Stack.Screen name="Legal" component={LegalScreen} options={{ title: 'Legal' }} />
+    <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} options={{ title: 'Change Password' }} />
+    <Stack.Screen name="ChangeSecurityCode" component={ChangeSecurityCodeScreen} options={{ title: 'Change Security Code' }} />
   </Stack.Navigator>
 );

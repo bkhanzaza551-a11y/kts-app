@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert, ActivityIndicator, Image } from 'react-native';
-import { useSelector, useDispatch } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { launchImageLibrary } from 'react-native-image-picker';
 import { COLORS } from '../../theme/colors';
 import { TYPOGRAPHY } from '../../theme/typography';
@@ -12,7 +12,6 @@ import client from '../../api/client';
 import { storage } from '../../utils/storage';
 
 export const EditProfileScreen = ({ navigation }) => {
-  const dispatch = useDispatch();
   const { user } = useSelector(s => s.auth);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);

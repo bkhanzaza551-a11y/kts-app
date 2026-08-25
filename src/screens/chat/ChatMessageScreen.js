@@ -17,7 +17,7 @@ export const ChatMessageScreen = ({ route }) => {
   const flatListRef = useRef();
   const roomMessages = messages[roomSlug] || [];
 
-  useEffect(() => { dispatch(fetchMessages({ roomSlug, page: 1 })); }, [roomSlug]);
+  useEffect(() => { dispatch(fetchMessages({ roomSlug, page: 1 })); }, [dispatch, roomSlug]);
 
   const handleSend = () => {
     if (!text.trim()) return;
@@ -44,12 +44,12 @@ export const ChatMessageScreen = ({ route }) => {
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={90}>
       <FlatList
         ref={flatListRef}
-        data={roomMessages}
+        data={[...roomMessages].reverse()}
         keyExtractor={(item) => String(item.id)}
         renderItem={renderMessage}
         contentContainerStyle={styles.list}
         onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
-        inverted={false}
+        inverted
       />
       <View style={styles.inputBar}>
         <TouchableOpacity style={styles.stickerBtn} onPress={() => setShowStickers(!showStickers)}>

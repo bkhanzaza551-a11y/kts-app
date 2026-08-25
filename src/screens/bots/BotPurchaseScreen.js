@@ -6,6 +6,7 @@ import { SPACING, RADIUS } from '../../theme/spacing';
 import { Card } from '../../components/common/Card';
 import { Badge } from '../../components/common/Badge';
 import { Button } from '../../components/common/Button';
+import { useCurrency } from '../../context/CurrencyContext';
 
 const AVAILABLE_BOTS = [
   { id: 1, name: 'KTS Scalper Pro', description: 'Automated scalping on EURUSD, GBPUSD', price: 99, monthly: 29, features: ['Auto Trade', '85% Win Rate', '24/7 Trading', 'Risk Management'] },
@@ -14,6 +15,8 @@ const AVAILABLE_BOTS = [
 ];
 
 export const BotPurchaseScreen = ({ navigation }) => {
+  const { formatAmount } = useCurrency();
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Text style={styles.title}>Available Bots</Text>
@@ -41,16 +44,16 @@ export const BotPurchaseScreen = ({ navigation }) => {
           <View style={styles.priceRow}>
             <View>
               <Text style={styles.priceLabel}>One-time</Text>
-              <Text style={styles.price}>${bot.price}</Text>
+              <Text style={styles.price}>{formatAmount(bot.price)}</Text>
             </View>
             <View style={styles.divider} />
             <View>
               <Text style={styles.priceLabel}>Monthly</Text>
-              <Text style={styles.priceGold}>${bot.monthly}/mo</Text>
+              <Text style={styles.priceGold}>{formatAmount(bot.monthly)}/mo</Text>
             </View>
           </View>
 
-          <Button title={`Get ${bot.name}`} onPress={() => navigation.navigate('Checkout', { bot })} />
+          <Button title={`Get ${bot.name}`} onPress={() => navigation.navigate('BotDetail', { botId: bot.id })} />
         </Card>
       ))}
     </ScrollView>

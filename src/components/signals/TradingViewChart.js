@@ -17,7 +17,7 @@ const INTERVALS = [
 ];
 
 export const TradingViewChart = ({ symbol, visible, onClose, onUsePrice }) => {
-  const [interval, setInterval] = useState('15');
+  const [chartInterval, setChartInterval] = useState('15');
   const [loading, setLoading] = useState(true);
   const { formatAmount } = useCurrency();
 
@@ -43,7 +43,7 @@ export const TradingViewChart = ({ symbol, visible, onClose, onUsePrice }) => {
       "container_id": "chart",
       "autosize": true,
       "symbol": "${binanceSymbol}",
-      "interval": "${interval}",
+      "interval": "${chartInterval}",
       "timezone": "Etc/UTC",
       "theme": "dark",
       "style": "1",
@@ -81,10 +81,10 @@ export const TradingViewChart = ({ symbol, visible, onClose, onUsePrice }) => {
             {INTERVALS.map((iv) => (
               <TouchableOpacity
                 key={iv.value}
-                style={[styles.intervalBtn, interval === iv.value && styles.intervalBtnActive]}
-                onPress={() => setInterval(iv.value)}
+                style={[styles.intervalBtn, chartInterval === iv.value && styles.intervalBtnActive]}
+                onPress={() => setChartInterval(iv.value)}
               >
-                <Text style={[styles.intervalText, interval === iv.value && styles.intervalTextActive]}>
+                <Text style={[styles.intervalText, chartInterval === iv.value && styles.intervalTextActive]}>
                   {iv.label}
                 </Text>
               </TouchableOpacity>
@@ -98,14 +98,16 @@ export const TradingViewChart = ({ symbol, visible, onClose, onUsePrice }) => {
                 <Text style={styles.loadingText}>Loading chart...</Text>
               </View>
             )}
-            <WebView
-              source={{ html: getHtml() }}
-              style={styles.webview}
-              onLoadEnd={() => setLoading(false)}
-              javaScriptEnabled
-              domStorageEnabled
-              startInLoadingState
-            />
+            {visible && (
+              <WebView
+                source={{ html: getHtml() }}
+                style={styles.webview}
+                onLoadEnd={() => setLoading(false)}
+                javaScriptEnabled
+                domStorageEnabled
+                startInLoadingState
+              />
+            )}
           </View>
 
           {onUsePrice && (

@@ -15,12 +15,21 @@ import client from '../../api/client';
 export const SignalDetailScreen = ({ route }) => {
   const { signalId } = route.params;
   const [signal, setSignal] = useState(null);
+  const [error, setError] = useState(false);
   const [chartVisible, setChartVisible] = useState(false);
   const { formatAmount } = useCurrency();
 
   useEffect(() => {
-    client.get(`/signals/${signalId}`).then(r => setSignal(r.data.data));
+    client.get(`/signals/${signalId}`)
+      .then(r => setSignal(r.data.data))
+      .catch(() => setError(true));
   }, [signalId]);
+
+  if (error) return (
+    <View style={styles.loadingContainer}>
+      <Text style={styles.loadingText}>Failed to load signal</Text>
+    </View>
+  );
 
   if (!signal) return (
     <View style={styles.loadingContainer}>
@@ -72,29 +81,35 @@ export const SignalDetailScreen = ({ route }) => {
           <View style={styles.priceItem}>
             <View style={[styles.priceDot, { backgroundColor: COLORS.gold }]} />
             <Text style={styles.priceLabel}>Entry</Text>
-            <Text style={styles.priceValue}>{formatPrice(signal.entry_price)}</Text>
+            <Text style={styles.priceValue}>{formatAmount(signal.entry_price)}</Text>
           </View>
           <View style={styles.priceItem}>
             <View style={[styles.priceDot, { backgroundColor: COLORS.green }]} />
             <Text style={styles.priceLabel}>Take Profit</Text>
-            <Text style={[styles.priceValue, { color: COLORS.green }]}>{formatPrice(signal.take_profit)}</Text>
+            <Text style={[styles.priceValue, { color: COLORS.green }]}>{formatAmount(signal.take_profit)}</Text>
           </View>
           <View style={styles.priceItem}>
             <View style={[styles.priceDot, { backgroundColor: COLORS.red }]} />
             <Text style={styles.priceLabel}>Stop Loss</Text>
-            <Text style={[styles.priceValue, { color: COLORS.red }]}>{formatPrice(signal.stop_loss)}</Text>
+            <Text style={[styles.priceValue, { color: COLORS.red }]}>{formatAmount(signal.stop_loss)}</Text>
           </View>
         </View>
 
         {/* Risk/Reward */}
-        {signal.entry_price && signal.take_profit && signal.stop_loss && (
-          <View style={styles.rrRow}>
-            <Text style={styles.rrLabel}>Risk:Reward</Text>
-            <Text style={styles.rrValue}>
-              1:{Math.abs((signal.take_profit - signal.entry_price) / (signal.entry_price - signal.stop_loss)).toFixed(1)}
-            </Text>
-          </View>
-        )}
+        {signal.entry_price && signal.take_profit && signal.stop_loss && (() => {
+          const entry = parseFloat(signal.entry_price);
+          const tp = parseFloat(signal.take_profit);
+          const sl = parseFloat(signal.stop_loss);
+          const reward = Math.abs(tp - entry);
+          const risk = Math.abs(entry - sl);
+          const rr = risk > 0 ? (reward / risk).toFixed(1) : '--';
+          return (
+            <View style={styles.rrRow}>
+              <Text style={styles.rrLabel}>Risk:Reward</Text>
+              <Text style={styles.rrValue}>1:{rr}</Text>
+            </View>
+          );
+        })()}
       </Card>
 
       {/* Result Card */}

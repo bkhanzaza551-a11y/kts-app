@@ -7,6 +7,7 @@ import { SPACING, RADIUS } from '../../theme/spacing';
 import { Button } from '../../components/common/Button';
 
 const { width } = Dimensions.get('window');
+const VIEWABILITY_CONFIG = { viewAreaCoveragePercentThreshold: 50 };
 
 const SLIDES = [
   {
@@ -41,8 +42,6 @@ export const OnboardingScreen = ({ onFinish }) => {
     if (viewableItems.length > 0) setCurrent(viewableItems[0].index);
   }).current;
 
-  const viewabilityConfig = useRef({ viewAreaCoveragePercentThreshold: 50 }).current;
-
   const handleNext = () => {
     if (current < SLIDES.length - 1) {
       flatListRef.current?.scrollToIndex({ index: current + 1 });
@@ -60,7 +59,7 @@ export const OnboardingScreen = ({ onFinish }) => {
         pagingEnabled
         showsHorizontalScrollIndicator={false}
         onViewableItemsChanged={onViewableItemsChanged}
-        viewabilityConfig={viewabilityConfig}
+        viewabilityConfig={VIEWABILITY_CONFIG}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <LinearGradient colors={item.bg} style={styles.slide}>

@@ -7,15 +7,20 @@ import { SPACING, RADIUS } from '../../theme/spacing';
 import { Card } from '../../components/common/Card';
 import { Badge } from '../../components/common/Badge';
 import { Button } from '../../components/common/Button';
-import { fetchBotDetail, toggleAutoTrade } from '../../store/botSlice';
-import { formatCurrency, formatWinRate } from '../../utils/formatters';
+import { fetchBotDetail, toggleAutoTrade, clearCurrentBot } from '../../store/botSlice';
+import { formatWinRate } from '../../utils/formatters';
+import { useCurrency } from '../../context/CurrencyContext';
 
 export const BotDetailScreen = ({ route, navigation }) => {
   const { botId } = route.params;
   const dispatch = useDispatch();
   const { currentBot } = useSelector(s => s.bots);
+  const { formatAmount } = useCurrency();
 
-  useEffect(() => { dispatch(fetchBotDetail(botId)); }, [botId]);
+  useEffect(() => {
+    dispatch(fetchBotDetail(botId));
+    return () => dispatch(clearCurrentBot());
+  }, [dispatch, botId]);
 
   if (!currentBot) return <View style={styles.container}><Text style={styles.loading}>Loading...</Text></View>;
 
@@ -34,15 +39,15 @@ export const BotDetailScreen = ({ route, navigation }) => {
       <Card style={styles.profitCard}>
         <Text style={styles.profitLabel}>Total Profit</Text>
         <Text style={[styles.profitValue, { color: (currentBot.total_profit || 0) >= 0 ? COLORS.green : COLORS.red }]}>
-          {formatCurrency(currentBot.total_profit)} ({profitPct}%)
+          {formatAmount(currentBot.total_profit)} ({profitPct}%)
         </Text>
       </Card>
 
       <Card>
         <Text style={styles.cardTitle}>Account Stats</Text>
         <View style={styles.statsGrid}>
-          <View style={styles.stat}><Text style={styles.statLabel}>Balance</Text><Text style={styles.statValue}>{formatCurrency(currentBot.balance)}</Text></View>
-          <View style={styles.stat}><Text style={styles.statLabel}>Equity</Text><Text style={styles.statValue}>{formatCurrency(currentBot.equity)}</Text></View>
+          <View style={styles.stat}><Text style={styles.statLabel}>Balance</Text><Text style={styles.statValue}>{formatAmount(currentBot.balance)}</Text></View>
+          <View style={styles.stat}><Text style={styles.statLabel}>Equity</Text><Text style={styles.statValue}>{formatAmount(currentBot.equity)}</Text></View>
           <View style={styles.stat}><Text style={styles.statLabel}>Total Trades</Text><Text style={styles.statValue}>{currentBot.total_trades || 0}</Text></View>
           <View style={styles.stat}><Text style={styles.statLabel}>Win Rate</Text><Text style={styles.statValue}>{formatWinRate(currentBot.winning_trades, currentBot.total_trades)}</Text></View>
         </View>

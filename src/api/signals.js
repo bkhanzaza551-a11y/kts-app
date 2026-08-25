@@ -5,5 +5,5 @@ export const signalApi = {
   getLatest: () => client.get('/signals/latest'),
   getClosed: (params) => client.get('/signals/closed', { params }),
   getDetail: (id) => client.get(`/signals/${id}`),
-  getCategories: () => client.get('/signals'), // Categories available in signal data
+  getCategories: () => client.get('/signals/categories'),
 };

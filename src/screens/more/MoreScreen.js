@@ -4,8 +4,10 @@ import { COLORS } from '../../theme/colors';
 import { TYPOGRAPHY } from '../../theme/typography';
 import { SPACING } from '../../theme/spacing';
 import { CurrencySwitcher } from '../../components/common/CurrencySwitcher';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export const MoreScreen = ({ navigation }) => {
+  const insets = useSafeAreaInsets();
   const sections = [
     { title: 'Trading', items: [
       { icon: '📊', label: 'Signals', screen: 'Signals', isTab: true },
@@ -35,7 +37,7 @@ export const MoreScreen = ({ navigation }) => {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
         <Text style={styles.headerTitle}>More</Text>
       </View>
 

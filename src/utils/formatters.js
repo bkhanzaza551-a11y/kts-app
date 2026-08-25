@@ -15,11 +15,15 @@ export const formatPips = (pips) => {
 
 export const formatCurrency = (amount, currency = 'USD') => {
   if (amount == null) return '--';
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency,
-    minimumFractionDigits: 2,
-  }).format(amount);
+  try {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency,
+      minimumFractionDigits: 2,
+    }).format(amount);
+  } catch {
+    return `$${parseFloat(amount).toFixed(2)}`;
+  }
 };
 
 export const formatDate = (date, format = 'short') => {

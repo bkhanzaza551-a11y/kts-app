@@ -5,12 +5,14 @@ import { TYPOGRAPHY } from '../../theme/typography';
 import { SPACING, RADIUS } from '../../theme/spacing';
 import { Card } from '../../components/common/Card';
 import { EmptyState } from '../../components/common/EmptyState';
-import { formatDate, formatCurrency } from '../../utils/formatters';
+import { formatDate } from '../../utils/formatters';
+import { useCurrency } from '../../context/CurrencyContext';
 import client from '../../api/client';
 
 export const PaymentHistoryScreen = () => {
   const [transactions, setTransactions] = React.useState([]);
   const [refreshing, setRefreshing] = React.useState(false);
+  const { formatAmount } = useCurrency();
 
   const load = () => client.get('/payments/history').then(r => setTransactions(r.data.data?.data || r.data.data || [])).catch(() => {});
   useEffect(() => { load(); }, []);
@@ -23,7 +25,7 @@ export const PaymentHistoryScreen = () => {
           <Text style={styles.date}>{formatDate(item.created_at, 'datetime')}</Text>
         </View>
         <View style={styles.right}>
-          <Text style={styles.amount}>{formatCurrency(item.amount)}</Text>
+          <Text style={styles.amount}>{formatAmount(item.amount)}</Text>
           <View style={[styles.statusBadge, { backgroundColor: item.status === 'completed' ? COLORS.greenMuted : COLORS.goldMuted }]}>
             <Text style={[styles.statusText, { color: item.status === 'completed' ? COLORS.green : COLORS.gold }]}>{item.status?.toUpperCase()}</Text>
           </View>

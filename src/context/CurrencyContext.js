@@ -32,7 +32,9 @@ export const CurrencyProvider = ({ children }) => {
       if (saved && CURRENCIES[saved]) {
         setCurrency(saved);
       }
-    } catch (e) {}
+    } catch (e) {
+      console.warn('Failed to load currency:', e);
+    }
   };
 
   const switchCurrency = async (newCurrency) => {

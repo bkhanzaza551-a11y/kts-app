@@ -8,14 +8,18 @@ import { Card } from '../../components/common/Card';
 import { Badge } from '../../components/common/Badge';
 import { EmptyState } from '../../components/common/EmptyState';
 import { fetchBots } from '../../store/botSlice';
-import { formatCurrency, formatWinRate } from '../../utils/formatters';
+import { formatWinRate } from '../../utils/formatters';
+import { useCurrency } from '../../context/CurrencyContext';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export const BotListScreen = ({ navigation }) => {
   const dispatch = useDispatch();
   const { bots, isLoading } = useSelector(s => s.bots);
   const [refreshing, setRefreshing] = React.useState(false);
+  const { formatAmount } = useCurrency();
+  const insets = useSafeAreaInsets();
 
-  useEffect(() => { dispatch(fetchBots()); }, []);
+  useEffect(() => { dispatch(fetchBots()); }, [dispatch]);
 
   const onRefresh = async () => { setRefreshing(true); await dispatch(fetchBots()); setRefreshing(false); };
 
@@ -32,9 +36,9 @@ export const BotListScreen = ({ navigation }) => {
         <Badge text={item.status?.toUpperCase()} variant={item.status} />
       </View>
       <View style={styles.statsGrid}>
-        <View style={styles.stat}><Text style={styles.statLabel}>Balance</Text><Text style={styles.statValue}>{formatCurrency(item.balance)}</Text></View>
-        <View style={styles.stat}><Text style={styles.statLabel}>Equity</Text><Text style={styles.statValue}>{formatCurrency(item.equity)}</Text></View>
-        <View style={styles.stat}><Text style={styles.statLabel}>Profit</Text><Text style={[styles.statValue, { color: (item.total_profit || 0) >= 0 ? COLORS.green : COLORS.red }]}>{formatCurrency(item.total_profit)}</Text></View>
+        <View style={styles.stat}><Text style={styles.statLabel}>Balance</Text><Text style={styles.statValue}>{formatAmount(item.balance)}</Text></View>
+        <View style={styles.stat}><Text style={styles.statLabel}>Equity</Text><Text style={styles.statValue}>{formatAmount(item.equity)}</Text></View>
+        <View style={styles.stat}><Text style={styles.statLabel}>Profit</Text><Text style={[styles.statValue, { color: (item.total_profit || 0) >= 0 ? COLORS.green : COLORS.red }]}>{formatAmount(item.total_profit)}</Text></View>
         <View style={styles.stat}><Text style={styles.statLabel}>Win Rate</Text><Text style={styles.statValue}>{formatWinRate(item.winning_trades, item.total_trades)}</Text></View>
       </View>
     </Card>
@@ -42,7 +46,7 @@ export const BotListScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
         <Text style={styles.headerTitle}>MT5 Bots</Text>
         <TouchableOpacity style={styles.addBtn} onPress={() => navigation.navigate('BotPurchase')}>
           <Text style={styles.addBtnText}>+ Get Bot</Text>

@@ -1,21 +1,25 @@
 import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { useDispatch, useSelector } from 'react-redux';
 import { COLORS } from '../../theme/colors';
 import { TYPOGRAPHY } from '../../theme/typography';
 import { SPACING, RADIUS } from '../../theme/spacing';
 import { Card } from '../../components/common/Card';
 import { Badge } from '../../components/common/Badge';
-import client from '../../api/client';
+import { fetchCourseDetail } from '../../store/educationSlice';
+import { useCurrency } from '../../context/CurrencyContext';
 
 export const CourseDetailScreen = ({ route, navigation }) => {
   const { courseId } = route.params;
-  const [course, setCourse] = React.useState(null);
+  const dispatch = useDispatch();
+  const { currentCourse: course, isLoading } = useSelector(s => s.education);
+  const { formatAmount } = useCurrency();
 
   useEffect(() => {
-    client.get(`/courses/${courseId}`).then(r => setCourse(r.data.data)).catch(() => {});
-  }, [courseId]);
+    dispatch(fetchCourseDetail(courseId));
+  }, [dispatch, courseId]);
 
-  if (!course) return <View style={styles.container}><Text style={styles.loading}>Loading...</Text></View>;
+  if (!course) return <View style={styles.container}><Text style={styles.loading}>{isLoading ? 'Loading...' : 'Course not found'}</Text></View>;
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>

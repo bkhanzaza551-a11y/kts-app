@@ -32,8 +32,12 @@ const signalSlice = createSlice({
         s.page = data.current_page + 1;
       })
       .addCase(fetchSignals.rejected, (s, a) => { s.isLoading = false; s.error = a.payload; })
-      .addCase(fetchLatest.fulfilled, (s, a) => { s.latest = a.payload.data; })
-      .addCase(fetchCategories.fulfilled, (s, a) => { s.categories = a.payload.data; });
+      .addCase(fetchLatest.pending, (s) => { s.isLoading = true; })
+      .addCase(fetchLatest.fulfilled, (s, a) => { s.isLoading = false; s.latest = a.payload.data; })
+      .addCase(fetchLatest.rejected, (s, a) => { s.isLoading = false; s.error = a.payload; })
+      .addCase(fetchCategories.pending, (s) => { s.isLoading = true; })
+      .addCase(fetchCategories.fulfilled, (s, a) => { s.isLoading = false; s.categories = a.payload.data; })
+      .addCase(fetchCategories.rejected, (s, a) => { s.isLoading = false; s.error = a.payload; });
   },
 });
 

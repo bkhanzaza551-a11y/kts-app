@@ -51,7 +51,7 @@ const chatSlice = createSlice({
       })
       .addCase(sendMessage.fulfilled, (s, a) => {
         const { roomSlug, message } = a.payload;
-        if (s.messages[roomSlug]) s.messages[roomSlug].push(message.data);
+        if (s.messages[roomSlug] && message?.data) s.messages[roomSlug].push(message.data);
       })
       .addCase(fetchStickers.fulfilled, (s, a) => { s.stickers = a.payload.data; });
   },

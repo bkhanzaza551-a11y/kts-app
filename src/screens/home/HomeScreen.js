@@ -11,7 +11,10 @@ import { CurrencySwitcher } from '../../components/common/CurrencySwitcher';
 import { loadProfile } from '../../store/authSlice';
 import { fetchLatest } from '../../store/signalSlice';
 import { fetchUnreadCount } from '../../store/notificationSlice';
-import { formatPips, formatDate, formatPrice } from '../../utils/formatters';
+import { fetchNotificationSettings } from '../../store/notificationSettingsSlice';
+import { formatPips, formatDate } from '../../utils/formatters';
+import { useCurrency } from '../../context/CurrencyContext';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export const HomeScreen = ({ navigation }) => {
   const dispatch = useDispatch();
@@ -19,12 +22,15 @@ export const HomeScreen = ({ navigation }) => {
   const { latest } = useSelector(s => s.signals);
   const { unreadCount } = useSelector(s => s.notifications);
   const [refreshing, setRefreshing] = React.useState(false);
+  const { formatAmount } = useCurrency();
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     dispatch(loadProfile());
     dispatch(fetchLatest());
     dispatch(fetchUnreadCount());
-  }, []);
+    dispatch(fetchNotificationSettings());
+  }, [dispatch]);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -51,7 +57,7 @@ export const HomeScreen = ({ navigation }) => {
 
   return (
     <ScrollView style={styles.container} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.gold} />}>
-      <LinearGradient colors={['#1A1510', COLORS.black]} style={styles.header}>
+      <LinearGradient colors={['#1A1510', COLORS.black]} style={[styles.header, { paddingTop: insets.top + 10 }]}>
         <View style={styles.headerRow}>
           <View>
             <Text style={styles.greeting}>Hello, {user?.name?.split(' ')[0] || 'Trader'} 👋</Text>
@@ -112,17 +118,17 @@ export const HomeScreen = ({ navigation }) => {
             <View style={styles.signalPrices}>
               <View style={styles.signalPriceCol}>
                 <Text style={styles.signalPriceLabel}>ENTRY</Text>
-                <Text style={styles.signalPriceValue}>{formatPrice(signal.entry_price)}</Text>
+                <Text style={styles.signalPriceValue}>{formatAmount(signal.entry_price)}</Text>
               </View>
               <View style={styles.signalPriceDivider} />
               <View style={styles.signalPriceCol}>
                 <Text style={styles.signalPriceLabel}>TP</Text>
-                <Text style={[styles.signalPriceValue, { color: COLORS.green }]}>{formatPrice(signal.take_profit)}</Text>
+                <Text style={[styles.signalPriceValue, { color: COLORS.green }]}>{formatAmount(signal.take_profit)}</Text>
               </View>
               <View style={styles.signalPriceDivider} />
               <View style={styles.signalPriceCol}>
                 <Text style={styles.signalPriceLabel}>SL</Text>
-                <Text style={[styles.signalPriceValue, { color: COLORS.red }]}>{formatPrice(signal.stop_loss)}</Text>
+                <Text style={[styles.signalPriceValue, { color: COLORS.red }]}>{formatAmount(signal.stop_loss)}</Text>
               </View>
             </View>
           </Card>

@@ -1,13 +1,11 @@
 import React from 'react';
-import { View, Text, StyleSheet, StatusBar } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { COLORS } from '../../theme/colors';
 import { TYPOGRAPHY } from '../../theme/typography';
 import { SPACING, RADIUS } from '../../theme/spacing';
 
 export const SplashScreen = () => (
-  <>
-    <StatusBar barStyle="light-content" backgroundColor={COLORS.black} />
     <LinearGradient colors={[COLORS.black, '#1A1510']} style={styles.container}>
       <View style={styles.logoContainer}>
         <View style={styles.logoCircle}>
@@ -18,7 +16,6 @@ export const SplashScreen = () => (
       </View>
       <Text style={styles.loading}>Loading...</Text>
     </LinearGradient>
-  </>
 );
 
 const styles = StyleSheet.create({
@@ -33,6 +30,6 @@ const styles = StyleSheet.create({
   },
   logoText: { ...TYPOGRAPHY.h1, color: COLORS.gold, letterSpacing: 2 },
   title: { ...TYPOGRAPHY.h3, color: COLORS.white, letterSpacing: 1 },
-  subtitle: { ...TYPOGRAPHY.body, color: COLORS.silver, marginTop: SPACING.sm },
+  subtitle: { ...TYPOGRAPHY.body2, color: COLORS.silver, marginTop: SPACING.sm },
   loading: { position: 'absolute', bottom: SPACING.headerTop + 10, color: COLORS.gold, ...TYPOGRAPHY.caption },
 });

@@ -5,9 +5,11 @@ import { TYPOGRAPHY } from '../../theme/typography';
 import { SPACING, RADIUS } from '../../theme/spacing';
 import { Button } from '../../components/common/Button';
 import LinearGradient from 'react-native-linear-gradient';
+import { useCurrency } from '../../context/CurrencyContext';
 
 export const PaymentSuccessScreen = ({ route, navigation }) => {
   const { amount, name } = route.params || {};
+  const { formatAmount } = useCurrency();
 
   return (
     <LinearGradient colors={[COLORS.black, '#1A1510']} style={styles.container}>
@@ -20,7 +22,7 @@ export const PaymentSuccessScreen = ({ route, navigation }) => {
 
         <View style={styles.receiptCard}>
           <View style={styles.receiptRow}><Text style={styles.receiptLabel}>Plan</Text><Text style={styles.receiptValue}>{name}</Text></View>
-          <View style={styles.receiptRow}><Text style={styles.receiptLabel}>Amount</Text><Text style={styles.receiptValue}>${amount}.00</Text></View>
+          <View style={styles.receiptRow}><Text style={styles.receiptLabel}>Amount</Text><Text style={styles.receiptValue}>{formatAmount(amount)}</Text></View>
           <View style={styles.receiptRow}><Text style={styles.receiptLabel}>Date</Text><Text style={styles.receiptValue}>{new Date().toLocaleDateString()}</Text></View>
           <View style={styles.receiptRow}><Text style={styles.receiptLabel}>Status</Text><Text style={[styles.receiptValue, { color: COLORS.green }]}>COMPLETED</Text></View>
         </View>

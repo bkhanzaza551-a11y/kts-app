@@ -8,13 +8,15 @@ import { Badge } from '../../components/common/Badge';
 import { EmptyState } from '../../components/common/EmptyState';
 import { fetchRooms } from '../../store/chatSlice';
 import { formatRelativeTime } from '../../utils/formatters';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export const ChatRoomListScreen = ({ navigation }) => {
   const dispatch = useDispatch();
   const { rooms, isLoadingRooms } = useSelector(s => s.chat);
   const [refreshing, setRefreshing] = React.useState(false);
+  const insets = useSafeAreaInsets();
 
-  useEffect(() => { dispatch(fetchRooms()); }, []);
+  useEffect(() => { dispatch(fetchRooms()); }, [dispatch]);
 
   const onRefresh = async () => { setRefreshing(true); await dispatch(fetchRooms()); setRefreshing(false); };
 
@@ -34,7 +36,7 @@ export const ChatRoomListScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
         <Text style={styles.headerTitle}>Chat Rooms</Text>
         <Text style={styles.headerSub}>Global community chat</Text>
       </View>
