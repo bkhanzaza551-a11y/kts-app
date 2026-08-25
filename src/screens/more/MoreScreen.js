@@ -29,7 +29,7 @@ export const MoreScreen = ({ navigation }) => {
 
   const handleNav = (item) => {
     if (item.isTab) {
-      navigation.navigate(item.screen);
+      navigation.getParent()?.navigate(item.screen);
     } else {
       navigation.navigate(item.screen);
     }

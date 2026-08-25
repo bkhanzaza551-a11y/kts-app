@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { StatusBar } from 'react-native';
 import { Provider, useDispatch } from 'react-redux';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import store from './src/store';
 import { CurrencyProvider } from './src/context/CurrencyContext';
 import { AppNavigator } from './src/navigation/AppNavigator';
@@ -27,13 +28,15 @@ const AppContent = () => {
 
 const App = () => {
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <Provider store={store}>
-        <CurrencyProvider>
-          <AppContent />
-        </CurrencyProvider>
-      </Provider>
-    </GestureHandlerRootView>
+    <SafeAreaProvider>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <Provider store={store}>
+          <CurrencyProvider>
+            <AppContent />
+          </CurrencyProvider>
+        </Provider>
+      </GestureHandlerRootView>
+    </SafeAreaProvider>
   );
 };
 

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, TouchableOpacity, Alert } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
-import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { COLORS } from '../../theme/colors';
 import { TYPOGRAPHY } from '../../theme/typography';
 import { SPACING, RADIUS } from '../../theme/spacing';
@@ -10,7 +9,12 @@ import { Input } from '../../components/common/Input';
 import { login, googleLogin, clearError } from '../../store/authSlice';
 import { validateEmail, validatePassword } from '../../utils/validators';
 
+let GoogleSignin = null;
 const GOOGLE_WEB_CLIENT_ID = 'YOUR_GOOGLE_WEB_CLIENT_ID.apps.googleusercontent.com';
+
+try {
+  GoogleSignin = require('@react-native-google-signin/google-signin').GoogleSignin;
+} catch (e) {}
 
 export const LoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
@@ -21,8 +25,10 @@ export const LoginScreen = ({ navigation }) => {
   const { isLoading, error } = useSelector(s => s.auth);
 
   useEffect(() => {
-    if (GOOGLE_WEB_CLIENT_ID && !GOOGLE_WEB_CLIENT_ID.includes('YOUR_GOOGLE')) {
-      GoogleSignin.configure({ webClientId: GOOGLE_WEB_CLIENT_ID, offlineAccess: true });
+    if (GoogleSignin && GOOGLE_WEB_CLIENT_ID && !GOOGLE_WEB_CLIENT_ID.includes('YOUR_GOOGLE')) {
+      try {
+        GoogleSignin.configure({ webClientId: GOOGLE_WEB_CLIENT_ID, offlineAccess: true });
+      } catch (e) {}
     }
   }, []);
 
@@ -35,11 +41,14 @@ export const LoginScreen = ({ navigation }) => {
   };
 
   const handleGoogleLogin = async () => {
+    if (!GoogleSignin) {
+      Alert.alert('Google Sign-In', 'Google Sign-In is not configured.');
+      return;
+    }
     try {
       setGoogleLoading(true);
       await GoogleSignin.hasPlayServices();
       const userInfo = await GoogleSignin.signIn();
-      const tokens = await GoogleSignin.getTokens();
 
       dispatch(googleLogin({
         google_id: userInfo.user.id,
