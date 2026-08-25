@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert, ActivityIndicator, Image } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TextInput, Alert, ActivityIndicator } from 'react-native';
 import { useSelector } from 'react-redux';
-import { launchImageLibrary } from 'react-native-image-picker';
 import { COLORS } from '../../theme/colors';
 import { TYPOGRAPHY } from '../../theme/typography';
 import { SPACING, RADIUS } from '../../theme/spacing';
@@ -9,7 +8,6 @@ import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
 import { Badge } from '../../components/common/Badge';
 import client from '../../api/client';
-import { storage } from '../../utils/storage';
 
 export const EditProfileScreen = ({ navigation }) => {
   const { user } = useSelector(s => s.auth);
@@ -23,8 +21,6 @@ export const EditProfileScreen = ({ navigation }) => {
   const [realAccountId, setRealAccountId] = useState('');
   const [realAccountServer, setRealAccountServer] = useState('');
   const [brokerName, setBrokerName] = useState('');
-  const [avatar, setAvatar] = useState(null);
-  const [avatarUri, setAvatarUri] = useState(null);
 
   useEffect(() => {
     loadProfile();
@@ -42,25 +38,10 @@ export const EditProfileScreen = ({ navigation }) => {
       setRealAccountId(u.real_account_id || '');
       setRealAccountServer(u.real_account_server || '');
       setBrokerName(u.broker_name || '');
-      if (u.avatar) setAvatarUri(u.avatar);
     } catch (e) {
       Alert.alert('Error', 'Failed to load profile');
     }
     setLoading(false);
-  };
-
-  const pickImage = () => {
-    launchImageLibrary({ mediaType: 'photo', maxWidth: 512, maxHeight: 512, quality: 0.8 }, (response) => {
-      if (response.didCancel) return;
-      if (response.errorCode) {
-        Alert.alert('Error', response.errorMessage || 'Failed to pick image');
-        return;
-      }
-      if (response.assets && response.assets[0]) {
-        setAvatar(response.assets[0]);
-        setAvatarUri(response.assets[0].uri);
-      }
-    });
   };
 
   const handleSave = async () => {
@@ -71,25 +52,14 @@ export const EditProfileScreen = ({ navigation }) => {
 
     setSaving(true);
     try {
-      const formData = new FormData();
-      formData.append('name', name.trim());
-      formData.append('phone', phone.trim());
-      formData.append('demo_account_id', demoAccountId.trim());
-      formData.append('demo_account_server', demoAccountServer.trim());
-      formData.append('real_account_id', realAccountId.trim());
-      formData.append('real_account_server', realAccountServer.trim());
-      formData.append('broker_name', brokerName.trim());
-
-      if (avatar) {
-        formData.append('avatar', {
-          uri: avatar.uri,
-          type: avatar.type || 'image/jpeg',
-          name: avatar.fileName || 'avatar.jpg',
-        });
-      }
-
-      await client.put('/profile', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
+      await client.put('/profile', {
+        name: name.trim(),
+        phone: phone.trim(),
+        demo_account_id: demoAccountId.trim(),
+        demo_account_server: demoAccountServer.trim(),
+        real_account_id: realAccountId.trim(),
+        real_account_server: realAccountServer.trim(),
+        broker_name: brokerName.trim(),
       });
 
       Alert.alert('Success', 'Profile updated successfully!', [
@@ -112,22 +82,12 @@ export const EditProfileScreen = ({ navigation }) => {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      {/* Avatar Section */}
-      <TouchableOpacity style={styles.avatarSection} onPress={pickImage}>
-        {avatarUri ? (
-          <Image source={{ uri: avatarUri }} style={styles.avatarImage} />
-        ) : (
-          <View style={styles.avatarPlaceholder}>
-            <Text style={styles.avatarText}>{name.charAt(0) || 'U'}</Text>
-          </View>
-        )}
-        <View style={styles.cameraIcon}>
-          <Text style={styles.cameraIconText}>📷</Text>
+      <View style={styles.avatarSection}>
+        <View style={styles.avatarPlaceholder}>
+          <Text style={styles.avatarText}>{name.charAt(0) || 'U'}</Text>
         </View>
-        <Text style={styles.avatarHint}>Tap to change photo</Text>
-      </TouchableOpacity>
+      </View>
 
-      {/* Personal Info */}
       <Card style={styles.card}>
         <Text style={styles.cardTitle}>Personal Information</Text>
 
@@ -155,7 +115,6 @@ export const EditProfileScreen = ({ navigation }) => {
         </View>
       </Card>
 
-      {/* Trading Account */}
       <Card style={styles.card}>
         <View style={styles.cardHeader}>
           <Text style={styles.cardTitle}>Trading Account</Text>
@@ -249,12 +208,8 @@ const styles = StyleSheet.create({
   loadingText: { ...TYPOGRAPHY.body2, color: COLORS.grey, marginTop: SPACING.md },
 
   avatarSection: { alignItems: 'center', paddingVertical: SPACING.xl, marginBottom: SPACING.md },
-  avatarImage: { width: 100, height: 100, borderRadius: 50, borderWidth: 3, borderColor: COLORS.gold },
   avatarPlaceholder: { width: 100, height: 100, borderRadius: 50, backgroundColor: COLORS.gold, alignItems: 'center', justifyContent: 'center' },
   avatarText: { ...TYPOGRAPHY.h1, color: COLORS.black, fontSize: 36 },
-  cameraIcon: { position: 'absolute', bottom: 20, right: '30%', width: 32, height: 32, borderRadius: 16, backgroundColor: COLORS.darkCard, borderWidth: 2, borderColor: COLORS.gold, alignItems: 'center', justifyContent: 'center' },
-  cameraIconText: { fontSize: 14 },
-  avatarHint: { ...TYPOGRAPHY.body3, color: COLORS.grey, marginTop: SPACING.sm },
 
   card: { marginBottom: SPACING.md },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: SPACING.md },
