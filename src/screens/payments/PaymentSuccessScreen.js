@@ -4,7 +4,6 @@ import { COLORS } from '../../theme/colors';
 import { TYPOGRAPHY } from '../../theme/typography';
 import { SPACING, RADIUS } from '../../theme/spacing';
 import { Button } from '../../components/common/Button';
-import LinearGradient from 'react-native-linear-gradient';
 import { useCurrency } from '../../context/CurrencyContext';
 
 export const PaymentSuccessScreen = ({ route, navigation }) => {
@@ -12,7 +11,7 @@ export const PaymentSuccessScreen = ({ route, navigation }) => {
   const { formatAmount } = useCurrency();
 
   return (
-    <LinearGradient colors={[COLORS.black, '#1A1510']} style={styles.container}>
+    <View style={styles.container}>
       <View style={styles.content}>
         <View style={styles.checkCircle}>
           <Text style={styles.checkmark}>✓</Text>
@@ -29,12 +28,12 @@ export const PaymentSuccessScreen = ({ route, navigation }) => {
 
         <Button title="Go to Dashboard" onPress={() => navigation.popToTop()} />
       </View>
-    </LinearGradient>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
+  container: { flex: 1, backgroundColor: COLORS.black },
   content: { flex: 1, padding: SPACING.screen, justifyContent: 'center', alignItems: 'center' },
   checkCircle: { width: 100, height: 100, borderRadius: 50, backgroundColor: COLORS.green, alignItems: 'center', justifyContent: 'center', marginBottom: SPACING.xxl },
   checkmark: { fontSize: 48, color: COLORS.white, fontWeight: '700' },

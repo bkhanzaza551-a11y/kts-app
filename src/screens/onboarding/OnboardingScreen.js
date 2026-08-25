@@ -1,6 +1,5 @@
 import React, { useRef, useState } from 'react';
 import { View, Text, StyleSheet, Dimensions, FlatList, Animated } from 'react-native';
-import LinearGradient from 'react-native-linear-gradient';
 import { COLORS } from '../../theme/colors';
 import { TYPOGRAPHY } from '../../theme/typography';
 import { SPACING, RADIUS } from '../../theme/spacing';
@@ -15,21 +14,21 @@ const SLIDES = [
     emoji: '📈',
     title: 'Trade Smarter',
     subtitle: 'AI-powered trading signals with 85%+ win rate. Let our bots handle the market while you relax.',
-    bg: ['#1A1510', '#0D0D0D'],
+    bg: '#1A1510',
   },
   {
     id: '2',
     emoji: '🔔',
     title: 'Real-Time Alerts',
     subtitle: 'Get instant notifications for every signal. Never miss a profitable trade opportunity again.',
-    bg: ['#0D1520', '#0D0D0D'],
+    bg: '#0D1520',
   },
   {
     id: '3',
     emoji: '👥',
     title: 'Join 50K+ Traders',
     subtitle: 'Connect with our global community. Share strategies, learn from experts, and grow together.',
-    bg: ['#151020', '#0D0D0D'],
+    bg: '#151020',
   },
 ];
 
@@ -62,13 +61,13 @@ export const OnboardingScreen = ({ onFinish }) => {
         viewabilityConfig={VIEWABILITY_CONFIG}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <LinearGradient colors={item.bg} style={styles.slide}>
+          <View style={[styles.slide, { backgroundColor: item.bg }]}>
             <View style={styles.emojiContainer}>
               <Text style={styles.emoji}>{item.emoji}</Text>
             </View>
             <Text style={styles.title}>{item.title}</Text>
             <Text style={styles.subtitle}>{item.subtitle}</Text>
-          </LinearGradient>
+          </View>
         )}
       />
 

@@ -1,18 +1,15 @@
 import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, RefreshControl, TouchableOpacity } from 'react-native';
-import LinearGradient from 'react-native-linear-gradient';
 import { useDispatch, useSelector } from 'react-redux';
 import { COLORS } from '../../theme/colors';
 import { TYPOGRAPHY } from '../../theme/typography';
 import { SPACING, RADIUS, SHADOW } from '../../theme/spacing';
 import { Card } from '../../components/common/Card';
-import { Badge } from '../../components/common/Badge';
 import { CurrencySwitcher } from '../../components/common/CurrencySwitcher';
 import { loadProfile } from '../../store/authSlice';
 import { fetchLatest } from '../../store/signalSlice';
 import { fetchUnreadCount } from '../../store/notificationSlice';
 import { fetchNotificationSettings } from '../../store/notificationSettingsSlice';
-import { formatPips, formatDate } from '../../utils/formatters';
 import { useCurrency } from '../../context/CurrencyContext';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -57,7 +54,7 @@ export const HomeScreen = ({ navigation }) => {
 
   return (
     <ScrollView style={styles.container} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.gold} />}>
-      <LinearGradient colors={['#1A1510', COLORS.black]} style={[styles.header, { paddingTop: insets.top + 10 }]}>
+      <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
         <View style={styles.headerRow}>
           <View>
             <Text style={styles.greeting}>Hello, {user?.name?.split(' ')[0] || 'Trader'} 👋</Text>
@@ -71,7 +68,7 @@ export const HomeScreen = ({ navigation }) => {
             </TouchableOpacity>
           </View>
         </View>
-      </LinearGradient>
+      </View>
 
       <View style={styles.body}>
         <Text style={styles.sectionTitle}>Quick Actions</Text>
@@ -140,7 +137,7 @@ export const HomeScreen = ({ navigation }) => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.black },
-  header: { paddingTop: 50, paddingBottom: 20, paddingHorizontal: SPACING.screen },
+  header: { paddingTop: 50, paddingBottom: 20, paddingHorizontal: SPACING.screen, backgroundColor: '#1A1510' },
   headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   greeting: { ...TYPOGRAPHY.h2, color: COLORS.white },
   date: { ...TYPOGRAPHY.body3, color: COLORS.silver, marginTop: 4 },

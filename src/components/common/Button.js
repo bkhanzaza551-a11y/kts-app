@@ -1,6 +1,5 @@
 import React from 'react';
-import { TouchableOpacity, Text, ActivityIndicator, StyleSheet } from 'react-native';
-import LinearGradient from 'react-native-linear-gradient';
+import { TouchableOpacity, Text, ActivityIndicator, StyleSheet, View } from 'react-native';
 import { COLORS } from '../../theme/colors';
 import { TYPOGRAPHY } from '../../theme/typography';
 import { SPACING, RADIUS } from '../../theme/spacing';
@@ -9,19 +8,14 @@ export const Button = ({ title, onPress, variant = 'primary', loading, disabled,
   if (variant === 'primary') {
     return (
       <TouchableOpacity onPress={onPress} disabled={disabled || loading} activeOpacity={0.8}>
-        <LinearGradient
-          colors={COLORS.gradient.gold}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={[styles.primary, disabled && styles.disabled, style]}
-        >
+        <View style={[styles.primary, disabled && styles.disabled, style]}>
           {loading ? <ActivityIndicator color={COLORS.black} /> : (
             <>
               {icon}
               <Text style={styles.primaryText}>{title}</Text>
             </>
           )}
-        </LinearGradient>
+        </View>
       </TouchableOpacity>
     );
   }
@@ -63,6 +57,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
+    backgroundColor: COLORS.gold,
   },
   primaryText: { ...TYPOGRAPHY.button, color: COLORS.black },
   outline: {
