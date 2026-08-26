@@ -56,7 +56,7 @@ export const MoreScreen = ({ navigation }) => {
           ))}
         </View>
       ))}
-      <Text style={styles.version}>KTS 10 Pips Bots v1.0.0</Text>
+      <Text style={styles.version}>KTS Markets v1.0.0</Text>
     </ScrollView>
   );
 };

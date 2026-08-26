@@ -1,4 +1,4 @@
-﻿import os
+import os
 from PIL import Image, ImageDraw
 
 source_img_path = r"C:\Users\Ahmed Bilal Khan\.gemini\antigravity\brain\54eccb8b-fafa-4dc9-9384-331629321722\.user_uploaded\media_1787686590106.jpg"

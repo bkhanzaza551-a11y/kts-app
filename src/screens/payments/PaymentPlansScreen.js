@@ -31,7 +31,7 @@ export const PaymentPlansScreen = ({ navigation }) => {
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <View style={styles.header}>
         <Text style={styles.title}>Choose Your Plan</Text>
-        <Text style={styles.subtitle}>Unlock the full power of KTS 10 Pips Bots</Text>
+        <Text style={styles.subtitle}>Unlock the full power of KTS Markets</Text>
       </View>
 
       {displayPlans.map(plan => (
