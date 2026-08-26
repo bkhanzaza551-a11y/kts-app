@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { COLORS } from '../theme/colors';
-import { TYPOGRAPHY } from '../theme/typography';
+import { COLORS } from '../../theme/colors';
+import { TYPOGRAPHY } from '../../theme/typography';
 
 export class ErrorBoundary extends React.Component {
   constructor(props) {
