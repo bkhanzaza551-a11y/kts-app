@@ -25,8 +25,10 @@ jobs:
           node-version: '18'
           cache: 'npm'
 
-      - name: Install dependencies
-        run: npm install --legacy-peer-deps
+      - name: Clean install dependencies
+        run: |
+          rm -rf node_modules
+          npm install --legacy-peer-deps
 
       - name: Setup Java
         uses: actions/setup-java@v4

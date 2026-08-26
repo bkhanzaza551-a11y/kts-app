@@ -9,6 +9,7 @@ import { AppNavigator } from './src/navigation/AppNavigator';
 import { COLORS } from './src/theme/colors';
 import { setLogoutCallback } from './src/api/client';
 import { logout } from './src/store/authSlice';
+import { ErrorBoundary } from './src/components/common/ErrorBoundary';
 
 const AppContent = () => {
   const dispatch = useDispatch();
@@ -28,15 +29,17 @@ const AppContent = () => {
 
 const App = () => {
   return (
-    <SafeAreaProvider>
-      <GestureHandlerRootView style={{ flex: 1 }}>
-        <Provider store={store}>
-          <CurrencyProvider>
-            <AppContent />
-          </CurrencyProvider>
-        </Provider>
-      </GestureHandlerRootView>
-    </SafeAreaProvider>
+    <ErrorBoundary>
+      <SafeAreaProvider>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <Provider store={store}>
+            <CurrencyProvider>
+              <AppContent />
+            </CurrencyProvider>
+          </Provider>
+        </GestureHandlerRootView>
+      </SafeAreaProvider>
+    </ErrorBoundary>
   );
 };
 
