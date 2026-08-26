@@ -1,5 +1,5 @@
-﻿import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, TouchableOpacity, Image } from 'react-native';
+﻿import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, TouchableOpacity, Animated, Easing } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { COLORS } from '../../theme/colors';
 import { TYPOGRAPHY } from '../../theme/typography';
@@ -17,6 +17,19 @@ export const LoginScreen = ({ navigation }) => {
   const dispatch = useDispatch();
   const { isLoading, error } = useSelector(s => s.auth);
 
+  // Animations
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(50)).current;
+  const logoScale = useRef(new Animated.Value(0.8)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, { toValue: 1, duration: 600, useNativeDriver: true }),
+      Animated.timing(slideAnim, { toValue: 0, duration: 600, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+      Animated.spring(logoScale, { toValue: 1, friction: 5, tension: 40, useNativeDriver: true })
+    ]).start();
+  }, []);
+
   const handleLogin = () => {
     const emailErr = validateEmail(email);
     const passErr = validatePassword(password);
@@ -29,54 +42,54 @@ export const LoginScreen = ({ navigation }) => {
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
         
-        <View style={styles.header}>
-          <View style={styles.logoContainer}>
+        <Animated.View style={[styles.header, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
+          <Animated.View style={[styles.logoContainer, { transform: [{ scale: logoScale }] }]}>
             <Text style={styles.logoText}>KTS</Text>
-          </View>
+          </Animated.View>
           <Text style={styles.title}>Welcome Back</Text>
           <Text style={styles.subtitle}>Sign in to access your trading dashboard</Text>
-        </View>
+        </Animated.View>
 
-        {error && (
-          <View style={styles.errorBox}>
-            <Icon name="alert-circle-outline" size={20} color={COLORS.error} />
-            <Text style={styles.errorText}>{error}</Text>
+        <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
+          {error && (
+            <View style={styles.errorBox}>
+              <Icon name="alert-circle-outline" size={20} color={COLORS.error} />
+              <Text style={styles.errorText}>{error}</Text>
+            </View>
+          )}
+
+          <View style={styles.form}>
+            <Input 
+              label="Email Address" 
+              value={email} 
+              onChangeText={(v) => { setEmail(v); dispatch(clearError()); }}
+              keyboardType="email-address" 
+              error={errors.email} 
+              icon="email-outline" 
+            />
+            <Input 
+              label="Password" 
+              value={password} 
+              onChangeText={(v) => { setPassword(v); dispatch(clearError()); }}
+              secureTextEntry 
+              error={errors.password} 
+              icon="lock-outline" 
+            />
+            
+            <TouchableOpacity style={styles.forgotBtn}>
+              <Text style={styles.forgotText}>Forgot Password?</Text>
+            </TouchableOpacity>
+
+            <Button title="Sign In" onPress={handleLogin} loading={isLoading} style={styles.submitBtn} />
           </View>
-        )}
 
-        <View style={styles.form}>
-          <Input 
-            label="Email Address" 
-            value={email} 
-            onChangeText={(v) => { setEmail(v); dispatch(clearError()); }}
-            placeholder="admin@kts10pipsbots.com" 
-            keyboardType="email-address" 
-            error={errors.email} 
-            icon="email-outline" 
-          />
-          <Input 
-            label="Password" 
-            value={password} 
-            onChangeText={(v) => { setPassword(v); dispatch(clearError()); }}
-            placeholder="••••••••" 
-            secureTextEntry 
-            error={errors.password} 
-            icon="lock-outline" 
-          />
-          
-          <TouchableOpacity style={styles.forgotBtn}>
-            <Text style={styles.forgotText}>Forgot Password?</Text>
-          </TouchableOpacity>
-
-          <Button title="Sign In" onPress={handleLogin} loading={isLoading} style={styles.submitBtn} />
-        </View>
-
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>Don't have an account? </Text>
-          <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-            <Text style={styles.link}>Sign Up</Text>
-          </TouchableOpacity>
-        </View>
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>Don't have an account? </Text>
+            <TouchableOpacity onPress={() => navigation.navigate('Register')}>
+              <Text style={styles.link}>Sign Up</Text>
+            </TouchableOpacity>
+          </View>
+        </Animated.View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -102,7 +115,7 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: COLORS.error + '40', gap: 8 
   },
   errorText: { ...TYPOGRAPHY.body3, color: COLORS.error, flex: 1 },
-  forgotBtn: { alignSelf: 'flex-end', marginBottom: SPACING.xl },
+  forgotBtn: { alignSelf: 'flex-end', marginBottom: SPACING.xl, marginTop: -8 },
   forgotText: { ...TYPOGRAPHY.body3, color: COLORS.primary, fontWeight: '600' },
   submitBtn: { marginTop: SPACING.sm },
   footer: { flexDirection: 'row', justifyContent: 'center', marginTop: 40 },
