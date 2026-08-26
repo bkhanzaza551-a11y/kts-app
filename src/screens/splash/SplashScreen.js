@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Animated, Easing, Dimensions } from 'react-native';
 import { COLORS } from '../../theme/colors';
 import { TYPOGRAPHY } from '../../theme/typography';
@@ -91,7 +91,7 @@ export const SplashScreen = () => {
       
       {/* Animated Text Area */}
       <Animated.View style={[styles.textContainer, { opacity: textOpacity, transform: [{ translateY: textTranslateY }] }]}>
-        <Text style={styles.title}>KTS 10 Pips Bots</Text>
+        <Text style={styles.title}>KTS Markets</Text>
         <Text style={styles.subtitle}>Trade Smarter. Earn More.</Text>
       </Animated.View>
 
