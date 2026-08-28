@@ -76,6 +76,7 @@ const authSlice = createSlice({
     isEmailVerificationPending: false,
     isSecurityCodePending: false,
     pendingEmail: null,
+    pendingOtp: null,
     error: null,
   },
   reducers: {
@@ -85,6 +86,7 @@ const authSlice = createSlice({
       state.isLoggedIn = true;
     },
     clearError: (state) => { state.error = null; },
+    clearPendingOtp: (state) => { state.pendingOtp = null; },
     setUser: (state, action) => { state.user = action.payload; },
     clearEmailVerification: (state) => { state.isEmailVerificationPending = false; state.pendingEmail = null; },
   },
@@ -93,9 +95,10 @@ const authSlice = createSlice({
       .addCase(login.pending, (s) => { s.isLoading = true; s.error = null; })
       .addCase(login.fulfilled, (s, a) => {
         s.isLoading = false;
+        s.error = null;
         const d = a.payload.data || a.payload;
         const { token, user, requires_otp, requires_security_code } = d;
-        if (requires_otp) { s.isOtpPending = true; s.user = d.user; }
+        if (requires_otp) { s.isOtpPending = true; s.user = d.user; if (d.otp) s.pendingOtp = d.otp; }
         else if (requires_security_code) { s.isSecurityCodePending = true; s.user = d.user; }
         else if (token) { s.token = token; s.user = user; s.isLoggedIn = true; storage.setToken(token); storage.setUser(user); }
       })
@@ -115,11 +118,13 @@ const authSlice = createSlice({
       .addCase(register.pending, (s) => { s.isLoading = true; s.error = null; })
       .addCase(register.fulfilled, (s, a) => {
         s.isLoading = false;
+        s.error = null;
         const d = a.payload.data || a.payload;
         if (d.requires_email_verification) {
           s.isEmailVerificationPending = true;
           s.pendingEmail = d.email;
           s.user = d.user;
+          if (d.otp) s.pendingOtp = d.otp;
         } else if (d.token) {
           s.token = d.token; s.user = d.user; s.isLoggedIn = true;
           storage.setToken(d.token); storage.setUser(d.user);
@@ -168,10 +173,10 @@ const authSlice = createSlice({
       .addCase(logout.fulfilled, (s) => {
         s.user = null; s.token = null; s.isLoggedIn = false;
         s.isOtpPending = false; s.isEmailVerificationPending = false;
-        s.isSecurityCodePending = false; s.pendingEmail = null;
+        s.isSecurityCodePending = false; s.pendingEmail = null; s.pendingOtp = null;
       });
   },
 });
 
-export const { setOnboarded, setToken, clearError, setUser, clearEmailVerification } = authSlice.actions;
+export const { setOnboarded, setToken, clearError, clearPendingOtp, setUser, clearEmailVerification } = authSlice.actions;
 export default authSlice.reducer;

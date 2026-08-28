@@ -5,7 +5,7 @@ import { COLORS } from '../../theme/colors';
 import { TYPOGRAPHY } from '../../theme/typography';
 import { SPACING, RADIUS } from '../../theme/spacing';
 import { Button } from '../../components/common/Button';
-import { verifyOtp, verifyEmailOtp, resendEmailOtp, clearError } from '../../store/authSlice';
+import { verifyOtp, verifyEmailOtp, resendEmailOtp, clearError, clearPendingOtp } from '../../store/authSlice';
 
 export const OtpVerificationScreen = ({ navigation, route }) => {
   const isEmailVerification = route?.params?.emailVerification || false;
@@ -14,13 +14,21 @@ export const OtpVerificationScreen = ({ navigation, route }) => {
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const inputs = useRef([]);
   const dispatch = useDispatch();
-  const { isLoading, error, isSecurityCodePending, isEmailVerificationPending, pendingEmail } = useSelector(s => s.auth);
+  const { isLoading, error, isSecurityCodePending, isEmailVerificationPending, pendingEmail, pendingOtp } = useSelector(s => s.auth);
 
   const userEmail = verificationEmail || pendingEmail || '';
 
   useEffect(() => {
     if (!isEmailVerification && isSecurityCodePending) navigation.replace('SecurityCode');
   }, [isSecurityCodePending, isEmailVerification]);
+
+  useEffect(() => {
+    if (pendingOtp && pendingOtp.length === 6) {
+      const digits = pendingOtp.split('');
+      setOtp(digits);
+      dispatch(clearPendingOtp());
+    }
+  }, [pendingOtp]);
 
   const handleChange = (text, index) => {
     if (text.length > 1) text = text.slice(-1);
@@ -66,6 +74,13 @@ export const OtpVerificationScreen = ({ navigation, route }) => {
         </View>
 
         {error && <View style={styles.errorBox}><Text style={styles.errorText}>{error}</Text></View>}
+
+        {pendingOtp && (
+          <View style={styles.infoBox}>
+            <Text style={styles.infoText}>Email could not be delivered. Use the code shown below.</Text>
+            <Text style={styles.otpDisplay}>{pendingOtp}</Text>
+          </View>
+        )}
 
         <View style={styles.otpRow}>
           {otp.map((digit, i) => (
@@ -114,6 +129,9 @@ const styles = StyleSheet.create({
   subtitle: { ...TYPOGRAPHY.body2, color: COLORS.silver, marginTop: 8, textAlign: 'center' },
   errorBox: { backgroundColor: 'rgba(255,23,68,0.1)', borderRadius: RADIUS.md, padding: SPACING.md, marginBottom: SPACING.lg, borderWidth: 1, borderColor: COLORS.red },
   errorText: { ...TYPOGRAPHY.body3, color: COLORS.red, textAlign: 'center' },
+  infoBox: { backgroundColor: COLORS.goldMuted, borderRadius: RADIUS.md, padding: SPACING.md, marginBottom: SPACING.lg, borderWidth: 1, borderColor: COLORS.gold + '40', alignItems: 'center' },
+  infoText: { ...TYPOGRAPHY.body3, color: COLORS.gold, textAlign: 'center', marginBottom: 8 },
+  otpDisplay: { ...TYPOGRAPHY.h2, color: COLORS.gold, letterSpacing: 4, fontWeight: '800' },
   otpRow: { flexDirection: 'row', justifyContent: 'center', gap: 12, marginBottom: 32 },
   otpInput: {
     width: 50, height: 60, borderRadius: RADIUS.md, borderWidth: 2, borderColor: COLORS.darkBorder,
