@@ -12,19 +12,19 @@ const SLIDES = [
   {
     id: '1',
     image: require('../../../assets/images/onboarding_1.jpg'),
-    title: <Text style={styles.title}>Trade <Text style={{ color: '#FFD700' }}>Smarter</Text></Text>,
+    title: (styles) => <Text style={styles.title}>Trade <Text style={{ color: '#FFD700' }}>Smarter</Text></Text>,
     subtitle: 'Empower your trading journey with advanced tools, deep insights, and real-time market data.',
   },
   {
     id: '2',
     image: require('../../../assets/images/onboarding_2.png'),
-    title: <Text style={styles.title}>Learn & Trade{'\n'}<Text style={{ color: '#FFD700' }}>with KTS Bot</Text></Text>,
+    title: (styles) => <Text style={styles.title}>Learn & Trade{'\n'}<Text style={{ color: '#FFD700' }}>with KTS Bot</Text></Text>,
     subtitle: 'Your AI trading guide that teaches, guides, and helps you grow from beginner to pro.',
   },
   {
     id: '3',
     image: require('../../../assets/images/onboarding_3.png'),
-    title: <Text style={styles.title}>Real-Time <Text style={{ color: '#FFD700' }}>Alerts</Text></Text>,
+    title: (styles) => <Text style={styles.title}>Real-Time <Text style={{ color: '#FFD700' }}>Alerts</Text></Text>,
     subtitle: 'Get instant notifications for every signal. Never miss a profitable trade opportunity again.',
   },
 ];
@@ -76,12 +76,10 @@ export const OnboardingScreen = ({ onFinish }) => {
             
             <View style={styles.visualArea}>
               <Image source={item.image} style={styles.image} resizeMode="cover" />
-              {/* Fade gradient from image to black bottom */}
-              
             </View>
 
             <View style={styles.textArea}>
-              {item.title}
+              {item.title(styles)}
               <Text style={styles.subtitle}>{item.subtitle}</Text>
             </View>
 
@@ -151,17 +149,6 @@ const styles = StyleSheet.create({
   image: {
     width: '100%',
     height: '100%',
-  },
-  fadeOverlay: {
-    position: 'absolute',
-    bottom: -1,
-    left: 0,
-    right: 0,
-    height: 100,
-    backgroundColor: '#000000',
-    opacity: 0.8,
-    // Note: Since React Native doesn't support linear gradients without expo-linear-gradient, 
-    // a pure solid overlay is used, but the images naturally fade to black at the bottom anyway!
   },
   
   textArea: {

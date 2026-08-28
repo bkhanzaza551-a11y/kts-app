@@ -2,7 +2,7 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { View, Text, Platform } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { HomeScreen } from '../screens/home/HomeScreen';
+import { HomeNavigator } from './HomeNavigator';
 import { COLORS } from '../theme/colors';
 import { SignalNavigator } from './SignalNavigator';
 import { ChatNavigator } from './ChatNavigator';
@@ -40,7 +40,7 @@ export const MainTabNavigator = () => (
     tabBarInactiveTintColor: '#888888',
     tabBarLabelStyle: { fontSize: 10, fontWeight: '600', marginTop: 4 },
   }}>
-    <Tab.Screen name="Home" component={HomeScreen} options={{
+    <Tab.Screen name="Home" component={HomeNavigator} options={{
       tabBarIcon: ({ focused }) => <TabIcon name={focused ? 'home' : 'home-outline'} focused={focused} />,
     }} />
     <Tab.Screen name="Markets" component={SignalNavigator} options={{

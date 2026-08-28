@@ -10,6 +10,7 @@ export default function AiChatScreen({ navigation }) {
   const flatListRef = useRef(null);
   const dispatch = useDispatch();
   const { messages, loading, error } = useSelector(s => s.aiChat);
+  const { token, isLoggedIn } = useSelector(s => s.auth);
 
   useEffect(() => {
     if (messages.length > 0) {
@@ -20,6 +21,9 @@ export default function AiChatScreen({ navigation }) {
   const handleSend = () => {
     const msg = input.trim();
     if (!msg || loading) return;
+    if (!isLoggedIn || !token) {
+      return;
+    }
     setInput('');
     dispatch(sendMessage({ message: msg }));
   };
@@ -34,6 +38,28 @@ export default function AiChatScreen({ navigation }) {
       </View>
     );
   };
+
+  if (!isLoggedIn || !token) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => navigation.goBack()}>
+            <Text style={styles.headerBack}>← Back</Text>
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>KTS AI Assistant</Text>
+          <View style={{ width: 50 }} />
+        </View>
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyIcon}>🔒</Text>
+          <Text style={styles.emptyTitle}>Login Required</Text>
+          <Text style={styles.emptyText}>Please login to use KTS AI Assistant</Text>
+          <TouchableOpacity style={styles.loginBtn} onPress={() => navigation.navigate('Login')}>
+            <Text style={styles.loginBtnText}>Login</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={90}>
@@ -113,6 +139,8 @@ const styles = StyleSheet.create({
   emptyIcon: { fontSize: 64 },
   emptyTitle: { color: COLORS.gold, fontSize: 22, fontWeight: '700', marginTop: 16 },
   emptyText: { color: COLORS.muted, fontSize: 14, textAlign: 'center', marginTop: 8, marginBottom: 24 },
+  loginBtn: { backgroundColor: COLORS.gold, borderRadius: 12, paddingVertical: 12, paddingHorizontal: 32, marginTop: 16 },
+  loginBtnText: { color: '#000', fontSize: 16, fontWeight: '700' },
   suggestionBtn: { backgroundColor: COLORS.card, borderRadius: 12, paddingVertical: 10, paddingHorizontal: 16, marginBottom: 8, borderWidth: 1, borderColor: COLORS.border, width: '100%' },
   suggestionText: { color: COLORS.gold, fontSize: 14 },
   errorText: { color: '#FF4444', textAlign: 'center', fontSize: 13, marginBottom: 4 },
