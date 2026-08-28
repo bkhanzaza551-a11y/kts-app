@@ -1,9 +1,9 @@
-import React from 'react';
+﻿import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Text } from 'react-native';
+import { View, Text, Platform } from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { HomeScreen } from '../screens/home/HomeScreen';
 import { COLORS } from '../theme/colors';
-import { TYPOGRAPHY } from '../theme/typography';
 import { SignalNavigator } from './SignalNavigator';
 import { ChatNavigator } from './ChatNavigator';
 import { BotNavigator } from './BotNavigator';
@@ -12,43 +12,51 @@ import { AiChatNavigator } from './AiChatNavigator';
 
 const Tab = createBottomTabNavigator();
 
-const TabIcon = ({ icon, focused }) => (
-  <Text style={{ fontSize: 22, opacity: focused ? 1 : 0.5 }}>{icon}</Text>
+const TabIcon = ({ name, focused }) => (
+  <View style={{ alignItems: 'center', justifyContent: 'center', marginTop: Platform.OS === 'android' ? 8 : 12 }}>
+    <Icon 
+      name={name} 
+      size={24} 
+      color={focused ? '#FFD700' : '#888888'} 
+    />
+  </View>
 );
 
 export const MainTabNavigator = () => (
   <Tab.Navigator screenOptions={{
     headerShown: false,
     tabBarStyle: {
-      backgroundColor: COLORS.darkCard,
-      borderTopColor: COLORS.darkBorder,
-      borderTopWidth: 1,
-      height: 70,
-      paddingBottom: 10,
-      paddingTop: 8,
+      backgroundColor: '#0B0E11', // Deep Binance dark
+      borderTopWidth: 0,
+      elevation: 10,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: -2 },
+      shadowOpacity: 0.2,
+      shadowRadius: 10,
+      height: Platform.OS === 'ios' ? 85 : 65,
+      paddingBottom: Platform.OS === 'ios' ? 25 : 8,
     },
-    tabBarActiveTintColor: COLORS.gold,
-    tabBarInactiveTintColor: COLORS.grey,
-    tabBarLabelStyle: { ...TYPOGRAPHY.tabLabel, marginTop: 4 },
+    tabBarActiveTintColor: '#FFD700',
+    tabBarInactiveTintColor: '#888888',
+    tabBarLabelStyle: { fontSize: 10, fontWeight: '600', marginTop: 4 },
   }}>
     <Tab.Screen name="Home" component={HomeScreen} options={{
-      tabBarIcon: ({ focused }) => <TabIcon icon="🏠" focused={focused} />,
+      tabBarIcon: ({ focused }) => <TabIcon name={focused ? 'home' : 'home-outline'} focused={focused} />,
     }} />
-    <Tab.Screen name="Signals" component={SignalNavigator} options={{
-      tabBarIcon: ({ focused }) => <TabIcon icon="📊" focused={focused} />,
+    <Tab.Screen name="Markets" component={SignalNavigator} options={{
+      tabBarIcon: ({ focused }) => <TabIcon name={focused ? 'poll' : 'poll'} focused={focused} />,
     }} />
     <Tab.Screen name="Chat" component={ChatNavigator} options={{
-      tabBarIcon: ({ focused }) => <TabIcon icon="💬" focused={focused} />,
-      tabBarBadge: undefined,
+      tabBarIcon: ({ focused }) => <TabIcon name={focused ? 'chat-processing' : 'chat-processing-outline'} focused={focused} />,
     }} />
     <Tab.Screen name="AI" component={AiChatNavigator} options={{
-      tabBarIcon: ({ focused }) => <TabIcon icon="🤖" focused={focused} />,
+      tabBarIcon: ({ focused }) => <TabIcon name={focused ? 'robot-excited' : 'robot-outline'} focused={focused} />,
     }} />
     <Tab.Screen name="Bots" component={BotNavigator} options={{
-      tabBarIcon: ({ focused }) => <TabIcon icon="⚙️" focused={focused} />,
+      tabBarIcon: ({ focused }) => <TabIcon name={focused ? 'lightning-bolt' : 'lightning-bolt-outline'} focused={focused} />,
     }} />
     <Tab.Screen name="More" component={MoreNavigator} options={{
-      tabBarIcon: ({ focused }) => <TabIcon icon="⋯" focused={focused} />,
+      tabBarIcon: ({ focused }) => <TabIcon name={focused ? 'view-grid' : 'view-grid-outline'} focused={focused} />,
     }} />
   </Tab.Navigator>
 );

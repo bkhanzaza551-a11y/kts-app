@@ -30,9 +30,12 @@ client.interceptors.response.use(
   (response) => response,
   async (error) => {
     if (error.response?.status === 401) {
-      await storage.clearAll();
-      if (logoutCallback) {
-        logoutCallback();
+      const currentRoute = error.config?.url || '';
+      if (currentRoute.includes('/login') || currentRoute.includes('/register')) {
+        await storage.clearAll();
+        if (logoutCallback) {
+          logoutCallback();
+        }
       }
     }
     const message = error.response?.data?.message || error.message || 'Network error';

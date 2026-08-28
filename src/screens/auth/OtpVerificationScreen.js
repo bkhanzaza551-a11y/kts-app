@@ -1,34 +1,25 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
+﻿import React, { useState, useRef, useEffect } from 'react';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, SafeAreaView } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
-import { COLORS } from '../../theme/colors';
-import { TYPOGRAPHY } from '../../theme/typography';
-import { SPACING, RADIUS } from '../../theme/spacing';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { Button } from '../../components/common/Button';
-import { verifyOtp, verifyEmailOtp, resendEmailOtp, clearError, clearPendingOtp } from '../../store/authSlice';
+import { verifyOtp, verifyEmailOtp, resendEmailOtp, clearError } from '../../store/authSlice';
 
 export const OtpVerificationScreen = ({ navigation, route }) => {
   const isEmailVerification = route?.params?.emailVerification || false;
   const verificationEmail = route?.params?.email || '';
 
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
+  const [focusedIndex, setFocusedIndex] = useState(-1);
   const inputs = useRef([]);
   const dispatch = useDispatch();
-  const { isLoading, error, isSecurityCodePending, isEmailVerificationPending, pendingEmail, pendingOtp } = useSelector(s => s.auth);
+  const { isLoading, error, isSecurityCodePending, isEmailVerificationPending, pendingEmail } = useSelector(s => s.auth);
 
   const userEmail = verificationEmail || pendingEmail || '';
 
   useEffect(() => {
     if (!isEmailVerification && isSecurityCodePending) navigation.replace('SecurityCode');
   }, [isSecurityCodePending, isEmailVerification]);
-
-  useEffect(() => {
-    if (pendingOtp && pendingOtp.length === 6) {
-      const digits = pendingOtp.split('');
-      setOtp(digits);
-      dispatch(clearPendingOtp());
-    }
-  }, [pendingOtp]);
 
   const handleChange = (text, index) => {
     if (text.length > 1) text = text.slice(-1);
@@ -60,84 +51,112 @@ export const OtpVerificationScreen = ({ navigation, route }) => {
   };
 
   return (
-    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <View style={styles.content}>
-        <View style={styles.header}>
-          <Text style={styles.emoji}>📧</Text>
-          <Text style={styles.title}>{isEmailVerification ? 'Email Verification' : 'Verification Code'}</Text>
-          <Text style={styles.subtitle}>
-            {isEmailVerification
-              ? `Enter the 6-digit code sent to\n${userEmail}`
-              : 'Enter the 6-digit code sent to your email'
-            }
-          </Text>
+    <SafeAreaView style={styles.container}>
+      <KeyboardAvoidingView style={styles.keyboardView} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        
+        {/* Top Navigation */}
+        <View style={styles.topNav}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn} hitSlop={{top:15, bottom:15, left:15, right:15}}>
+            <Icon name="arrow-left" size={24} color="#FFFFFF" />
+          </TouchableOpacity>
         </View>
 
-        {error && <View style={styles.errorBox}><Text style={styles.errorText}>{error}</Text></View>}
-
-        {pendingOtp && (
-          <View style={styles.infoBox}>
-            <Text style={styles.infoText}>Email could not be delivered. Use the code shown below.</Text>
-            <Text style={styles.otpDisplay}>{pendingOtp}</Text>
+        <View style={styles.content}>
+          {/* Minimal Icon */}
+          <View style={styles.iconContainer}>
+            <Icon name={isEmailVerification ? "email-fast-outline" : "shield-check-outline"} size={36} color="#FFD700" />
           </View>
-        )}
 
-        <View style={styles.otpRow}>
-          {otp.map((digit, i) => (
-            <TextInput
-              key={i}
-              ref={(ref) => { inputs.current[i] = ref; }}
-              style={[styles.otpInput, digit && styles.otpInputFilled]}
-              value={digit}
-              onChangeText={(t) => handleChange(t, i)}
-              onKeyPress={(e) => handleKeyPress(e, i)}
-              keyboardType="number-pad"
-              maxLength={1}
-              selectTextOnFocus
-            />
-          ))}
+          <Text style={styles.title}>{isEmailVerification ? 'Verify your email' : 'Verification Code'}</Text>
+          
+          <Text style={styles.subtitle}>
+            Enter the 6-digit code we sent to{'\n'}
+            <Text style={styles.highlight}>{userEmail || 'your email'}</Text>
+          </Text>
+
+          {error && (
+            <View style={styles.errorBox}>
+              <Icon name="alert-circle-outline" size={18} color="#FF4444" />
+              <Text style={styles.errorText}>{error}</Text>
+            </View>
+          )}
+
+          <View style={styles.otpRow}>
+            {otp.map((digit, i) => (
+              <TextInput
+                key={i}
+                ref={(ref) => { inputs.current[i] = ref; }}
+                style={[
+                  styles.otpInput,
+                  focusedIndex === i && styles.otpInputFocused,
+                  digit && styles.otpInputFilled
+                ]}
+                value={digit}
+                onChangeText={(t) => handleChange(t, i)}
+                onKeyPress={(e) => handleKeyPress(e, i)}
+                onFocus={() => setFocusedIndex(i)}
+                onBlur={() => setFocusedIndex(-1)}
+                keyboardType="number-pad"
+                maxLength={1}
+                selectTextOnFocus
+                placeholder="-"
+                placeholderTextColor="#555555"
+              />
+            ))}
+          </View>
+
+          <Button
+            title="VERIFY CODE"
+            onPress={handleVerify}
+            loading={isLoading}
+            rightIcon="arrow-right"
+            style={styles.verifyBtn}
+          />
+
+          <View style={styles.resendContainer}>
+            <Text style={styles.resendText}>Didn't receive the code? </Text>
+            <TouchableOpacity onPress={handleResend} hitSlop={{top:10, bottom:10, left:10, right:10}}>
+              <Text style={styles.resendLink}>Resend</Text>
+            </TouchableOpacity>
+          </View>
+
         </View>
-
-        <Button
-          title={isEmailVerification ? 'Verify Email' : 'Verify Code'}
-          onPress={handleVerify}
-          loading={isLoading}
-        />
-
-        {isEmailVerification && (
-          <TouchableOpacity style={styles.resend} onPress={handleResend}>
-            <Text style={styles.resendText}>Didn't receive code? Resend</Text>
-          </TouchableOpacity>
-        )}
-
-        {!isEmailVerification && (
-          <TouchableOpacity style={styles.resend}>
-            <Text style={styles.resendText}>Didn't receive code? Resend</Text>
-          </TouchableOpacity>
-        )}
-      </View>
-    </KeyboardAvoidingView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.black },
-  content: { flex: 1, padding: SPACING.screen, justifyContent: 'center' },
-  header: { alignItems: 'center', marginBottom: 40 },
-  emoji: { fontSize: 48, marginBottom: 16 },
-  title: { ...TYPOGRAPHY.h2, color: COLORS.white },
-  subtitle: { ...TYPOGRAPHY.body2, color: COLORS.silver, marginTop: 8, textAlign: 'center' },
-  errorBox: { backgroundColor: 'rgba(255,23,68,0.1)', borderRadius: RADIUS.md, padding: SPACING.md, marginBottom: SPACING.lg, borderWidth: 1, borderColor: COLORS.red },
-  errorText: { ...TYPOGRAPHY.body3, color: COLORS.red, textAlign: 'center' },
-  infoBox: { backgroundColor: COLORS.goldMuted, borderRadius: RADIUS.md, padding: SPACING.md, marginBottom: SPACING.lg, borderWidth: 1, borderColor: COLORS.gold + '40', alignItems: 'center' },
-  infoText: { ...TYPOGRAPHY.body3, color: COLORS.gold, textAlign: 'center', marginBottom: 8 },
-  otpDisplay: { ...TYPOGRAPHY.h2, color: COLORS.gold, letterSpacing: 4, fontWeight: '800' },
-  otpRow: { flexDirection: 'row', justifyContent: 'center', gap: 12, marginBottom: 32 },
-  otpInput: {
-    width: 50, height: 60, borderRadius: RADIUS.md, borderWidth: 2, borderColor: COLORS.darkBorder,
-    backgroundColor: COLORS.darkInput, textAlign: 'center', ...TYPOGRAPHY.h2, color: COLORS.white,
+  container: { flex: 1, backgroundColor: '#000000' },
+  keyboardView: { flex: 1 },
+  topNav: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 10 },
+  backBtn: { width: 40, height: 40, justifyContent: 'center' },
+  content: { flex: 1, paddingHorizontal: 24, paddingTop: 20 },
+  iconContainer: { 
+    width: 64, height: 64, borderRadius: 32, 
+    backgroundColor: 'rgba(255, 215, 0, 0.1)', 
+    alignItems: 'center', justifyContent: 'center',
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 215, 0, 0.2)'
   },
-  otpInputFilled: { borderColor: COLORS.gold, backgroundColor: COLORS.goldMuted },
-  resend: { alignItems: 'center', marginTop: SPACING.xl },
-  resendText: { ...TYPOGRAPHY.body2, color: COLORS.gold },
+  title: { fontSize: 28, color: '#FFFFFF', fontWeight: '700', marginBottom: 12, letterSpacing: 0.5 },
+  subtitle: { fontSize: 15, color: '#A0A0A0', lineHeight: 22, marginBottom: 32 },
+  highlight: { color: '#FFFFFF', fontWeight: '600' },
+  
+  errorBox: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255, 68, 68, 0.1)', padding: 12, borderRadius: 8, borderWidth: 1, borderColor: 'rgba(255, 68, 68, 0.3)', marginBottom: 24, gap: 8 },
+  errorText: { fontSize: 13, color: '#FF4444', flex: 1 },
+  
+  otpRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 40 },
+  otpInput: {
+    width: 48, height: 56, borderRadius: 12, borderWidth: 1, borderColor: '#333333',
+    backgroundColor: '#121212', textAlign: 'center', fontSize: 24, fontWeight: '700', color: '#FFFFFF',
+  },
+  otpInputFocused: { borderColor: '#FFD700', backgroundColor: '#1A1A1A' },
+  otpInputFilled: { borderColor: '#FFD700', backgroundColor: '#1A1A1A' },
+  
+  verifyBtn: { marginBottom: 24 },
+  resendContainer: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center' },
+  resendText: { fontSize: 14, color: '#A0A0A0' },
+  resendLink: { fontSize: 14, color: '#FFD700', fontWeight: '700' },
 });
