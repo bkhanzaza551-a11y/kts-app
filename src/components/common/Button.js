@@ -2,7 +2,7 @@
 import { TouchableOpacity, Text, StyleSheet, ActivityIndicator, View } from 'react-native';
 import { COLORS } from '../../theme/colors';
 import { TYPOGRAPHY } from '../../theme/typography';
-import { SPACING, RADIUS } from '../../theme/spacing';
+import { SPACING } from '../../theme/spacing';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 export const Button = ({ title, onPress, variant = 'primary', loading, disabled, style, icon, rightIcon }) => {
@@ -15,7 +15,7 @@ export const Button = ({ title, onPress, variant = 'primary', loading, disabled,
             <Text style={styles.primaryText}>{title}</Text>
             {rightIcon && (
               <View style={styles.rightIconCircle}>
-                <Icon name={rightIcon} size={16} color={COLORS.primary} />
+                <Icon name={rightIcon} size={18} color={COLORS.primary} style={{marginLeft: 2}} />
               </View>
             )}
           </>
@@ -42,32 +42,34 @@ export const Button = ({ title, onPress, variant = 'primary', loading, disabled,
 
 const styles = StyleSheet.create({
   primary: {
-    height: 54,
-    borderRadius: 8,
-    borderTopRightRadius: 16,
-    borderBottomLeftRadius: 16, // Simulating slight chamfer effect via assymetric radius
+    height: 56,
+    borderTopLeftRadius: 18,
+    borderBottomRightRadius: 18,
+    borderTopRightRadius: 4,
+    borderBottomLeftRadius: 4,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: COLORS.primary,
+    backgroundColor: '#FFD700', // Exact bright gold from mockup
     paddingHorizontal: SPACING.md,
+    shadowColor: '#FFD700', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 10, elevation: 6
   },
-  primaryText: { ...TYPOGRAPHY.button, color: COLORS.black, fontWeight: '800', fontSize: 16, flex: 1, textAlign: 'center' },
+  primaryText: { ...TYPOGRAPHY.button, color: '#000000', fontWeight: '900', fontSize: 16, flex: 1, textAlign: 'center', letterSpacing: 1 },
   rightIconCircle: {
-    width: 28, height: 28, borderRadius: 14, backgroundColor: COLORS.black,
-    alignItems: 'center', justifyContent: 'center', position: 'absolute', right: 16
+    width: 32, height: 32, borderRadius: 16, backgroundColor: '#000000',
+    alignItems: 'center', justifyContent: 'center', position: 'absolute', right: 12
   },
   social: {
     height: 54,
-    borderRadius: 8,
+    borderRadius: 12,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#1A1A1A',
+    backgroundColor: '#121212',
     borderWidth: 1,
     borderColor: '#333333',
     gap: 12,
   },
-  socialText: { ...TYPOGRAPHY.button, color: COLORS.white, fontWeight: '600', fontSize: 15 },
+  socialText: { ...TYPOGRAPHY.button, color: '#FFFFFF', fontWeight: '600', fontSize: 15 },
   disabled: { opacity: 0.5 },
 });

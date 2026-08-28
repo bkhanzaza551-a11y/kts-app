@@ -1,5 +1,5 @@
 {
-  "name": "kts10pipsbots",
+  "name": "ktsmarkets",
   "displayName": "KTS Markets",
   "version": "1.0.0",
   "versionName": "1.0.0",
@@ -17,10 +17,10 @@
       "foregroundImage": "./assets/adaptive-icon.png",
       "backgroundColor": "#0D0D0D"
     },
-    "package": "com.kts10pipsbots"
+    "package": "com.ktsmarkets"
   },
   "ios": {
     "supportsTablet": true,
-    "bundleIdentifier": "com.kts10pipsbots"
+    "bundleIdentifier": "com.ktsmarkets"
   }
 }

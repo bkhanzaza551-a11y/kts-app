@@ -36,7 +36,7 @@ export const LoginScreen = ({ navigation }) => {
   };
 
   return (
-    <ImageBackground source={require('../../../assets/images/login_bg.png')} style={styles.background} resizeMode="cover">
+    <ImageBackground source={require('../../../assets/images/login_bg.png')} style={styles.background} resizeMode="stretch">
       <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
           
@@ -110,7 +110,7 @@ const styles = StyleSheet.create({
   scroll: { flexGrow: 1, padding: SPACING.screen, paddingBottom: 40, justifyContent: 'center', paddingTop: 100 },
   header: { marginBottom: 30, marginTop: 40 },
   title: { fontSize: 32, color: COLORS.white, fontWeight: '700', letterSpacing: 0.5 },
-  subtitle: { ...TYPOGRAPHY.body2, color: COLORS.silver, marginTop: 8 },
+  subtitle: { ...TYPOGRAPHY.body2, color: "#CCCCCC", marginTop: 8 },
   form: { backgroundColor: 'transparent' },
   errorBox: { 
     flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.sellMuted, 
@@ -125,6 +125,6 @@ const styles = StyleSheet.create({
   dividerLine: { flex: 1, height: 1, backgroundColor: '#333333' },
   dividerText: { color: COLORS.textMuted, paddingHorizontal: 12, fontSize: 12, fontWeight: '600' },
   footer: { flexDirection: 'row', justifyContent: 'center', marginTop: 40 },
-  footerText: { ...TYPOGRAPHY.body2, color: COLORS.silver },
+  footerText: { ...TYPOGRAPHY.body2, color: "#CCCCCC" },
   link: { ...TYPOGRAPHY.body2, color: COLORS.primary, fontWeight: '700' },
 });

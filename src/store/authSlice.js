@@ -127,7 +127,7 @@ const authSlice = createSlice({
       })
       .addCase(register.rejected, (s, a) => { s.isLoading = false; s.error = a.payload; })
 
-      .addCase(verifyOtp.pending, (s) => { s.isLoading = true; })
+      .addCase(verifyOtp.pending, (s) => { s.isLoading = true; s.error = null; })
       .addCase(verifyOtp.fulfilled, (s, a) => {
         s.isLoading = false;
         const d = a.payload.data || a.payload;
@@ -148,11 +148,11 @@ const authSlice = createSlice({
       })
       .addCase(verifyEmailOtp.rejected, (s, a) => { s.isLoading = false; s.error = a.payload; })
 
-      .addCase(resendEmailOtp.pending, (s) => { s.isLoading = true; })
+      .addCase(resendEmailOtp.pending, (s) => { s.isLoading = true; s.error = null; })
       .addCase(resendEmailOtp.fulfilled, (s) => { s.isLoading = false; })
       .addCase(resendEmailOtp.rejected, (s, a) => { s.isLoading = false; s.error = a.payload; })
 
-      .addCase(verifySecurityCode.pending, (s) => { s.isLoading = true; })
+      .addCase(verifySecurityCode.pending, (s) => { s.isLoading = true; s.error = null; })
       .addCase(verifySecurityCode.fulfilled, (s, a) => {
         s.isLoading = false;
         const d = a.payload.data || a.payload;
@@ -162,7 +162,9 @@ const authSlice = createSlice({
       })
       .addCase(verifySecurityCode.rejected, (s, a) => { s.isLoading = false; s.error = a.payload; })
 
-      .addCase(loadProfile.fulfilled, (s, a) => { const u = a.payload.data?.user || a.payload.user; s.user = u; storage.setUser(u); })
+      .addCase(loadProfile.pending, (s) => { s.isLoading = true; })
+      .addCase(loadProfile.fulfilled, (s, a) => { const u = a.payload.data?.user || a.payload.user; s.user = u; storage.setUser(u); s.isLoading = false; })
+      .addCase(loadProfile.rejected, (s) => { s.isLoading = false; })
       .addCase(logout.fulfilled, (s) => {
         s.user = null; s.token = null; s.isLoggedIn = false;
         s.isOtpPending = false; s.isEmailVerificationPending = false;

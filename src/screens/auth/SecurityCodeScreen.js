@@ -29,7 +29,7 @@ export const SecurityCodeScreen = () => {
         {error && <View style={styles.errorBox}><Text style={styles.errorText}>{error}</Text></View>}
 
         <Input label="Security Code" value={code} onChangeText={setCode}
-          placeholder="Enter security code" secureTextEntry icon="🔑" />
+          placeholder="Enter security code" secureTextEntry icon="lock-outline" />
 
         <Button title="Verify" onPress={handleVerify} loading={isLoading} />
       </View>

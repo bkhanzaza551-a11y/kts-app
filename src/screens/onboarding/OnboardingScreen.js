@@ -1,9 +1,9 @@
 ﻿import React, { useRef, useState } from 'react';
-import { View, Text, StyleSheet, Dimensions, FlatList, Animated, TouchableOpacity, SafeAreaView } from 'react-native';
+import { View, Text, StyleSheet, Dimensions, FlatList, Animated, TouchableOpacity, Image, Platform } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { COLORS } from '../../theme/colors';
 import { TYPOGRAPHY } from '../../theme/typography';
-import { SPACING, RADIUS } from '../../theme/spacing';
+import { SPACING } from '../../theme/spacing';
 import { Button } from '../../components/common/Button';
 
 const { width, height } = Dimensions.get('window');
@@ -11,21 +11,21 @@ const { width, height } = Dimensions.get('window');
 const SLIDES = [
   {
     id: '1',
-    icon: 'chart-box-outline',
-    title: 'Trade Smarter',
-    subtitle: 'AI-powered trading signals with 85%+ win rate. Let our bots handle the market while you relax.',
+    image: require('../../../assets/images/onboarding_1.jpg'),
+    title: <Text style={styles.title}>Trade <Text style={{ color: '#FFD700' }}>Smarter</Text></Text>,
+    subtitle: 'Empower your trading journey with advanced tools, deep insights, and real-time market data.',
   },
   {
     id: '2',
-    icon: 'bell-ring-outline',
-    title: 'Real-Time Alerts',
-    subtitle: 'Get instant notifications for every signal. Never miss a profitable trade opportunity again.',
+    image: require('../../../assets/images/onboarding_2.png'),
+    title: <Text style={styles.title}>Learn & Trade{'\n'}<Text style={{ color: '#FFD700' }}>with KTS Bot</Text></Text>,
+    subtitle: 'Your AI trading guide that teaches, guides, and helps you grow from beginner to pro.',
   },
   {
     id: '3',
-    icon: 'account-group-outline',
-    title: 'Join 50K+ Traders',
-    subtitle: 'Connect with our global community. Share strategies, learn from experts, and grow together.',
+    image: require('../../../assets/images/onboarding_3.png'),
+    title: <Text style={styles.title}>Real-Time <Text style={{ color: '#FFD700' }}>Alerts</Text></Text>,
+    subtitle: 'Get instant notifications for every signal. Never miss a profitable trade opportunity again.',
   },
 ];
 
@@ -47,7 +47,7 @@ export const OnboardingScreen = ({ onFinish }) => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       {/* Floating Skip Button */}
       <View style={styles.header}>
         {current < SLIDES.length - 1 ? (
@@ -74,17 +74,14 @@ export const OnboardingScreen = ({ onFinish }) => {
         renderItem={({ item }) => (
           <View style={styles.slide}>
             
-            {/* --- VISUAL/LOTTIE AREA --- */}
             <View style={styles.visualArea}>
-              {/* NOTE: Replace this View with your <LottieView /> component here! */}
-              <View style={styles.iconGlow}>
-                <Icon name={item.icon} size={80} color={COLORS.primary} />
-              </View>
+              <Image source={item.image} style={styles.image} resizeMode="cover" />
+              {/* Fade gradient from image to black bottom */}
+              
             </View>
 
-            {/* --- TEXT AREA --- */}
             <View style={styles.textArea}>
-              <Text style={styles.title}>{item.title}</Text>
+              {item.title}
               <Text style={styles.subtitle}>{item.subtitle}</Text>
             </View>
 
@@ -93,14 +90,13 @@ export const OnboardingScreen = ({ onFinish }) => {
       />
 
       <View style={styles.bottomSheet}>
-        {/* Buttery Smooth Indicators */}
         <View style={styles.dots}>
           {SLIDES.map((_, i) => {
             const inputRange = [(i - 1) * width, i * width, (i + 1) * width];
             
             const dotWidth = scrollX.interpolate({
               inputRange,
-              outputRange: [8, 32, 8],
+              outputRange: [8, 24, 8],
               extrapolate: 'clamp',
             });
             const opacity = scrollX.interpolate({
@@ -110,7 +106,7 @@ export const OnboardingScreen = ({ onFinish }) => {
             });
             const bgColor = scrollX.interpolate({
               inputRange,
-              outputRange: [COLORS.textMuted, COLORS.primary, COLORS.textMuted],
+              outputRange: ['#888888', '#FFD700', '#888888'],
               extrapolate: 'clamp',
             });
 
@@ -124,57 +120,67 @@ export const OnboardingScreen = ({ onFinish }) => {
         </View>
 
         <Button
-          title={current === SLIDES.length - 1 ? 'Get Started' : 'Next'}
+          title={current === SLIDES.length - 1 ? 'GET STARTED' : 'Next'}
           onPress={handleNext}
           variant="primary"
-          icon={current === SLIDES.length - 1 ? <Icon name="rocket-launch-outline" size={20} color={COLORS.background} /> : null}
+          rightIcon="arrow-right"
           style={styles.actionBtn}
         />
       </View>
-    </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.background },
+  container: { flex: 1, backgroundColor: '#000000' },
   header: { 
-    height: 60, 
-    flexDirection: 'row', 
-    justifyContent: 'flex-end', 
-    alignItems: 'center', 
-    paddingHorizontal: SPACING.lg,
+    position: 'absolute',
+    top: 50,
+    right: 20,
     zIndex: 10
   },
   skipBtn: { padding: SPACING.sm },
-  skipText: { ...TYPOGRAPHY.body2, color: COLORS.textMuted, fontWeight: '600' },
+  skipText: { fontSize: 15, color: '#FFFFFF', fontWeight: '600' },
   
   slide: { width, flex: 1 },
   visualArea: {
-    flex: 0.6, // Takes top 60% of screen
-    alignItems: 'center',
-    justifyContent: 'center',
+    height: height * 0.60,
+    width: '100%',
+    position: 'relative',
   },
-  iconGlow: {
-    width: 180, height: 180, borderRadius: 90,
-    backgroundColor: COLORS.card, borderWidth: 1, borderColor: COLORS.primary + '40',
-    alignItems: 'center', justifyContent: 'center',
-    shadowColor: COLORS.primary, shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.3, shadowRadius: 20, elevation: 15
+  image: {
+    width: '100%',
+    height: '100%',
+  },
+  fadeOverlay: {
+    position: 'absolute',
+    bottom: -1,
+    left: 0,
+    right: 0,
+    height: 100,
+    backgroundColor: '#000000',
+    opacity: 0.8,
+    // Note: Since React Native doesn't support linear gradients without expo-linear-gradient, 
+    // a pure solid overlay is used, but the images naturally fade to black at the bottom anyway!
   },
   
   textArea: {
-    flex: 0.4,
-    paddingHorizontal: SPACING.screen * 2,
+    height: height * 0.20,
+    paddingHorizontal: SPACING.screen * 1.5,
     alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: -20,
   },
-  title: { ...TYPOGRAPHY.h1, color: COLORS.text, textAlign: 'center', fontWeight: '900', marginBottom: SPACING.md },
-  subtitle: { ...TYPOGRAPHY.body1, color: COLORS.textMuted, textAlign: 'center', lineHeight: 24 },
+  title: { fontSize: 32, color: '#FFFFFF', textAlign: 'center', fontWeight: '700', marginBottom: 12, letterSpacing: 0.5 },
+  subtitle: { ...TYPOGRAPHY.body1, color: '#CCCCCC', textAlign: 'center', lineHeight: 24, fontSize: 15 },
   
   bottomSheet: { 
+    height: height * 0.20,
     paddingHorizontal: SPACING.screen, 
-    paddingBottom: Platform.OS === 'ios' ? 40 : SPACING.xxl,
-    paddingTop: SPACING.md,
+    paddingBottom: 40,
+    justifyContent: 'flex-end'
   },
-  dots: { flexDirection: 'row', justifyContent: 'center', marginBottom: SPACING.xl, gap: 8 },
+  dots: { flexDirection: 'row', justifyContent: 'center', marginBottom: 30, gap: 8 },
   dot: { height: 8, borderRadius: 4 },
-  actionBtn: { width: '100%', elevation: 4, shadowColor: COLORS.primary, shadowOpacity: 0.2, shadowRadius: 8, shadowOffset: {width: 0, height: 4} },
+  actionBtn: { width: '100%' },
 });

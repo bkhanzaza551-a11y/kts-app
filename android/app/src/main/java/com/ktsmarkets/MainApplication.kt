@@ -1,4 +1,4 @@
-package com.kts10pipsbots
+package com.ktsmarkets
 
 import android.app.Application
 import com.facebook.react.PackageList

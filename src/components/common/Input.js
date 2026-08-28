@@ -1,8 +1,7 @@
 ﻿import React, { useState } from 'react';
 import { View, TextInput, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { COLORS } from '../../theme/colors';
 import { TYPOGRAPHY } from '../../theme/typography';
-import { SPACING, RADIUS } from '../../theme/spacing';
+import { SPACING } from '../../theme/spacing';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 export const Input = ({ label, error, icon, secureTextEntry, ...props }) => {
@@ -12,12 +11,12 @@ export const Input = ({ label, error, icon, secureTextEntry, ...props }) => {
   return (
     <View style={styles.container}>
       <View style={[styles.inputWrapper, isFocused && styles.focusedWrapper, error && styles.errorWrapper]}>
-        {icon && <Icon name={icon} size={22} color={isFocused ? COLORS.primary : COLORS.textMuted} style={styles.leftIcon} />}
+        {icon && <Icon name={icon} size={22} color={isFocused ? '#FFD700' : '#888888'} style={styles.leftIcon} />}
         
         <TextInput
           style={styles.input}
           placeholder={label}
-          placeholderTextColor={COLORS.textMuted}
+          placeholderTextColor="#888888"
           secureTextEntry={hidden}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
@@ -26,7 +25,7 @@ export const Input = ({ label, error, icon, secureTextEntry, ...props }) => {
 
         {secureTextEntry && (
           <TouchableOpacity onPress={() => setHidden(!hidden)} hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
-            <Icon name={hidden ? 'eye-outline' : 'eye-off-outline'} size={20} color={COLORS.textMuted} />
+            <Icon name={hidden ? 'eye-outline' : 'eye-off-outline'} size={20} color="#888888" />
           </TouchableOpacity>
         )}
       </View>
@@ -36,20 +35,20 @@ export const Input = ({ label, error, icon, secureTextEntry, ...props }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { marginBottom: SPACING.md },
+  container: { marginBottom: 16 },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(20, 20, 20, 0.85)',
-    borderRadius: 8,
+    backgroundColor: 'rgba(18, 18, 18, 0.7)', // Dark semi-transparent
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: '#333333',
     paddingHorizontal: SPACING.md,
-    height: 54,
+    height: 56,
   },
-  focusedWrapper: { borderColor: COLORS.primary },
-  errorWrapper: { borderColor: COLORS.error },
-  leftIcon: { marginRight: SPACING.sm },
-  input: { flex: 1, ...TYPOGRAPHY.body1, color: COLORS.text, height: '100%' },
-  errorText: { ...TYPOGRAPHY.caption, color: COLORS.error, marginTop: 4, marginLeft: 4 },
+  focusedWrapper: { borderColor: '#FFD700', backgroundColor: 'rgba(25, 25, 25, 0.9)' },
+  errorWrapper: { borderColor: '#FF4444' },
+  leftIcon: { marginRight: 12 },
+  input: { flex: 1, ...TYPOGRAPHY.body1, color: '#FFFFFF', height: '100%', fontSize: 15 },
+  errorText: { ...TYPOGRAPHY.caption, color: '#FF4444', marginTop: 4, marginLeft: 4 },
 });
