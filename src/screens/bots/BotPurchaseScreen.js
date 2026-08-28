@@ -1,83 +1,152 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
-import { COLORS } from '../../theme/colors';
-import { TYPOGRAPHY } from '../../theme/typography';
-import { SPACING, RADIUS } from '../../theme/spacing';
-import { Card } from '../../components/common/Card';
-import { Badge } from '../../components/common/Badge';
-import { Button } from '../../components/common/Button';
+﻿import React from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCurrency } from '../../context/CurrencyContext';
 
+const COLORS = {
+  bg: '#0B0E11',
+  card: '#12161A',
+  border: '#1E2329',
+  gold: '#FFD700',
+  goldMuted: 'rgba(255, 215, 0, 0.1)',
+  white: '#FFFFFF',
+  grey: '#A0A0A0',
+  green: '#00C853',
+};
+
 const AVAILABLE_BOTS = [
-  { id: 1, name: 'KTS Scalper Pro', description: 'Automated scalping on EURUSD, GBPUSD', price: 99, monthly: 29, features: ['Auto Trade', '85% Win Rate', '24/7 Trading', 'Risk Management'] },
-  { id: 2, name: 'KTS Swing Master', description: 'Swing trading on Gold & Indices', price: 149, monthly: 49, features: ['Swing Strategy', 'Multi-Asset', 'Drawdown Protection', 'Weekly Reports'] },
-  { id: 3, name: 'KTS Crypto Hunter', description: 'Crypto trading bot for BTC, ETH', price: 199, monthly: 59, features: ['24/7 Crypto', 'Martingale Off', 'DCA Mode', 'Portfolio Track'] },
+  { 
+    id: 1, 
+    name: 'KTS Scalper Pro', 
+    description: 'High-frequency scalping on EURUSD, GBPUSD', 
+    price: 99, 
+    monthly: 29, 
+    features: ['Auto Trade Execution', '85% Historical Win Rate', '24/5 Forex Trading', 'Dynamic Risk Management'],
+    popular: true
+  },
+  { 
+    id: 2, 
+    name: 'KTS Swing Master', 
+    description: 'Long-term swing trading on Gold & Indices', 
+    price: 149, 
+    monthly: 49, 
+    features: ['Swing Trend Strategy', 'Multi-Asset Support', 'Drawdown Protection', 'Weekly Performance Reports'] 
+  },
+  { 
+    id: 3, 
+    name: 'KTS Crypto Hunter', 
+    description: '24/7 Crypto trading bot for BTC, ETH', 
+    price: 199, 
+    monthly: 59, 
+    features: ['24/7 Crypto Market', 'Martingale Safety Off', 'DCA Mode Available', 'Real-time Portfolio Track'] 
+  },
 ];
 
 export const BotPurchaseScreen = ({ navigation }) => {
   const { formatAmount } = useCurrency();
+  const insets = useSafeAreaInsets();
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.title}>Available Bots</Text>
-      <Text style={styles.subtitle}>Choose a bot that fits your trading style</Text>
+    <View style={styles.container}>
+      <ScrollView 
+        contentContainerStyle={[styles.content, { paddingTop: insets.top + 10, paddingBottom: insets.bottom + 40 }]}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.header}>
+          <Text style={styles.title}>Bot Store</Text>
+          <Text style={styles.subtitle}>Supercharge your trading with our battle-tested AI bots</Text>
+        </View>
 
-      {AVAILABLE_BOTS.map(bot => (
-        <Card key={bot.id} style={styles.botCard}>
-          <View style={styles.botHeader}>
-            <View style={styles.botIcon}><Text style={styles.botEmoji}>🤖</Text></View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.botName}>{bot.name}</Text>
-              <Text style={styles.botDesc}>{bot.description}</Text>
-            </View>
-          </View>
-
-          <View style={styles.features}>
-            {bot.features.map((f, i) => (
-              <View key={i} style={styles.featureRow}>
-                <Text style={styles.checkmark}>✓</Text>
-                <Text style={styles.featureText}>{f}</Text>
+        {AVAILABLE_BOTS.map(bot => (
+          <View key={bot.id} style={[styles.botCard, bot.popular && styles.botCardPopular]}>
+            
+            {bot.popular && (
+              <View style={styles.popularBadge}>
+                <Icon name="fire" size={14} color="#0B0E11" />
+                <Text style={styles.popularText}>MOST POPULAR</Text>
               </View>
-            ))}
-          </View>
+            )}
 
-          <View style={styles.priceRow}>
-            <View>
-              <Text style={styles.priceLabel}>One-time</Text>
-              <Text style={styles.price}>{formatAmount(bot.price)}</Text>
+            <View style={styles.cardHeader}>
+              <View style={styles.iconContainer}>
+                <Icon name="robot-outline" size={32} color={COLORS.gold} />
+              </View>
+              <View style={styles.titleContainer}>
+                <Text style={styles.botName}>{bot.name}</Text>
+                <Text style={styles.botDesc}>{bot.description}</Text>
+              </View>
             </View>
-            <View style={styles.divider} />
-            <View>
-              <Text style={styles.priceLabel}>Monthly</Text>
-              <Text style={styles.priceGold}>{formatAmount(bot.monthly)}/mo</Text>
-            </View>
-          </View>
 
-          <Button title={`Get ${bot.name}`} onPress={() => navigation.navigate('BotDetail', { botId: bot.id })} />
-        </Card>
-      ))}
-    </ScrollView>
+            <View style={styles.featuresBox}>
+              {bot.features.map((f, i) => (
+                <View key={i} style={styles.featureRow}>
+                  <Icon name="check-decagram" size={16} color={COLORS.green} style={styles.checkIcon} />
+                  <Text style={styles.featureText}>{f}</Text>
+                </View>
+              ))}
+            </View>
+
+            <View style={styles.pricingRow}>
+              <View style={styles.priceBox}>
+                <Text style={styles.priceLabel}>Lifetime License</Text>
+                <Text style={styles.priceAmount}>{formatAmount(bot.price)}</Text>
+              </View>
+              <View style={styles.priceDivider} />
+              <View style={styles.priceBox}>
+                <Text style={styles.priceLabel}>Monthly Rent</Text>
+                <Text style={styles.priceAmountGold}>{formatAmount(bot.monthly)}<Text style={styles.perMo}>/mo</Text></Text>
+              </View>
+            </View>
+
+            <TouchableOpacity 
+              style={styles.buyBtn} 
+              activeOpacity={0.8}
+              onPress={() => navigation.navigate('BotDetail', { botId: bot.id })}
+            >
+              <Text style={styles.buyBtnText}>View Details & Subscribe</Text>
+              <Icon name="arrow-right" size={18} color="#0B0E11" />
+            </TouchableOpacity>
+          </View>
+        ))}
+      </ScrollView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.black },
-  content: { padding: SPACING.screen, paddingBottom: 40 },
-  title: { ...TYPOGRAPHY.h2, color: COLORS.white, marginBottom: 8 },
-  subtitle: { ...TYPOGRAPHY.body2, color: COLORS.silver, marginBottom: SPACING.xl },
-  botCard: { marginBottom: SPACING.xl },
-  botHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: SPACING.lg },
-  botIcon: { width: 56, height: 56, borderRadius: 28, backgroundColor: COLORS.goldMuted, alignItems: 'center', justifyContent: 'center', marginRight: SPACING.md },
-  botEmoji: { fontSize: 26 },
-  botName: { ...TYPOGRAPHY.h3, color: COLORS.gold },
-  botDesc: { ...TYPOGRAPHY.body3, color: COLORS.silver, marginTop: 4 },
-  features: { marginBottom: SPACING.lg },
-  featureRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 4, gap: 8 },
-  checkmark: { color: COLORS.gold, fontWeight: '700', fontSize: 16 },
-  featureText: { ...TYPOGRAPHY.body2, color: COLORS.silver },
-  priceRow: { flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center', backgroundColor: COLORS.darkSurface, borderRadius: RADIUS.md, padding: SPACING.lg, marginBottom: SPACING.lg },
-  divider: { width: 1, height: 40, backgroundColor: COLORS.darkBorder },
-  priceLabel: { ...TYPOGRAPHY.caption, color: COLORS.grey, textAlign: 'center' },
-  price: { ...TYPOGRAPHY.h3, color: COLORS.white, textAlign: 'center', marginTop: 4 },
-  priceGold: { ...TYPOGRAPHY.h3, color: COLORS.gold, textAlign: 'center', marginTop: 4 },
+  container: { flex: 1, backgroundColor: COLORS.bg },
+  content: { padding: 16 },
+  
+  header: { paddingHorizontal: 4, marginBottom: 24 },
+  title: { fontSize: 28, color: COLORS.white, fontWeight: '800', marginBottom: 6 },
+  subtitle: { fontSize: 14, color: COLORS.grey, lineHeight: 22 },
+
+  botCard: { backgroundColor: '#12161A', borderRadius: 16, padding: 20, marginBottom: 24, borderWidth: 1, borderColor: '#1E2329', position: 'relative' },
+  botCardPopular: { borderColor: 'rgba(255, 215, 0, 0.4)' },
+  
+  popularBadge: { position: 'absolute', top: -12, right: 20, backgroundColor: COLORS.gold, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 12, gap: 4, zIndex: 10 },
+  popularText: { fontSize: 10, fontWeight: '800', color: '#0B0E11', letterSpacing: 0.5 },
+
+  cardHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 20 },
+  iconContainer: { width: 56, height: 56, borderRadius: 16, backgroundColor: COLORS.goldMuted, alignItems: 'center', justifyContent: 'center', marginRight: 16, borderWidth: 1, borderColor: 'rgba(255,215,0,0.2)' },
+  titleContainer: { flex: 1 },
+  botName: { fontSize: 20, color: COLORS.white, fontWeight: '800', marginBottom: 4 },
+  botDesc: { fontSize: 13, color: COLORS.grey, lineHeight: 18 },
+
+  featuresBox: { marginBottom: 20, paddingHorizontal: 4 },
+  featureRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
+  checkIcon: { marginRight: 10 },
+  featureText: { fontSize: 14, color: '#EAEAEA', fontWeight: '500' },
+
+  pricingRow: { flexDirection: 'row', backgroundColor: '#0B0E11', borderRadius: 12, padding: 16, marginBottom: 20, borderWidth: 1, borderColor: COLORS.border },
+  priceBox: { flex: 1, alignItems: 'center' },
+  priceDivider: { width: 1, height: '100%', backgroundColor: COLORS.border, marginHorizontal: 10 },
+  priceLabel: { fontSize: 11, color: COLORS.grey, fontWeight: '600', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 },
+  priceAmount: { fontSize: 20, color: COLORS.white, fontWeight: '800' },
+  priceAmountGold: { fontSize: 20, color: COLORS.gold, fontWeight: '800' },
+  perMo: { fontSize: 14, color: COLORS.grey, fontWeight: '600' },
+
+  buyBtn: { backgroundColor: COLORS.gold, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 14, borderRadius: 12, gap: 8 },
+  buyBtnText: { color: '#0B0E11', fontSize: 16, fontWeight: '800' },
 });

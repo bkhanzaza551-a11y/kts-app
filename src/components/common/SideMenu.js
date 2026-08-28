@@ -1,16 +1,18 @@
 ﻿import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Animated, Dimensions, TouchableWithoutFeedback } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Animated, Dimensions, Pressable, Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useSelector, useDispatch } from 'react-redux';
+import { useNavigation } from '@react-navigation/native';
 import { logout } from '../../store/authSlice';
 
 const { width, height } = Dimensions.get('window');
 const MENU_WIDTH = width * 0.75;
 
-export const SideMenu = ({ isVisible, onClose, navigation }) => {
+export const SideMenu = ({ isVisible, onClose }) => {
   const insets = useSafeAreaInsets();
   const dispatch = useDispatch();
+  const navigation = useNavigation();
   const slideAnim = useRef(new Animated.Value(-MENU_WIDTH)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const { user } = useSelector(s => s.auth);
@@ -41,28 +43,47 @@ export const SideMenu = ({ isVisible, onClose, navigation }) => {
   ];
 
   const handlePress = (item) => {
+    triggerHaptic('light');
     onClose();
     if (item.screen) {
-      navigation.navigate('More', { screen: item.screen });
+      setTimeout(() => {
+        navigation.navigate('More', { screen: item.screen });
+      }, 100);
     } else {
-      alert("Support portal will be available soon!");
+      Alert.alert("Coming Soon", "Support portal will be available soon!");
     }
   };
 
   const handleLogout = () => {
+    Alert.alert(
+      "Log Out",
+      "Are you sure you want to log out?",
+      [
+        { text: "No", style: "cancel" },
+        { 
+          text: "Yes", 
+          style: "destructive",
+          onPress: () => {
+            triggerHaptic('light');
     onClose();
-    dispatch(logout());
+            setTimeout(() => {
+              dispatch(logout());
+            }, 100);
+          }
+        }
+      ]
+    );
   };
 
   return (
     <View style={[StyleSheet.absoluteFill, { zIndex: 999 }]} pointerEvents={isVisible ? 'auto' : 'none'}>
       {/* Dark Backdrop */}
-      <TouchableWithoutFeedback onPress={onClose}>
+      <Pressable style={StyleSheet.absoluteFill} onPress={onClose}>
         <Animated.View style={[styles.backdrop, { opacity: fadeAnim }]} />
-      </TouchableWithoutFeedback>
+      </Pressable>
 
       {/* Sliding Menu */}
-      <Animated.View style={[styles.menuContainer, { transform: [{ translateX: slideAnim }], paddingTop: insets.top + 20 }]}>
+      <Animated.View style={[styles.menuContainer, { transform: [{ translateX: slideAnim }], paddingTop: insets.top + 20 }]} pointerEvents="box-none">
         
         {/* Profile Header */}
         <View style={styles.profileHeader}>
@@ -84,7 +105,12 @@ export const SideMenu = ({ isVisible, onClose, navigation }) => {
         {/* Menu Items */}
         <View style={styles.menuItemsList}>
           {menuItems.map((item, index) => (
-            <TouchableOpacity key={index} style={styles.menuItem} onPress={() => handlePress(item)}>
+            <TouchableOpacity 
+              key={index} 
+              style={styles.menuItem} 
+              activeOpacity={0.7}
+              onPress={() => handlePress(item)}
+            >
               <Icon name={item.icon} size={22} color="#A0A0A0" style={styles.menuIcon} />
               <Text style={styles.menuText}>{item.title}</Text>
               <Icon name="chevron-right" size={20} color="#333" />
@@ -94,7 +120,7 @@ export const SideMenu = ({ isVisible, onClose, navigation }) => {
 
         {/* Bottom Actions */}
         <View style={[styles.bottomActions, { paddingBottom: insets.bottom > 0 ? insets.bottom + 20 : 30 }]}>
-          <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
+          <TouchableOpacity style={styles.logoutBtn} activeOpacity={0.7} onPress={handleLogout}>
             <Icon name="logout" size={22} color="#FF4444" />
             <Text style={styles.logoutText}>Log Out</Text>
           </TouchableOpacity>
@@ -121,7 +147,7 @@ const styles = StyleSheet.create({
   divider: { height: 1, backgroundColor: '#1E2329', marginHorizontal: 20, marginBottom: 15 },
   
   menuItemsList: { flex: 1, paddingHorizontal: 15 },
-  menuItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 16, paddingHorizontal: 5 },
+  menuItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 16, paddingHorizontal: 5, zIndex: 10 },
   menuIcon: { marginRight: 15 },
   menuText: { flex: 1, fontSize: 15, color: '#EAEAEA', fontWeight: '500' },
   
@@ -130,3 +156,5 @@ const styles = StyleSheet.create({
   logoutText: { fontSize: 15, color: '#FF4444', fontWeight: '700' },
   appVersion: { fontSize: 11, color: '#666', marginTop: 15 }
 });
+
+

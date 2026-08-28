@@ -1,5 +1,8 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { aiChatApi } from '../api/aiChat';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const MESSAGES_KEY = '@kts_ai_chat_messages';
 
 export const sendMessage = createAsyncThunk(
   'aiChat/sendMessage',
@@ -15,6 +18,15 @@ export const sendMessage = createAsyncThunk(
   }
 );
 
+export const loadChatHistory = createAsyncThunk('aiChat/loadHistory', async (_, { rejectWithValue }) => {
+  try {
+    const stored = await AsyncStorage.getItem(MESSAGES_KEY);
+    return stored ? JSON.parse(stored) : [];
+  } catch (err) {
+    return [];
+  }
+});
+
 export const fetchChatStatus = createAsyncThunk('aiChat/status', async (_, { rejectWithValue }) => {
   try {
     const res = await aiChatApi.status();
@@ -23,6 +35,13 @@ export const fetchChatStatus = createAsyncThunk('aiChat/status', async (_, { rej
     return rejectWithValue(err.message);
   }
 });
+
+const saveMessages = async (messages) => {
+  try {
+    const toSave = messages.slice(-50);
+    await AsyncStorage.setItem(MESSAGES_KEY, JSON.stringify(toSave));
+  } catch (e) {}
+};
 
 const aiChatSlice = createSlice({
   name: 'aiChat',
@@ -33,13 +52,14 @@ const aiChatSlice = createSlice({
     error: null,
   },
   reducers: {
-    clearMessages: (state) => { state.messages = []; },
+    clearMessages: (state) => { state.messages = []; AsyncStorage.removeItem(MESSAGES_KEY); },
     addUserMessage: (state, action) => {
       state.messages.push({ role: 'user', content: action.payload, timestamp: new Date().toISOString() });
     },
   },
   extraReducers: (builder) => {
     builder
+      .addCase(loadChatHistory.fulfilled, (state, action) => { state.messages = action.payload || []; })
       .addCase(sendMessage.pending, (state) => { state.loading = true; state.error = null; })
       .addCase(sendMessage.fulfilled, (state, action) => {
         state.loading = false;
@@ -50,6 +70,7 @@ const aiChatSlice = createSlice({
           if (action.payload.response) {
             state.messages.push({ role: 'assistant', content: action.payload.response, timestamp: action.payload.timestamp, model: action.payload.model });
           }
+          saveMessages(state.messages);
         }
       })
       .addCase(sendMessage.rejected, (state, action) => { state.loading = false; state.error = action.payload; })

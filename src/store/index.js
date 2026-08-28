@@ -1,4 +1,4 @@
-import { configureStore } from '@reduxjs/toolkit';
+﻿import { configureStore } from '@reduxjs/toolkit';
 import authReducer from './authSlice';
 import signalReducer from './signalSlice';
 import chatReducer from './chatSlice';
@@ -8,6 +8,7 @@ import educationReducer from './educationSlice';
 import notificationReducer from './notificationSlice';
 import notificationSettingsReducer from './notificationSettingsSlice';
 import aiChatReducer from './aiChatSlice';
+import appSettingsReducer from './appSettingsSlice';
 
 export const store = configureStore({
   reducer: {
@@ -20,7 +21,13 @@ export const store = configureStore({
     notifications: notificationReducer,
     notificationSettings: notificationSettingsReducer,
     aiChat: aiChatReducer,
+    appSettings: appSettingsReducer,
   },
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware({
+      immutableCheck: { warnAfter: 500 },
+      serializableCheck: { warnAfter: 500 },
+    }),
 });
 
 export default store;

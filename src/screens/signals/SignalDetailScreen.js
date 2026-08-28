@@ -1,265 +1,258 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
+﻿import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Dimensions } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
+import { WebView } from 'react-native-webview';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { COLORS } from '../../theme/colors';
-import { TYPOGRAPHY } from '../../theme/typography';
-import { SPACING, RADIUS, SHADOW } from '../../theme/spacing';
-import { Card } from '../../components/common/Card';
-import { Badge } from '../../components/common/Badge';
-import { LiveMarketBadge } from '../../components/signals/LiveMarketBadge';
-import { TradingViewChart } from '../../components/signals/TradingViewChart';
 import { useCurrency } from '../../context/CurrencyContext';
-import { formatPrice, formatPips, formatDate } from '../../utils/formatters';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Skeleton } from '../../components/common/Skeleton';
 import client from '../../api/client';
 
-export const SignalDetailScreen = ({ route }) => {
+const { width } = Dimensions.get('window');
+
+export const SignalDetailScreen = ({ route, navigation }) => {
   const { signalId } = route.params;
   const [signal, setSignal] = useState(null);
-  const [error, setError] = useState(false);
-  const [chartVisible, setChartVisible] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [chartLoading, setChartLoading] = useState(true);
   const { formatAmount } = useCurrency();
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
-    client.get(`/signals/${signalId}`)
-      .then(r => setSignal(r.data.data))
-      .catch(() => setError(true));
+    fetchSignalDetail();
   }, [signalId]);
 
-  if (error) return (
-    <View style={styles.loadingContainer}>
-      <Text style={styles.loadingText}>Failed to load signal</Text>
-    </View>
-  );
+  const fetchSignalDetail = async () => {
+    setIsLoading(true);
+    try {
+      const response = await client.get(`/signals/${signalId}`);
+      setSignal(response.data.data);
+    } catch (e) {
+      console.log('Error fetching signal:', e);
+    }
+    setIsLoading(false);
+  };
 
-  if (!signal) return (
-    <View style={styles.loadingContainer}>
-      <ActivityIndicator size="large" color={COLORS.gold} />
-      <Text style={styles.loadingText}>Loading signal...</Text>
-    </View>
-  );
-
-  const isWin = signal.result === 'win';
-  const isLoss = signal.result === 'loss';
-  const resultColor = isWin ? COLORS.green : isLoss ? COLORS.red : COLORS.grey;
-
-  return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      {/* Header */}
-      <View style={styles.headerRow}>
-        <View style={{ flex: 1 }}>
-          <View style={styles.symbolRow}>
-            <Text style={styles.symbol}>{signal.symbol}</Text>
-            <Badge text={signal.direction?.toUpperCase()} variant={signal.direction} size="large" />
-          </View>
-          <Text style={styles.title}>{signal.title}</Text>
+  if (isLoading || !signal) {
+    return (
+      <View style={[styles.container, { paddingTop: insets.top }]}>
+        <View style={styles.header}>
+          <Icon name="arrow-left" size={24} color={COLORS.white} />
+        </View>
+        <View style={{ padding: 16, gap: 16 }}>
+          <Skeleton width={150} height={32} borderRadius={8} />
+          <Skeleton width="100%" height={320} borderRadius={16} />
+          <Skeleton width="100%" height={150} borderRadius={16} />
         </View>
       </View>
+    );
+  }
 
-      {/* Live Market Data */}
-      {signal.status === 'active' && (
-        <View style={styles.section}>
-          <LiveMarketBadge symbol={signal.symbol} />
-        </View>
-      )}
+  const isBuy = signal.direction?.toLowerCase() === 'buy';
+  const isWin = signal.result?.toLowerCase() === 'win';
+  const isLoss = signal.result?.toLowerCase() === 'loss';
+  const isActive = signal.status?.toLowerCase() === 'active';
 
-      {/* Chart Button */}
-      <TouchableOpacity style={styles.chartBtn} onPress={() => setChartVisible(true)}>
-        <View style={styles.chartBtnIcon}>
-          <Text style={styles.chartBtnEmoji}>📈</Text>
-        </View>
-        <View style={styles.chartBtnContent}>
-          <Text style={styles.chartBtnTitle}>View Live Chart</Text>
-          <Text style={styles.chartBtnSub}>TradingView interactive chart</Text>
-        </View>
-        <Text style={styles.chartBtnArrow}>→</Text>
-      </TouchableOpacity>
+  // Smart symbol resolver for TradingView
+  const tvSymbol = signal.symbol?.includes('USDT') || signal.symbol?.includes('BTC') || signal.symbol?.includes('ETH') 
+    ? `BINANCE:${signal.symbol}` 
+    : `OANDA:${signal.symbol}`;
 
-      {/* Price Levels */}
-      <Card style={styles.priceCard}>
-        <Text style={styles.cardTitle}>Price Levels</Text>
-        <View style={styles.priceGrid}>
-          <View style={styles.priceItem}>
-            <View style={[styles.priceDot, { backgroundColor: COLORS.gold }]} />
-            <Text style={styles.priceLabel}>Entry</Text>
-            <Text style={styles.priceValue}>{formatAmount(signal.entry_price)}</Text>
-          </View>
-          <View style={styles.priceItem}>
-            <View style={[styles.priceDot, { backgroundColor: COLORS.green }]} />
-            <Text style={styles.priceLabel}>Take Profit</Text>
-            <Text style={[styles.priceValue, { color: COLORS.green }]}>{formatAmount(signal.take_profit)}</Text>
-          </View>
-          <View style={styles.priceItem}>
-            <View style={[styles.priceDot, { backgroundColor: COLORS.red }]} />
-            <Text style={styles.priceLabel}>Stop Loss</Text>
-            <Text style={[styles.priceValue, { color: COLORS.red }]}>{formatAmount(signal.stop_loss)}</Text>
-          </View>
-        </View>
+  const tradingViewHtml = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+      <style>
+        body,html{margin:0;padding:0;height:100%;background-color:#0B0E11;}
+        .tradingview-widget-container{height:100%;width:100%;}
+      </style>
+    </head>
+    <body>
+      <div class="tradingview-widget-container">
+        <div id="tradingview_chart" style="height:100%;width:100%"></div>
+        <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+        <script type="text/javascript">
+          new TradingView.widget({
+            "autosize": true,
+            "symbol": "${tvSymbol}",
+            "interval": "15",
+            "timezone": "Etc/UTC",
+            "theme": "dark",
+            "style": "1",
+            "locale": "en",
+            "enable_publishing": false,
+            "backgroundColor": "#12161A",
+            "gridColor": "#1E2329",
+            "hide_top_toolbar": true,
+            "hide_legend": false,
+            "save_image": false,
+            "container_id": "tradingview_chart",
+            "toolbar_bg": "#12161A"
+          });
+        </script>
+      </div>
+    </body>
+    </html>
+  `;
 
-        {/* Risk/Reward */}
-        {signal.entry_price && signal.take_profit && signal.stop_loss && (() => {
-          const entry = parseFloat(signal.entry_price);
-          const tp = parseFloat(signal.take_profit);
-          const sl = parseFloat(signal.stop_loss);
-          const reward = Math.abs(tp - entry);
-          const risk = Math.abs(entry - sl);
-          const rr = risk > 0 ? (reward / risk).toFixed(1) : '--';
-          return (
-            <View style={styles.rrRow}>
-              <Text style={styles.rrLabel}>Risk:Reward</Text>
-              <Text style={styles.rrValue}>1:{rr}</Text>
-            </View>
-          );
-        })()}
-      </Card>
+  return (
+    <View style={styles.container}>
+      <View style={[styles.navbar, { paddingTop: insets.top + 10 }]}>
+        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
+          <Icon name="arrow-left" size={24} color={COLORS.white} />
+        </TouchableOpacity>
+        <Text style={styles.navTitle}>Trade Setup</Text>
+        <View style={{ width: 24 }} />
+      </View>
 
-      {/* Result Card */}
-      <Card style={styles.resultCard}>
-        <View style={styles.resultHeader}>
-          <Text style={styles.cardTitle}>Signal Result</Text>
-          <View style={[styles.resultBadge, { backgroundColor: resultColor + '20' }]}>
-            <Text style={[styles.resultBadgeText, { color: resultColor }]}>
-              {signal.result?.toUpperCase() || 'PENDING'}
-            </Text>
-          </View>
-        </View>
-
-        <View style={styles.resultGrid}>
-          <View style={styles.resultItem}>
-            <Text style={styles.resultLabel}>Status</Text>
-            <Badge text={signal.status?.toUpperCase()} variant={signal.status} />
-          </View>
-          {signal.pips_result != null && (
-            <View style={styles.resultItem}>
-              <Text style={styles.resultLabel}>Pips</Text>
-              <Text style={[styles.resultPips, { color: signal.pips_result >= 0 ? COLORS.green : COLORS.red }]}>
-                {signal.pips_result >= 0 ? '+' : ''}{signal.pips_result}
+      <ScrollView 
+        contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 40 }]}
+        showsVerticalScrollIndicator={false}
+      >
+        
+        {/* Signal Header */}
+        <View style={styles.signalHeader}>
+          <View style={styles.titleRow}>
+            <Text style={styles.symbol}>{signal.symbol}</Text>
+            <View style={[styles.dirBadge, { backgroundColor: isBuy ? 'rgba(0,200,83,0.15)' : 'rgba(255,68,68,0.15)' }]}>
+              <Icon name={isBuy ? 'trending-up' : 'trending-down'} size={18} color={isBuy ? COLORS.green : COLORS.red} />
+              <Text style={[styles.dirText, { color: isBuy ? COLORS.green : COLORS.red }]}>
+                {signal.direction?.toUpperCase()}
               </Text>
             </View>
-          )}
-          <View style={styles.resultItem}>
-            <Text style={styles.resultLabel}>Created</Text>
-            <Text style={styles.resultValue}>{formatDate(signal.created_at, 'datetime')}</Text>
+            <View style={[styles.statusBadge, { backgroundColor: isActive ? 'rgba(255,215,0,0.15)' : 'rgba(160,160,160,0.15)' }]}>
+              <Text style={[styles.statusText, { color: isActive ? COLORS.gold : COLORS.grey }]}>
+                {signal.status?.toUpperCase()}
+              </Text>
+            </View>
           </View>
-          {signal.closed_at && (
-            <View style={styles.resultItem}>
-              <Text style={styles.resultLabel}>Closed</Text>
-              <Text style={styles.resultValue}>{formatDate(signal.closed_at, 'datetime')}</Text>
+          <Text style={styles.timeText}>
+            {signal.created_at ? new Date(signal.created_at).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' }) : 'Recently Added'}
+          </Text>
+        </View>
+
+        {/* Dynamic TradingView Chart */}
+        <View style={styles.chartWrapper}>
+          {chartLoading && (
+            <View style={styles.chartLoader}>
+              <ActivityIndicator size="large" color={COLORS.gold} />
             </View>
           )}
+          <WebView 
+            source={{ html: tradingViewHtml }} 
+            style={styles.webView}
+            scrollEnabled={false}
+            bounces={false}
+            onLoadEnd={() => setChartLoading(false)}
+          />
         </View>
-      </Card>
 
-      {/* Description */}
-      {signal.description && (
-        <Card style={styles.descCard}>
-          <Text style={styles.cardTitle}>Analysis</Text>
-          <Text style={styles.descText}>{signal.description}</Text>
-        </Card>
-      )}
+        {/* Price Levels Card */}
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Execution Levels</Text>
+          
+          <View style={styles.levelRow}>
+            <View style={[styles.iconBox, { backgroundColor: 'rgba(255, 215, 0, 0.1)' }]}>
+              <Icon name="ray-start-arrow" size={20} color={COLORS.gold} />
+            </View>
+            <View style={styles.levelInfo}>
+              <Text style={styles.levelLabel}>Entry Price</Text>
+              <Text style={[styles.levelValue, { color: COLORS.white }]}>{formatAmount(signal.entry_price)}</Text>
+            </View>
+          </View>
 
-      {/* Categories */}
-      {signal.categories?.length > 0 && (
-        <View style={styles.catRow}>
-          {signal.categories.map(c => (
-            <Badge key={c.id} text={c.name} variant="default" />
-          ))}
+          <View style={styles.levelDivider} />
+
+          <View style={styles.levelRow}>
+            <View style={[styles.iconBox, { backgroundColor: 'rgba(0, 200, 83, 0.1)' }]}>
+              <Icon name="flag-checkered" size={20} color={COLORS.green} />
+            </View>
+            <View style={styles.levelInfo}>
+              <Text style={styles.levelLabel}>Take Profit</Text>
+              <Text style={[styles.levelValue, { color: COLORS.green }]}>{formatAmount(signal.take_profit)}</Text>
+            </View>
+          </View>
+
+          <View style={styles.levelDivider} />
+
+          <View style={styles.levelRow}>
+            <View style={[styles.iconBox, { backgroundColor: 'rgba(255, 68, 68, 0.1)' }]}>
+              <Icon name="shield-remove-outline" size={20} color={COLORS.red} />
+            </View>
+            <View style={styles.levelInfo}>
+              <Text style={styles.levelLabel}>Stop Loss</Text>
+              <Text style={[styles.levelValue, { color: COLORS.red }]}>{formatAmount(signal.stop_loss)}</Text>
+            </View>
+          </View>
         </View>
-      )}
 
-      {/* TradingView Chart Modal */}
-      <TradingViewChart
-        symbol={signal.symbol}
-        visible={chartVisible}
-        onClose={() => setChartVisible(false)}
-      />
-    </ScrollView>
+        {/* Result & Analysis */}
+        {(signal.result && signal.result !== 'pending') || signal.description ? (
+          <View style={styles.card}>
+            {signal.result && signal.result !== 'pending' && (
+              <View style={styles.resultBox}>
+                <Text style={styles.resultLabel}>Trade Result</Text>
+                <View style={[styles.resultPill, { backgroundColor: isWin ? 'rgba(0,200,83,0.1)' : isLoss ? 'rgba(255,68,68,0.1)' : 'rgba(33,150,243,0.1)' }]}>
+                  <Text style={[styles.resultText, { color: isWin ? COLORS.green : isLoss ? COLORS.red : '#2196F3' }]}>
+                    {signal.result?.toUpperCase()} {signal.pips_result != null ? `(${signal.pips_result > 0 ? '+' : ''}${signal.pips_result} pips)` : ''}
+                  </Text>
+                </View>
+              </View>
+            )}
+
+            {signal.description && (
+              <View style={[styles.analysisBox, signal.result && signal.result !== 'pending' ? { borderTopWidth: 1, borderTopColor: COLORS.border, paddingTop: 16 } : {}]}>
+                <Text style={styles.cardTitle}>Expert Analysis</Text>
+                <Text style={styles.descText}>{signal.description}</Text>
+              </View>
+            )}
+          </View>
+        ) : null}
+
+      </ScrollView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.black },
-  content: { padding: SPACING.screen, paddingBottom: 40 },
-  loadingContainer: { flex: 1, backgroundColor: COLORS.black, alignItems: 'center', justifyContent: 'center' },
-  loadingText: { ...TYPOGRAPHY.body2, color: COLORS.grey, marginTop: SPACING.md },
+  container: { flex: 1, backgroundColor: '#0B0E11' },
+  
+  navbar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: '#1E2329', backgroundColor: '#12161A' },
+  backBtn: { padding: 4 },
+  navTitle: { fontSize: 18, color: COLORS.white, fontWeight: '700' },
+  
+  content: { padding: 16 },
 
-  headerRow: { marginBottom: SPACING.xl },
-  symbolRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 6 },
-  symbol: { ...TYPOGRAPHY.h1, color: COLORS.gold },
-  title: { ...TYPOGRAPHY.body2, color: COLORS.silver },
+  signalHeader: { marginBottom: 20 },
+  titleRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 10, marginBottom: 8 },
+  symbol: { fontSize: 28, color: COLORS.white, fontWeight: '800' },
+  dirBadge: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12, gap: 6 },
+  dirText: { fontSize: 14, fontWeight: '800', letterSpacing: 0.5 },
+  statusBadge: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 12 },
+  statusText: { fontSize: 12, fontWeight: '800' },
+  timeText: { fontSize: 13, color: COLORS.grey, fontWeight: '500' },
 
-  section: { marginBottom: SPACING.md },
+  chartWrapper: { height: 350, backgroundColor: '#12161A', borderRadius: 16, overflow: 'hidden', borderWidth: 1, borderColor: '#1E2329', marginBottom: 20, position: 'relative' },
+  webView: { flex: 1, backgroundColor: '#12161A' },
+  chartLoader: { ...StyleSheet.absoluteFillObject, justifyContent: 'center', alignItems: 'center', backgroundColor: '#12161A', zIndex: 10 },
 
-  chartBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: COLORS.darkCard,
-    borderRadius: RADIUS.lg,
-    padding: SPACING.lg,
-    borderWidth: 1,
-    borderColor: COLORS.darkBorder,
-    marginBottom: SPACING.md,
-  },
-  chartBtnIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    backgroundColor: COLORS.goldMuted,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: SPACING.md,
-  },
-  chartBtnEmoji: { fontSize: 22 },
-  chartBtnContent: { flex: 1 },
-  chartBtnTitle: { ...TYPOGRAPHY.body1, color: COLORS.white, fontWeight: '600' },
-  chartBtnSub: { ...TYPOGRAPHY.body3, color: COLORS.grey, marginTop: 2 },
-  chartBtnArrow: { color: COLORS.grey, fontSize: 16 },
+  card: { backgroundColor: '#12161A', borderRadius: 16, padding: 20, marginBottom: 20, borderWidth: 1, borderColor: '#1E2329' },
+  cardTitle: { fontSize: 16, color: COLORS.white, fontWeight: '700', marginBottom: 16 },
 
-  priceCard: { marginBottom: SPACING.md },
-  cardTitle: { ...TYPOGRAPHY.h4, color: COLORS.white, marginBottom: SPACING.md },
-  priceGrid: { gap: SPACING.md },
-  priceItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: COLORS.darkSurface,
-    borderRadius: RADIUS.sm,
-    padding: SPACING.md,
-    gap: 10,
-  },
-  priceDot: { width: 8, height: 8, borderRadius: 4 },
-  priceLabel: { ...TYPOGRAPHY.body3, color: COLORS.grey, flex: 1 },
-  priceValue: { ...TYPOGRAPHY.h4, color: COLORS.white, fontWeight: '700' },
+  levelRow: { flexDirection: 'row', alignItems: 'center' },
+  iconBox: { width: 44, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginRight: 16 },
+  levelInfo: { flex: 1, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  levelLabel: { fontSize: 14, color: COLORS.grey, fontWeight: '600' },
+  levelValue: { fontSize: 18, fontWeight: '800' },
+  levelDivider: { height: 1, backgroundColor: '#1E2329', marginVertical: 16, marginLeft: 60 },
 
-  rrRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: SPACING.md,
-    paddingTop: SPACING.md,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.darkBorder,
-  },
-  rrLabel: { ...TYPOGRAPHY.body2, color: COLORS.grey },
-  rrValue: { ...TYPOGRAPHY.h4, color: COLORS.gold, fontWeight: '700' },
-
-  resultCard: { marginBottom: SPACING.md },
-  resultHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: SPACING.md },
-  resultBadge: { paddingHorizontal: 12, paddingVertical: 4, borderRadius: RADIUS.full },
-  resultBadgeText: { ...TYPOGRAPHY.caption, fontWeight: '700' },
-  resultGrid: { gap: 0 },
-  resultItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.darkBorder,
-  },
-  resultLabel: { ...TYPOGRAPHY.body2, color: COLORS.silver },
-  resultValue: { ...TYPOGRAPHY.body2, color: COLORS.white, fontWeight: '600' },
-  resultPips: { ...TYPOGRAPHY.h4, fontWeight: '700' },
-
-  descCard: { marginBottom: SPACING.md },
-  descText: { ...TYPOGRAPHY.body2, color: COLORS.silver, lineHeight: 22 },
-
-  catRow: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
+  resultBox: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingBottom: 16 },
+  resultLabel: { fontSize: 16, color: COLORS.white, fontWeight: '700' },
+  resultPill: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 12 },
+  resultText: { fontSize: 14, fontWeight: '800' },
+  
+  analysisBox: {},
+  descText: { fontSize: 14, color: COLORS.grey, lineHeight: 22 }
 });

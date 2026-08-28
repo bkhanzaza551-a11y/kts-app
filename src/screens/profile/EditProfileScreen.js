@@ -1,26 +1,24 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TextInput, Alert, ActivityIndicator } from 'react-native';
-import { useSelector } from 'react-redux';
+﻿import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Alert, TextInput } from 'react-native';
+import { useDispatch, useSelector } from 'react-redux';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { COLORS } from '../../theme/colors';
-import { TYPOGRAPHY } from '../../theme/typography';
-import { SPACING, RADIUS } from '../../theme/spacing';
-import { Card } from '../../components/common/Card';
-import { Button } from '../../components/common/Button';
-import { Badge } from '../../components/common/Badge';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import client from '../../api/client';
+import { triggerHaptic } from '../../utils/haptics';
 
 export const EditProfileScreen = ({ navigation }) => {
   const { user } = useSelector(s => s.auth);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const insets = useSafeAreaInsets();
 
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [demoAccountId, setDemoAccountId] = useState('');
-  const [demoAccountServer, setDemoAccountServer] = useState('');
+  const [demoAccountEmail, setDemoAccountEmail] = useState('');
   const [realAccountId, setRealAccountId] = useState('');
-  const [realAccountServer, setRealAccountServer] = useState('');
-  const [brokerName, setBrokerName] = useState('');
+  const [realAccountEmail, setRealAccountEmail] = useState('');
 
   useEffect(() => {
     loadProfile();
@@ -34,12 +32,11 @@ export const EditProfileScreen = ({ navigation }) => {
       setName(u.name || '');
       setPhone(u.phone || '');
       setDemoAccountId(u.demo_account_id || '');
-      setDemoAccountServer(u.demo_account_server || '');
+      setDemoAccountEmail(u.demo_account_email || '');
       setRealAccountId(u.real_account_id || '');
-      setRealAccountServer(u.real_account_server || '');
-      setBrokerName(u.broker_name || '');
+      setRealAccountEmail(u.real_account_email || '');
     } catch (e) {
-      Alert.alert('Error', 'Failed to load profile');
+      console.log('Error loading profile');
     }
     setLoading(false);
   };
@@ -51,21 +48,23 @@ export const EditProfileScreen = ({ navigation }) => {
     }
 
     setSaving(true);
+    triggerHaptic('light');
     try {
       await client.put('/profile', {
         name: name.trim(),
         phone: phone.trim(),
         demo_account_id: demoAccountId.trim(),
-        demo_account_server: demoAccountServer.trim(),
+        demo_account_email: demoAccountEmail.trim(),
         real_account_id: realAccountId.trim(),
-        real_account_server: realAccountServer.trim(),
-        broker_name: brokerName.trim(),
+        real_account_email: realAccountEmail.trim(),
       });
 
-      Alert.alert('Success', 'Profile updated successfully!', [
+      triggerHaptic('success');
+      Alert.alert('Success', 'Profile completed successfully!', [
         { text: 'OK', onPress: () => navigation.goBack() }
       ]);
     } catch (e) {
+      triggerHaptic('heavy');
       Alert.alert('Error', e.message || 'Failed to update profile');
     }
     setSaving(false);
@@ -73,163 +72,109 @@ export const EditProfileScreen = ({ navigation }) => {
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
         <ActivityIndicator size="large" color={COLORS.gold} />
-        <Text style={styles.loadingText}>Loading profile...</Text>
       </View>
     );
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <View style={styles.avatarSection}>
-        <View style={styles.avatarPlaceholder}>
-          <Text style={styles.avatarText}>{name.charAt(0) || 'U'}</Text>
-        </View>
+    <View style={styles.container}>
+      <View style={[styles.navbar, { paddingTop: insets.top + 10 }]}>
+        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
+          <Icon name="arrow-left" size={24} color={COLORS.white} />
+        </TouchableOpacity>
+        <Text style={styles.navTitle}>Complete Profile</Text>
+        <View style={{ width: 24 }} />
       </View>
 
-      <Card style={styles.card}>
-        <Text style={styles.cardTitle}>Personal Information</Text>
-
-        <View style={styles.field}>
-          <Text style={styles.label}>Full Name *</Text>
-          <TextInput
-            style={styles.input}
-            value={name}
-            onChangeText={setName}
-            placeholder="Enter your name"
-            placeholderTextColor={COLORS.grey}
-          />
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        
+        {/* Info Banner for Demo Accounts */}
+        <View style={styles.infoBanner}>
+          <Icon name="information" size={24} color="#2196F3" />
+          <View style={{ flex: 1, marginLeft: 12 }}>
+            <Text style={styles.bannerTitle}>Why add a Demo Account?</Text>
+            <Text style={styles.bannerText}>Linking a Demo Account is strictly required to test our MT5 AI Bots risk-free. Your bot demo requests will be securely routed to this MT5 demo account.</Text>
+          </View>
         </View>
 
-        <View style={styles.field}>
-          <Text style={styles.label}>Phone Number</Text>
-          <TextInput
-            style={styles.input}
-            value={phone}
-            onChangeText={setPhone}
-            placeholder="+92 300 1234567"
-            placeholderTextColor={COLORS.grey}
-            keyboardType="phone-pad"
-          />
-        </View>
-      </Card>
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Personal Details</Text>
+          
+          <View style={styles.field}>
+            <Text style={styles.label}>Full Name</Text>
+            <TextInput style={styles.input} value={name} onChangeText={setName} placeholder="John Doe" placeholderTextColor="#666" />
+          </View>
 
-      <Card style={styles.card}>
-        <View style={styles.cardHeader}>
-          <Text style={styles.cardTitle}>Trading Account</Text>
-          <Badge text="Optional" variant="default" />
+          <View style={styles.field}>
+            <Text style={styles.label}>Phone Number</Text>
+            <TextInput style={styles.input} value={phone} onChangeText={setPhone} placeholder="+1 234 567 890" placeholderTextColor="#666" keyboardType="phone-pad" />
+          </View>
         </View>
 
-        <View style={styles.field}>
-          <Text style={styles.label}>Broker Name</Text>
-          <TextInput
-            style={styles.input}
-            value={brokerName}
-            onChangeText={setBrokerName}
-            placeholder="e.g. Exness, XM, IC Markets"
-            placeholderTextColor={COLORS.grey}
-          />
+        <View style={styles.card}>
+          <View style={styles.cardHeader}>
+            <Icon name="robot-outline" size={22} color={COLORS.gold} />
+            <Text style={styles.cardTitleLine}>Demo MT5 Account (For Bot Testing)</Text>
+          </View>
+          
+          <View style={styles.field}>
+            <Text style={styles.label}>Demo Account Number</Text>
+            <TextInput style={styles.input} value={demoAccountId} onChangeText={setDemoAccountId} placeholder="e.g. 10023456" placeholderTextColor="#666" keyboardType="numeric" />
+          </View>
+
+          <View style={styles.field}>
+            <Text style={styles.label}>Demo Account Email</Text>
+            <TextInput style={styles.input} value={demoAccountEmail} onChangeText={setDemoAccountEmail} placeholder="Email linked to broker" placeholderTextColor="#666" keyboardType="email-address" autoCapitalize="none" />
+          </View>
         </View>
 
-        <View style={styles.divider}>
-          <View style={styles.dividerLine} />
-          <Text style={styles.dividerText}>DEMO ACCOUNT</Text>
-          <View style={styles.dividerLine} />
+        <View style={styles.card}>
+          <View style={styles.cardHeader}>
+            <Icon name="shield-check" size={22} color="#00C853" />
+            <Text style={styles.cardTitleLine}>Real MT5 Account (For Live Trading)</Text>
+          </View>
+          
+          <View style={styles.field}>
+            <Text style={styles.label}>Real Account Number</Text>
+            <TextInput style={styles.input} value={realAccountId} onChangeText={setRealAccountId} placeholder="e.g. 50023456" placeholderTextColor="#666" keyboardType="numeric" />
+          </View>
+
+          <View style={styles.field}>
+            <Text style={styles.label}>Real Account Email</Text>
+            <TextInput style={styles.input} value={realAccountEmail} onChangeText={setRealAccountEmail} placeholder="Email linked to broker" placeholderTextColor="#666" keyboardType="email-address" autoCapitalize="none" />
+          </View>
         </View>
 
-        <View style={styles.field}>
-          <Text style={styles.label}>Demo Account ID</Text>
-          <TextInput
-            style={styles.input}
-            value={demoAccountId}
-            onChangeText={setDemoAccountId}
-            placeholder="e.g. 12345678"
-            placeholderTextColor={COLORS.grey}
-            keyboardType="numeric"
-          />
-        </View>
+        <TouchableOpacity style={styles.saveBtn} onPress={handleSave} disabled={saving} activeOpacity={0.8}>
+          {saving ? <ActivityIndicator color="#0B0E11" /> : <Text style={styles.saveBtnText}>Save Profile</Text>}
+        </TouchableOpacity>
 
-        <View style={styles.field}>
-          <Text style={styles.label}>Demo Server</Text>
-          <TextInput
-            style={styles.input}
-            value={demoAccountServer}
-            onChangeText={setDemoAccountServer}
-            placeholder="e.g. Exness-MT5Trial"
-            placeholderTextColor={COLORS.grey}
-          />
-        </View>
-
-        <View style={styles.divider}>
-          <View style={styles.dividerLine} />
-          <Text style={styles.dividerText}>REAL ACCOUNT</Text>
-          <View style={styles.dividerLine} />
-        </View>
-
-        <View style={styles.field}>
-          <Text style={styles.label}>Real Account ID</Text>
-          <TextInput
-            style={styles.input}
-            value={realAccountId}
-            onChangeText={setRealAccountId}
-            placeholder="e.g. 87654321"
-            placeholderTextColor={COLORS.grey}
-            keyboardType="numeric"
-          />
-        </View>
-
-        <View style={styles.field}>
-          <Text style={styles.label}>Real Server</Text>
-          <TextInput
-            style={styles.input}
-            value={realAccountServer}
-            onChangeText={setRealAccountServer}
-            placeholder="e.g. Exness-MT5Real"
-            placeholderTextColor={COLORS.grey}
-          />
-        </View>
-      </Card>
-
-      <Button
-        title={saving ? 'Saving...' : 'Save Profile'}
-        onPress={handleSave}
-        disabled={saving}
-        style={styles.saveBtn}
-      />
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.black },
-  content: { padding: SPACING.screen, paddingBottom: 40 },
-  loadingContainer: { flex: 1, backgroundColor: COLORS.black, alignItems: 'center', justifyContent: 'center' },
-  loadingText: { ...TYPOGRAPHY.body2, color: COLORS.grey, marginTop: SPACING.md },
+  container: { flex: 1, backgroundColor: '#0B0E11' },
+  navbar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingBottom: 16, backgroundColor: '#12161A', borderBottomWidth: 1, borderBottomColor: '#1E2329' },
+  navTitle: { fontSize: 18, color: COLORS.white, fontWeight: '700' },
+  content: { padding: 16, paddingBottom: 40 },
+  
+  infoBanner: { flexDirection: 'row', backgroundColor: 'rgba(33, 150, 243, 0.1)', padding: 16, borderRadius: 12, borderWidth: 1, borderColor: 'rgba(33, 150, 243, 0.3)', marginBottom: 20 },
+  bannerTitle: { fontSize: 15, color: '#2196F3', fontWeight: '700', marginBottom: 4 },
+  bannerText: { fontSize: 13, color: '#A0A0A0', lineHeight: 20 },
 
-  avatarSection: { alignItems: 'center', paddingVertical: SPACING.xl, marginBottom: SPACING.md },
-  avatarPlaceholder: { width: 100, height: 100, borderRadius: 50, backgroundColor: COLORS.gold, alignItems: 'center', justifyContent: 'center' },
-  avatarText: { ...TYPOGRAPHY.h1, color: COLORS.black, fontSize: 36 },
+  card: { backgroundColor: '#12161A', padding: 20, borderRadius: 16, marginBottom: 20, borderWidth: 1, borderColor: '#1E2329' },
+  cardHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 16, gap: 10 },
+  cardTitle: { fontSize: 16, color: COLORS.white, fontWeight: '700', marginBottom: 16 },
+  cardTitleLine: { fontSize: 16, color: COLORS.white, fontWeight: '700' },
 
-  card: { marginBottom: SPACING.md },
-  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: SPACING.md },
-  cardTitle: { ...TYPOGRAPHY.h4, color: COLORS.white, marginBottom: SPACING.md },
-  field: { marginBottom: SPACING.md },
-  label: { ...TYPOGRAPHY.caption, color: COLORS.grey, marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 },
-  input: {
-    backgroundColor: COLORS.darkSurface,
-    borderRadius: RADIUS.md,
-    borderWidth: 1,
-    borderColor: COLORS.darkBorder,
-    paddingHorizontal: SPACING.lg,
-    paddingVertical: 12,
-    color: COLORS.white,
-    ...TYPOGRAPHY.body1,
-  },
+  field: { marginBottom: 16 },
+  label: { fontSize: 12, color: COLORS.grey, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 },
+  input: { backgroundColor: '#0B0E11', borderRadius: 12, borderWidth: 1, borderColor: '#1E2329', paddingHorizontal: 16, paddingVertical: 14, fontSize: 15, color: COLORS.white },
 
-  divider: { flexDirection: 'row', alignItems: 'center', marginVertical: SPACING.md },
-  dividerLine: { flex: 1, height: 1, backgroundColor: COLORS.darkBorder },
-  dividerText: { ...TYPOGRAPHY.caption, color: COLORS.gold, marginHorizontal: SPACING.md, letterSpacing: 1 },
-
-  saveBtn: { marginTop: SPACING.md, marginBottom: SPACING.xxl },
+  saveBtn: { backgroundColor: COLORS.gold, paddingVertical: 16, borderRadius: 12, alignItems: 'center', marginTop: 10 },
+  saveBtnText: { fontSize: 16, color: '#0B0E11', fontWeight: '800' }
 });

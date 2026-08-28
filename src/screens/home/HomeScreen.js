@@ -15,6 +15,13 @@ export const HomeScreen = ({ navigation }) => {
   const [refreshing, setRefreshing] = useState(false);
   const [liveMarkets, setLiveMarkets] = useState([]);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [showProfilePrompt, setShowProfilePrompt] = useState(false);
+
+  useEffect(() => {
+    if (user && !user.demo_account_id) {
+      setShowProfilePrompt(true);
+    }
+  }, [user]);
 
   const fetchMarkets = async () => {
     try {
@@ -210,8 +217,38 @@ export const HomeScreen = ({ navigation }) => {
         </View>
       </ScrollView>
 
-      {/* RENDER CUSTOM SLIDING DRAWER AT ROOT */}
+            {/* RENDER CUSTOM SLIDING DRAWER AT ROOT */}
       <SideMenu isVisible={isMenuOpen} onClose={() => setIsMenuOpen(false)} navigation={navigation} />
+
+      {/* Profile Completion Prompt */}
+      <Modal visible={showProfilePrompt} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalIconBox}>
+              <Icon name="account-edit-outline" size={32} color="#0B0E11" />
+            </View>
+            <Text style={styles.modalTitle}>Complete Your Profile</Text>
+            <Text style={styles.modalText}>Please link your Demo MT5 account in your profile to request and test AI Bots risk-free.</Text>
+            
+            <TouchableOpacity 
+              style={styles.modalBtnPrimary}
+              onPress={() => {
+                setShowProfilePrompt(false);
+                navigation.navigate('More', { screen: 'Profile' });
+              }}
+            >
+              <Text style={styles.modalBtnPrimaryText}>Complete Profile Now</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={styles.modalBtnSecondary}
+              onPress={() => setShowProfilePrompt(false)}
+            >
+              <Text style={styles.modalBtnSecondaryText}>Maybe Later</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -285,3 +322,4 @@ const styles = StyleSheet.create({
   emptyCard: { alignItems: 'center', padding: 40, marginHorizontal: SPACING.screen, backgroundColor: '#12161A', borderRadius: 12 },
   emptyText: { fontSize: 14, color: '#888', marginTop: 12 },
 });
+
