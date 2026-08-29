@@ -1,7 +1,8 @@
 ﻿import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, RefreshControl, Modal } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
+import { fetchNotifications, fetchUnreadCount } from '../../store/notificationSlice';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { SPACING } from '../../theme/spacing';
 import { CurrencySwitcher } from '../../components/common/CurrencySwitcher';
@@ -10,12 +11,20 @@ import { SideMenu } from '../../components/common/SideMenu';
 export const HomeScreen = ({ navigation }) => {
   const insets = useSafeAreaInsets();
   const { user } = useSelector(s => s.auth);
+  const dispatch = useDispatch();
   const { latest } = useSelector(s => s.signals);
+  const { items: notifs } = useSelector(s => s.notifications);
+  const unreadNewsCount = (notifs || []).filter(i => !i.is_read).length;
   
   const [refreshing, setRefreshing] = useState(false);
   const [liveMarkets, setLiveMarkets] = useState([]);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showProfilePrompt, setShowProfilePrompt] = useState(false);
+
+  useEffect(() => {
+    dispatch(fetchNotifications());
+    dispatch(fetchUnreadCount());
+  }, [dispatch]);
 
   useEffect(() => {
     if (user && !user.demo_account_id) {
@@ -82,7 +91,11 @@ export const HomeScreen = ({ navigation }) => {
               <CurrencySwitcher compact />
               <TouchableOpacity style={styles.notifBtn} onPress={() => navigation.navigate('More', { screen: 'Notifications' })}>
                 <Icon name="bell-outline" size={22} color="#FFFFFF" />
-                <View style={styles.notifBadge} />
+                {unreadNewsCount > 0 && (
+                  <View style={styles.notifBadge}>
+                    <Text style={styles.notifBadgeText}>{unreadNewsCount > 99 ? '99+' : unreadNewsCount}</Text>
+                  </View>
+                )}
               </TouchableOpacity>
             </View>
           </View>
@@ -263,8 +276,9 @@ const styles = StyleSheet.create({
   greeting: { fontSize: 16, color: '#FFFFFF', fontWeight: '700' },
   date: { fontSize: 12, color: '#A0A0A0', marginTop: 2 },
   headerRight: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  notifBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#1A1E24', alignItems: 'center', justifyContent: 'center' },
-  notifBadge: { position: 'absolute', top: 8, right: 8, width: 8, height: 8, borderRadius: 4, backgroundColor: '#FF4444' },
+  notifBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#1A1E24', alignItems: 'center', justifyContent: 'center', position: 'relative' },
+  notifBadge: { position: 'absolute', top: -2, right: -4, backgroundColor: '#FF4444', borderRadius: 10, minWidth: 18, height: 18, alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderColor: '#0B0E11', paddingHorizontal: 3 },
+  notifBadgeText: { color: '#FFF', fontSize: 9, fontWeight: '800' },
   
   heroCard: { backgroundColor: '#1E2329', borderRadius: 16, elevation: 5, shadowColor: '#000', shadowOpacity: 0.3, shadowRadius: 10, shadowOffset: { width: 0, height: 5 }, overflow: 'hidden', borderWidth: 1, borderColor: '#2A2E35' },
   heroContent: { padding: 20 },

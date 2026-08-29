@@ -57,6 +57,14 @@ export const MainTabNavigator = () => (
     }} />
     <Tab.Screen name="More" component={MoreNavigator} options={{
       tabBarIcon: ({ focused }) => <TabIcon name={focused ? 'view-grid' : 'view-grid-outline'} focused={focused} />,
-    }} />
+    }} listeners={({ navigation }) => ({
+      tabPress: (e) => {
+        e.preventDefault();
+        navigation.navigate('More', { screen: 'MoreHome' });
+      },
+    })} />
   </Tab.Navigator>
 );
+
+
+

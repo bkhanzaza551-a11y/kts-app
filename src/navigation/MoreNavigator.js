@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { COLORS } from '../theme/colors';
 import { TYPOGRAPHY } from '../theme/typography';
@@ -6,6 +6,9 @@ import { MoreScreen } from '../screens/more/MoreScreen';
 import { ProfileScreen } from '../screens/profile/ProfileScreen';
 import { EditProfileScreen } from '../screens/profile/EditProfileScreen';
 import { NotificationScreen } from '../screens/notifications/NotificationScreen';
+import { NotificationSettingsScreen } from '../screens/notifications/NotificationSettingsScreen';
+import { NewsDetailScreen } from '../screens/notifications/NewsDetailScreen';
+import { SupportScreen } from '../screens/more/SupportScreen';
 import { EducationScreen } from '../screens/education/EducationScreen';
 import { CourseDetailScreen } from '../screens/education/CourseDetailScreen';
 import { DemoAccountScreen } from '../screens/demo/DemoAccountScreen';
@@ -39,5 +42,11 @@ export const MoreNavigator = () => (
     <Stack.Screen name="Legal" component={LegalScreen} options={{ title: 'Legal' }} />
     <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} options={{ title: 'Change Password' }} />
     <Stack.Screen name="ChangeSecurityCode" component={ChangeSecurityCodeScreen} options={{ title: 'Change Security Code' }} />
-  </Stack.Navigator>
+    <Stack.Screen name="NotificationSettings" component={NotificationSettingsScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="NewsDetail" component={NewsDetailScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="Support" component={SupportScreen} options={{ headerShown: false }} />
+    </Stack.Navigator>
 );
+
+
+

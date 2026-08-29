@@ -1,135 +1,130 @@
-import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Animated, Easing, Dimensions } from 'react-native';
-import { COLORS } from '../../theme/colors';
-import { TYPOGRAPHY } from '../../theme/typography';
-import { SPACING, RADIUS } from '../../theme/spacing';
+﻿import React, { useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, Animated, Easing, Dimensions, Platform } from 'react-native';
 
 const { width } = Dimensions.get('window');
 
 export const SplashScreen = () => {
-  // Entrance Animations
-  const logoScale = useRef(new Animated.Value(0)).current;
-  const logoOpacity = useRef(new Animated.Value(0)).current;
-  const textTranslateY = useRef(new Animated.Value(30)).current;
-  const textOpacity = useRef(new Animated.Value(0)).current;
-  
-  // Continuous Animations
-  const ringScale = useRef(new Animated.Value(1)).current;
-  const ringOpacity = useRef(new Animated.Value(0.4)).current;
-  const loadingProgress = useRef(new Animated.Value(0)).current;
+  // Animations
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(20)).current;
+  const loaderAnim = useRef(new Animated.Value(-width * 0.4)).current;
 
   useEffect(() => {
-    // 1. Entrance Sequence
-    Animated.sequence([
-      Animated.parallel([
-        Animated.spring(logoScale, { toValue: 1, friction: 6, tension: 40, useNativeDriver: true }),
-        Animated.timing(logoOpacity, { toValue: 1, duration: 800, useNativeDriver: true })
-      ]),
-      Animated.parallel([
-        Animated.timing(textTranslateY, { toValue: 0, duration: 600, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
-        Animated.timing(textOpacity, { toValue: 1, duration: 600, useNativeDriver: true })
-      ])
+    // Elegant entrance for Logo and Text
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 1000,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 1000,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      })
     ]).start();
 
-    // 2. Continuous Radar/Pulse Ring
+    // Smooth, continuous indeterminate loader (Apple/Premium style sweep)
     Animated.loop(
-      Animated.parallel([
-        Animated.timing(ringScale, {
-          toValue: 1.6,
-          duration: 2000,
-          easing: Easing.out(Easing.quad),
-          useNativeDriver: true,
-        }),
-        Animated.timing(ringOpacity, {
-          toValue: 0,
-          duration: 2000,
-          easing: Easing.out(Easing.quad),
-          useNativeDriver: true,
-        })
-      ])
+      Animated.timing(loaderAnim, {
+        toValue: width * 0.4,
+        duration: 1500,
+        easing: Easing.inOut(Easing.quad),
+        useNativeDriver: true,
+      })
     ).start();
-
-    // 3. Loading Bar Progress
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(loadingProgress, {
-          toValue: 1,
-          duration: 1500,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: false,
-        }),
-        Animated.timing(loadingProgress, {
-          toValue: 0,
-          duration: 1500,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: false,
-        })
-      ])
-    ).start();
-
   }, []);
-
-  const barWidth = loadingProgress.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0%', '100%']
-  });
 
   return (
     <View style={styles.container}>
       
-      {/* Animated Logo Area */}
-      <View style={styles.logoWrapper}>
-        <Animated.View style={[styles.pulseRing, { transform: [{ scale: ringScale }], opacity: ringOpacity }]} />
-        <Animated.View style={[styles.pulseRing, { transform: [{ scale: Animated.multiply(ringScale, 0.8) }], opacity: ringOpacity }]} />
+      {/* Centered Brand Content */}
+      <Animated.View style={[styles.content, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
         
-        <Animated.View style={[styles.logoContainer, { opacity: logoOpacity, transform: [{ scale: logoScale }] }]}>
-          <View style={styles.logoCircle}>
-            <Text style={styles.logoText}>KTS</Text>
-          </View>
-        </Animated.View>
-      </View>
-      
-      {/* Animated Text Area */}
-      <Animated.View style={[styles.textContainer, { opacity: textOpacity, transform: [{ translateY: textTranslateY }] }]}>
-        <Text style={styles.title}>KTS Markets</Text>
-        <Text style={styles.subtitle}>Trade Smarter. Earn More.</Text>
+        {/* Minimal Typographic Logo */}
+        <View style={styles.logoRow}>
+          <Text style={styles.brandText}>KTS</Text>
+          <Text style={styles.brandAccent}>MARKETS</Text>
+        </View>
+        
+        <Text style={styles.subtitle}>INSTITUTIONAL TRADING</Text>
+        
       </Animated.View>
 
-      {/* Modern Loading Bar */}
-      <View style={styles.loaderContainer}>
+      {/* Minimal Loader at bottom */}
+      <Animated.View style={[styles.loaderContainer, { opacity: fadeAnim }]}>
         <View style={styles.loaderTrack}>
-          <Animated.View style={[styles.loaderFill, { width: barWidth }]} />
+          <Animated.View style={[styles.loaderIndicator, { transform: [{ translateX: loaderAnim }] }]} />
         </View>
-      </View>
+      </Animated.View>
       
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: COLORS.background },
-  logoWrapper: { alignItems: 'center', justifyContent: 'center', marginBottom: SPACING.xl },
-  pulseRing: {
-    position: 'absolute',
-    width: 120, height: 120, borderRadius: 60,
-    borderWidth: 2, borderColor: COLORS.primary,
-    backgroundColor: COLORS.primaryMuted,
+  container: { 
+    flex: 1, 
+    backgroundColor: '#0B0E11', // Deep rich black
+    alignItems: 'center', 
+    justifyContent: 'center' 
   },
-  logoContainer: { alignItems: 'center' },
-  logoCircle: {
-    width: 120, height: 120, borderRadius: RADIUS.full,
-    borderWidth: 4, borderColor: COLORS.primary,
-    alignItems: 'center', justifyContent: 'center',
-    backgroundColor: COLORS.card,
-    shadowColor: COLORS.primary, shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.5, shadowRadius: 20, elevation: 15
+  content: {
+    alignItems: 'center',
   },
-  logoText: { fontSize: 40, fontWeight: '900', color: COLORS.primary, letterSpacing: 2 },
+  logoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 12
+  },
+  brandText: { 
+    fontSize: 36, 
+    fontWeight: '900', 
+    color: '#FFFFFF', 
+    letterSpacing: 2,
+    fontFamily: Platform.OS === 'ios' ? 'Helvetica Neue' : 'sans-serif'
+  },
+  brandAccent: { 
+    fontSize: 36, 
+    fontWeight: '300', 
+    color: '#FFD700', // Premium Gold
+    letterSpacing: 1,
+    fontFamily: Platform.OS === 'ios' ? 'Helvetica Neue' : 'sans-serif-light'
+  },
+  subtitle: { 
+    fontSize: 10, 
+    color: '#666666', 
+    letterSpacing: 4, 
+    fontWeight: '600',
+    marginTop: 4
+  },
   
-  textContainer: { alignItems: 'center' },
-  title: { ...TYPOGRAPHY.h2, color: COLORS.text, letterSpacing: 1.5, fontWeight: '800' },
-  subtitle: { ...TYPOGRAPHY.body1, color: COLORS.textMuted, marginTop: SPACING.sm },
-  
-  loaderContainer: { position: 'absolute', bottom: 60, width: width * 0.5, alignItems: 'center' },
-  loaderTrack: { width: '100%', height: 4, backgroundColor: COLORS.surface, borderRadius: 2, overflow: 'hidden' },
-  loaderFill: { height: '100%', backgroundColor: COLORS.primary, borderRadius: 2 },
+  loaderContainer: { 
+    position: 'absolute', 
+    bottom: 60, 
+    width: width * 0.4, 
+    alignItems: 'center' 
+  },
+  loaderTrack: { 
+    width: '100%', 
+    height: 2, // Extremely thin line
+    backgroundColor: '#1E2329', 
+    overflow: 'hidden',
+    borderRadius: 1
+  },
+  loaderIndicator: { 
+    width: '40%', 
+    height: '100%', 
+    backgroundColor: '#FFD700', 
+    borderRadius: 1,
+    shadowColor: '#FFD700',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 4,
+    elevation: 3
+  },
 });
+

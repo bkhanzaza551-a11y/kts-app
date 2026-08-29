@@ -1,5 +1,5 @@
 ﻿import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Alert, KeyboardAvoidingView, Platform, TouchableOpacity, Linking } from 'react-native';
 import { useSelector } from 'react-redux';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -16,6 +16,7 @@ export const DemoAccountScreen = ({ navigation }) => {
   const [depositAmount, setDepositAmount] = useState('10000');
   const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState({});
   const [instructions, setInstructions] = useState(null);
 
   useEffect(() => {
@@ -37,12 +38,37 @@ export const DemoAccountScreen = ({ navigation }) => {
       });
   }, []);
 
-  const handleSubmit = async () => {
-    if (!accountNumber) { 
-      Alert.alert('Required Field', 'Please enter your Exness account number.'); 
-      return; 
+    const handleSubmit = async () => {
+    // Validations
+    let newErrors = {};
+    triggerHaptic('light');
+
+    if (!accountNumber) {
+      newErrors.accountNumber = 'Account Number is required';
+    } else if (!/^\d{5,15}$/.test(accountNumber)) {
+      newErrors.accountNumber = 'Must be 5 to 15 digits';
     }
+
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      newErrors.email = 'Invalid email format';
+    }
+
+    if (phone && !/^\+?[0-9]{8,15}$/.test(phone)) {
+      newErrors.phone = 'Invalid phone number';
+    }
+
+    if (depositAmount && (isNaN(depositAmount) || Number(depositAmount) < 100)) {
+      newErrors.depositAmount = 'Minimum deposit is 100';
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      triggerHaptic('error');
+      return;
+    }
+    setErrors({});
     setLoading(true);
+
     try {
       await client.post('/demo-account/request', {
         exness_account_number: accountNumber,
@@ -52,11 +78,14 @@ export const DemoAccountScreen = ({ navigation }) => {
         demo_phone: phone,
         user_notes: notes,
       });
+      triggerHaptic('success');
       Alert.alert('Success', 'Your demo account request has been submitted!', [
         { text: 'Awesome', onPress: () => navigation.goBack() }
       ]);
     } catch (e) { 
       Alert.alert('Submission Error', e.message || "Failed to submit request."); 
+    } finally {
+      setLoading(false);
     }
     setLoading(false);
   };
@@ -80,10 +109,21 @@ export const DemoAccountScreen = ({ navigation }) => {
         {/* Instructions Block */}
         {instructions && (
           <View style={styles.card}>
-            <View style={styles.cardHeader}>
+                        <View style={styles.cardHeader}>
               <Icon name="information-outline" size={20} color="#FFD700" />
               <Text style={styles.cardTitle}>{instructions.title}</Text>
             </View>
+
+            <TouchableOpacity 
+              style={styles.exnessBtn} 
+              onPress={() => {
+                const link = instructions.referral_link || 'https://www.exness.com';
+                Linking.openURL(link);
+              }}
+            >
+              <Icon name="link-variant" size={20} color="#0B0E11" />
+              <Text style={styles.exnessBtnText}>Open Exness Account</Text>
+            </TouchableOpacity>
             
             <View style={styles.timeline}>
               {instructions.steps?.map((step, i) => (
@@ -109,37 +149,49 @@ export const DemoAccountScreen = ({ navigation }) => {
           <Text style={styles.sectionTitle}>Submit Details</Text>
           <View style={styles.card}>
             <Input 
-              label="Exness Account Number *" 
+                label="Exness Account Number *" 
               value={accountNumber} 
               onChangeText={setAccountNumber} 
               placeholder="e.g. 12345678" 
               keyboardType="number-pad"
               icon="card-account-details-outline" 
-            />
+            
+                error={errors.accountNumber}
+                maxLength={15}
+              />
             <Input 
-              label="Demo Email (Optional)" 
+                label="Demo Email (Optional)" 
               value={email} 
               onChangeText={setEmail} 
               placeholder="Email used on Exness" 
               keyboardType="email-address" 
               icon="email-outline" 
-            />
+            
+                error={errors.email}
+                autoCapitalize="none"
+              />
             <Input 
-              label="Phone Number (Optional)" 
+                label="Phone Number (Optional)" 
               value={phone} 
               onChangeText={setPhone} 
               placeholder="Your phone number" 
               keyboardType="phone-pad" 
               icon="phone-outline" 
-            />
+            
+                error={errors.phone}
+                maxLength={15}
+              />
             <Input 
-              label="Deposit Amount" 
+                label="Deposit Amount" 
               value={depositAmount} 
               onChangeText={setDepositAmount} 
               placeholder="e.g. 10000" 
               keyboardType="number-pad" 
               icon="cash-multiple" 
-            />
+            
+                error={errors.depositAmount}
+                maxLength={9}
+              />
             <Input 
               label="Additional Notes (Optional)" 
               value={notes} 
@@ -170,7 +222,10 @@ const styles = StyleSheet.create({
 
   card: { backgroundColor: '#12161A', borderRadius: 16, padding: 20, marginBottom: 24, borderWidth: 1, borderColor: '#1E2329' },
   cardHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 20, gap: 8 },
-  cardTitle: { fontSize: 16, color: '#FFD700', fontWeight: '700' },
+    cardTitle: { fontSize: 15, color: '#FFD700', fontWeight: '700', marginLeft: 8 },
+  exnessBtn: { backgroundColor: '#FFD700', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 14, borderRadius: 12, marginHorizontal: 16, marginBottom: 16, gap: 8, elevation: 4, shadowColor: '#FFD700', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.3, shadowRadius: 4 },
+  exnessBtnText: { color: '#0B0E11', fontSize: 15, fontWeight: '800', letterSpacing: 0.5 },
+  timeline: { paddingHorizontal: 16 },
   
   timeline: { paddingLeft: 4 },
   stepRow: { flexDirection: 'row', minHeight: 60 },
@@ -187,3 +242,7 @@ const styles = StyleSheet.create({
   sectionTitle: { fontSize: 18, color: '#FFF', fontWeight: '700', marginBottom: 16, paddingLeft: 4 },
   btnWrapper: { marginTop: 16 }
 });
+
+
+
+

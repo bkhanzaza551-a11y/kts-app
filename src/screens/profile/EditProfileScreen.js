@@ -36,6 +36,7 @@ export const EditProfileScreen = ({ navigation }) => {
 
   const [pickerConfig, setPickerConfig] = useState({ visible: false, type: '', data: [] });
   const [searchQuery, setSearchQuery] = useState('');
+  const [exnessLink, setExnessLink] = useState('https://www.exness.com/register/');
 
   useLayoutEffect(() => {
     navigation.setOptions({ headerShown: false });
@@ -45,7 +46,13 @@ export const EditProfileScreen = ({ navigation }) => {
     loadProfile();
   }, []);
 
-  const loadProfile = async () => {
+      const loadProfile = async () => {
+      try {
+        const insRes = await client.get('/demo-account/instructions');
+        if (insRes.data?.data?.referral_link) {
+          setExnessLink(insRes.data.data.referral_link);
+        }
+      } catch (e) {}
     setLoading(true);
     try {
       const res = await client.get('/profile');
@@ -202,7 +209,19 @@ export const EditProfileScreen = ({ navigation }) => {
           </View>
         </View>
 
-        {/* Demo Account */}
+                  {/* Exness Link CTA */}
+          <TouchableOpacity 
+            style={styles.exnessBtn} 
+            onPress={() => {
+              triggerHaptic('light');
+              Linking.openURL(exnessLink);
+            }}
+          >
+            <Icon name="link-variant" size={20} color="#0B0E11" />
+            <Text style={styles.exnessBtnText}>Create Exness Account (Partner Link)</Text>
+          </TouchableOpacity>
+
+          {/* Demo Account */}
         <View style={styles.card}>
           <View style={styles.cardHeader}>
             <Icon name="robot-outline" size={22} color={COLORS.gold} />
@@ -330,7 +349,10 @@ const styles = StyleSheet.create({
   
   infoBanner: { flexDirection: 'row', backgroundColor: 'rgba(33, 150, 243, 0.08)', padding: 16, borderRadius: 16, borderWidth: 1, borderColor: 'rgba(33, 150, 243, 0.2)', marginBottom: 20 },
   bannerTitle: { fontSize: 15, color: '#2196F3', fontWeight: '800', marginBottom: 6 },
-  bannerText: { fontSize: 13, color: '#A0A0A0', lineHeight: 20 },
+    bannerText: { fontSize: 13, color: '#FFFFFF', lineHeight: 18, marginTop: 4 },
+  
+  exnessBtn: { backgroundColor: '#FFD700', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 14, borderRadius: 12, marginBottom: 20, gap: 8, elevation: 4, shadowColor: '#FFD700', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.3, shadowRadius: 4 },
+  exnessBtnText: { color: '#0B0E11', fontSize: 14, fontWeight: '800', letterSpacing: 0.5 },
 
   card: { backgroundColor: '#12161A', padding: 20, borderRadius: 20, marginBottom: 20, borderWidth: 1, borderColor: '#1E2329' },
   cardHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 20, gap: 10 },
@@ -369,3 +391,4 @@ const styles = StyleSheet.create({
   emptySearch: { alignItems: 'center', paddingVertical: 40 },
   emptySearchText: { color: '#666', fontSize: 15, marginTop: 10, fontWeight: '600' }
 });
+

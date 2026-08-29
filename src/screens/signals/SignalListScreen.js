@@ -67,7 +67,7 @@ export const SignalListScreen = ({ navigation }) => {
         <View style={styles.cardHeader}>
           <View style={styles.headerLeft}>
             <View style={styles.symbolBadge}>
-              <Text style={styles.symbolText}>{item.symbol}</Text>
+              <Text style={styles.symbolText}>{formatSymbol(item.symbol)}</Text>
             </View>
             <View>
               <Text style={styles.cardTitle}>{item.title}</Text>
@@ -124,6 +124,13 @@ export const SignalListScreen = ({ navigation }) => {
         </View>
       </TouchableOpacity>
     );
+  };
+
+    const formatSymbol = (sym) => {
+    if (!sym) return '';
+    if (sym.length === 6) return sym.substring(0, 3) + '/' + sym.substring(3);
+    if (sym.includes('USDT')) return sym.replace('USDT', '/USDT');
+    return sym;
   };
 
   const renderHeader = () => (
@@ -195,7 +202,7 @@ export const SignalListScreen = ({ navigation }) => {
   return (
     <View style={styles.container}>
       <View style={[styles.header, { paddingTop: insets.top + 15 }]}>
-        <Text style={styles.headerTitle}>Trading Signals</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}><Icon name="chart-line-variant" size={24} color={COLORS.gold} /><Text style={styles.headerTitle}>Market Signals</Text></View>
         <Text style={styles.headerSub}>{filteredItems.length} active setups</Text>
       </View>
 
@@ -262,4 +269,5 @@ const styles = StyleSheet.create({
   emptyTitle: { fontSize: 22, color: COLORS.white, fontWeight: '800', marginBottom: 12 },
   emptyDesc: { fontSize: 14, color: COLORS.grey, textAlign: 'center', lineHeight: 22, paddingHorizontal: 10 },
 });
+
 

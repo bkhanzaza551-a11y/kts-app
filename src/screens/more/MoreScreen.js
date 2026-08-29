@@ -48,10 +48,17 @@ export const MoreScreen = ({ navigation }) => {
       title: 'Account & Settings', 
       items: [
         { icon: 'account-circle-outline', iconColor: '#9C27B0', label: 'My Profile', screen: 'Profile' },
-        { icon: 'bell-outline', iconColor: '#FF9800', label: 'Notifications', screen: 'Notifications' },
+        { icon: 'bell-outline', iconColor: '#FF9800', label: 'Notification Settings', screen: 'NotificationSettings' },
         { icon: 'vibrate', iconColor: '#E91E63', label: 'Haptic Feedback', isToggle: true },
       ]
-    },
+        },
+    { 
+      title: 'Support & Legal', 
+      items: [
+        { icon: 'help-circle-outline', iconColor: '#4CAF50', label: 'Help Center', screen: 'Support' },
+        { icon: 'shield-check-outline', iconColor: '#607D8B', label: 'Privacy Policy', screen: 'Legal' },
+      ]
+    }
   ];
 
   const handleNav = (item) => {
@@ -139,3 +146,6 @@ const styles = StyleSheet.create({
   menuLabel: { flex: 1, fontSize: 16, color: COLORS.white, fontWeight: '600' },
   version: { fontSize: 13, color: COLORS.greyDark, textAlign: 'center', marginTop: 10, fontWeight: '500' }
 });
+
+
+

@@ -71,7 +71,7 @@ export const LoginScreen = ({ navigation }) => {
                 icon="lock-outline" 
               />
               
-              <TouchableOpacity style={styles.forgotBtn}>
+              <TouchableOpacity style={styles.forgotBtn} onPress={() => navigation.navigate('ForgotPassword')}>
                 <Text style={styles.forgotText}>Forgot Password?</Text>
               </TouchableOpacity>
 
@@ -128,3 +128,4 @@ const styles = StyleSheet.create({
   footerText: { ...TYPOGRAPHY.body2, color: "#CCCCCC" },
   link: { ...TYPOGRAPHY.body2, color: COLORS.primary, fontWeight: '700' },
 });
+

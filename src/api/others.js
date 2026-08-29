@@ -12,6 +12,11 @@ export const notificationApi = {
   getUnreadCount: () => client.get('/notifications/unread'),
 };
 
+export const deviceApi = {
+  register: (data) => client.post('/device/register', data),
+  unregister: (data) => client.post('/device/unregister', data),
+};
+
 export const legalApi = {
   getPages: () => client.get('/legal'),
   getPage: (slug) => client.get(`/legal/${slug}`),
