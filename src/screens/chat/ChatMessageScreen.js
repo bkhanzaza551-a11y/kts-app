@@ -7,6 +7,12 @@ import { fetchMessages, sendMessage, fetchStickers } from '../../store/chatSlice
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { triggerHaptic } from '../../utils/haptics';
 
+const EMOJI_GRID = [
+  ['😀','😂','😍','🥰','😎','🤔','😭','🔥','❤️','👍','🙌','💪','🎉','✅','⭐','💀'],
+  ['🙏','👏','🤝','💯','🤣','😊','😘','🥳','😏','😢','😤','👀','💔','🎶','💰','🏆'],
+  ['⚡','🚀','💎','📈','📉','💡','🔒','📢','🚨','⏰','📱','💻','🌍','🕌','📌','🎯'],
+];
+
 const isSameDay = (date1, date2) => {
   if (!date1 || !date2) return false;
   const d1 = new Date(date1);
@@ -39,7 +45,9 @@ export const ChatMessageScreen = ({ route, navigation }) => {
 
   const [text, setText] = useState('');
   const [showStickers, setShowStickers] = useState(false);
+  const [showEmojis, setShowEmojis] = useState(false);
   const flatListRef = useRef();
+  const textInputRef = useRef();
 
   const roomMessages = messages[roomSlug] || [];
   const displayMessages = [...roomMessages].reverse();
@@ -67,6 +75,18 @@ export const ChatMessageScreen = ({ route, navigation }) => {
     triggerHaptic('light');
     if (!showStickers) Keyboard.dismiss();
     setShowStickers(!showStickers);
+    setShowEmojis(false);
+  };
+
+  const toggleEmojis = () => {
+    triggerHaptic('light');
+    if (!showEmojis) Keyboard.dismiss();
+    setShowEmojis(!showEmojis);
+    setShowStickers(false);
+  };
+
+  const insertEmoji = (emoji) => {
+    setText(prev => prev + emoji);
   };
 
   const renderMessage = ({ item, index }) => {
@@ -149,6 +169,21 @@ export const ChatMessageScreen = ({ route, navigation }) => {
           />
         </View>
 
+        {/* Emoji Tray */}
+        {showEmojis && (
+          <View style={styles.emojiTray}>
+            {EMOJI_GRID.map((row, ri) => (
+              <View key={ri} style={styles.emojiRow}>
+                {row.map((emoji, ei) => (
+                  <TouchableOpacity key={ei} style={styles.emojiBtn} onPress={() => insertEmoji(emoji)}>
+                    <Text style={styles.emojiText}>{emoji}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            ))}
+          </View>
+        )}
+
         {/* Sticker Tray */}
         {showStickers && (
           <View style={styles.stickerTray}>
@@ -173,23 +208,33 @@ export const ChatMessageScreen = ({ route, navigation }) => {
           </View>
         )}
 
-        {/* Input Bar — text + sticker toggle + send only */}
+        {/* Input Bar */}
         <View style={[styles.inputBar, { paddingBottom: Math.max(insets.bottom, 12) }]}>
-          <TouchableOpacity style={styles.stickerBtn} onPress={toggleStickers}>
-            <Icon name={showStickers ? "keyboard-outline" : "sticker-emoji"} size={26} color={COLORS.grey} />
+          {/* Emoji button */}
+          <TouchableOpacity style={styles.iconBtn} onPress={toggleEmojis}>
+            <Icon name={showEmojis ? "keyboard" : "emoticon-outline"} size={26} color={showEmojis ? COLORS.gold : COLORS.grey} />
           </TouchableOpacity>
+
           <View style={styles.inputWrapper}>
             <TextInput
+              ref={textInputRef}
               style={styles.textInput}
               value={text}
               onChangeText={setText}
-              onFocus={() => setShowStickers(false)}
+              onFocus={() => { setShowEmojis(false); setShowStickers(false); }}
               placeholder="Message..."
               placeholderTextColor="#666"
               multiline
               maxLength={1000}
             />
           </View>
+
+          {/* Sticker button */}
+          <TouchableOpacity style={styles.iconBtn} onPress={toggleStickers}>
+            <Icon name={showStickers ? "keyboard" : "sticker-emoji"} size={26} color={showStickers ? COLORS.gold : COLORS.grey} />
+          </TouchableOpacity>
+
+          {/* Send button */}
           <TouchableOpacity style={styles.sendBtn} onPress={handleSendText}>
             <Icon name="send" size={20} color="#0B0E11" />
           </TouchableOpacity>
@@ -239,12 +284,20 @@ const styles = StyleSheet.create({
   time: { fontSize: 10, color: '#888' },
   timeMe: { color: 'rgba(0,0,0,0.5)' },
 
-  inputBar: { flexDirection: 'row', alignItems: 'flex-end', padding: 8, backgroundColor: '#0B0E11', gap: 8 },
-  stickerBtn: { padding: 10, paddingBottom: 12 },
+  // Input Bar
+  inputBar: { flexDirection: 'row', alignItems: 'flex-end', padding: 8, backgroundColor: '#0B0E11', gap: 6 },
+  iconBtn: { padding: 10, paddingBottom: 12 },
   inputWrapper: { flex: 1, flexDirection: 'row', alignItems: 'center', backgroundColor: '#1A2026', borderRadius: 24, paddingLeft: 16, paddingRight: 12, minHeight: 48 },
   textInput: { flex: 1, minHeight: 48, maxHeight: 120, color: COLORS.white, fontSize: 16, paddingVertical: 12 },
-  sendBtn: { width: 48, height: 48, borderRadius: 24, backgroundColor: COLORS.gold, alignItems: 'center', justifyContent: 'center' },
+  sendBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: COLORS.gold, alignItems: 'center', justifyContent: 'center' },
 
+  // Emoji Tray
+  emojiTray: { backgroundColor: '#12161A', borderTopWidth: 1, borderTopColor: '#1E2329', paddingVertical: 8, paddingHorizontal: 4 },
+  emojiRow: { flexDirection: 'row', justifyContent: 'space-around', marginBottom: 4 },
+  emojiBtn: { padding: 8, alignItems: 'center', justifyContent: 'center' },
+  emojiText: { fontSize: 28 },
+
+  // Sticker Tray
   stickerTray: { height: 260, backgroundColor: '#12161A', borderTopWidth: 1, borderTopColor: '#1E2329', padding: 10 },
   stickerItem: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 10, aspectRatio: 1 },
   stickerItemEmoji: { fontSize: 40 },
