@@ -60,7 +60,7 @@ export const loadProfile = createAsyncThunk('auth/loadProfile', async (_, { reje
 
 export const logout = createAsyncThunk('auth/logout', async () => {
   try { await authApi.logout(); } catch (e) { /* ignore */ }
-  await storage.clearAll();
+  await storage.clearAuth();
   return true;
 });
 

@@ -201,7 +201,7 @@ export const SignalListScreen = ({ navigation }) => {
   };
 
   return (
-    <View style={styles.container}>
+    <AnimatedScreen style={styles.container}>
       <View style={[styles.header, { paddingTop: insets.top + 15 }]}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}><Icon name="chart-line-variant" size={24} color={COLORS.gold} /><Text style={styles.headerTitle}>Market Signals</Text></View>
         <Text style={styles.headerSub}>{filteredItems.length} active setups</Text>
@@ -219,7 +219,7 @@ export const SignalListScreen = ({ navigation }) => {
         onEndReachedThreshold={0.5}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.gold} />}
       />
-    </View>
+    </AnimatedScreen>
   );
 };
 
@@ -270,6 +270,7 @@ const styles = StyleSheet.create({
   emptyTitle: { fontSize: 22, color: COLORS.white, fontWeight: '800', marginBottom: 12 },
   emptyDesc: { fontSize: 14, color: COLORS.grey, textAlign: 'center', lineHeight: 22, paddingHorizontal: 10 },
 });
+
 
 
 

@@ -76,7 +76,7 @@ export const MoreScreen = ({ navigation }) => {
   };
 
   return (
-    <View style={styles.container}>
+    <AnimatedScreen style={styles.container}>
       <ScrollView 
         contentContainerStyle={[styles.content, { paddingTop: insets.top + 10, paddingBottom: insets.bottom + 40 }]}
         showsVerticalScrollIndicator={false}
@@ -127,7 +127,7 @@ export const MoreScreen = ({ navigation }) => {
 
         <Text style={styles.version}>KTS Markets v1.0.0</Text>
       </ScrollView>
-    </View>
+    </AnimatedScreen>
   );
 };
 
@@ -146,6 +146,7 @@ const styles = StyleSheet.create({
   menuLabel: { flex: 1, fontSize: 16, color: COLORS.white, fontWeight: '600' },
   version: { fontSize: 13, color: COLORS.greyDark, textAlign: 'center', marginTop: 10, fontWeight: '500' }
 });
+
 
 
 

@@ -32,6 +32,8 @@ export const storage = {
   },
   setCurrency: (currency) => AsyncStorage.setItem(KEYS.CURRENCY, currency),
 
+  clearAuth: () => AsyncStorage.multiRemove([KEYS.TOKEN, KEYS.USER]),
+
   clearAll: () => AsyncStorage.multiRemove([KEYS.TOKEN, KEYS.USER, KEYS.ONBOARDED, KEYS.CURRENCY, KEYS.THEME]),
 };
 

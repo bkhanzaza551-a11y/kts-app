@@ -7,6 +7,7 @@ import { fetchRooms } from '../../store/chatSlice';
 import { formatRelativeTime } from '../../utils/formatters';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { triggerHaptic } from '../../utils/haptics';
+import { AnimatedScreen } from '../../components/common/AnimatedScreen';
 
 export const ChatRoomListScreen = ({ navigation }) => {
   const dispatch = useDispatch();
@@ -77,7 +78,7 @@ export const ChatRoomListScreen = ({ navigation }) => {
   };
 
   return (
-    <View style={styles.container}>
+    <AnimatedScreen style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#080A0C" />
       
       {/* Premium Header */}
@@ -114,7 +115,7 @@ export const ChatRoomListScreen = ({ navigation }) => {
           </View>
         }
       />
-    </View>
+    </AnimatedScreen>
   );
 };
 
@@ -181,3 +182,4 @@ const styles = StyleSheet.create({
   emptyTitle: { fontSize: 18, color: COLORS.white, fontWeight: '700', marginTop: 16 },
   emptyText: { fontSize: 14, color: '#8A939E', marginTop: 8, textAlign: 'center' }
 });
+

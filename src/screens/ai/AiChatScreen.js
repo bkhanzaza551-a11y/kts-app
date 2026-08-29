@@ -3,7 +3,7 @@ import { View, Text, TextInput, FlatList, TouchableOpacity, StyleSheet, Keyboard
 import { useDispatch, useSelector } from 'react-redux';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { sendMessage, clearMessages, loadChatHistory } from '../../store/aiChatSlice';
+import { sendMessage, clearChatMessages, loadChatHistory } from '../../store/aiChatSlice';
 import { triggerHaptic } from '../../utils/haptics';
 
 const COLORS = { 
@@ -153,7 +153,7 @@ export default function AiChatScreen({ navigation }) {
           </View>
         </View>
 
-        <TouchableOpacity onPress={() => { triggerHaptic('light'); dispatch(clearMessages()); }} style={styles.iconBtn}>
+        <TouchableOpacity onPress={() => { triggerHaptic('light'); dispatch(clearChatMessages()); }} style={styles.iconBtn}>
           <Icon name="refresh" size={22} color="#A0A0A0" />
         </TouchableOpacity>
       </View>

@@ -43,6 +43,13 @@ const saveMessages = async (messages) => {
   } catch (e) {}
 };
 
+export const clearChatMessages = createAsyncThunk('aiChat/clearMessages', async (_, { dispatch }) => {
+  try {
+    await AsyncStorage.removeItem(MESSAGES_KEY);
+  } catch (e) {}
+  dispatch({ type: 'aiChat/clearMessagesLocal' });
+});
+
 const aiChatSlice = createSlice({
   name: 'aiChat',
   initialState: {
@@ -52,7 +59,7 @@ const aiChatSlice = createSlice({
     error: null,
   },
   reducers: {
-    clearMessages: (state) => { state.messages = []; AsyncStorage.removeItem(MESSAGES_KEY); },
+    clearMessagesLocal: (state) => { state.messages = []; },
     addUserMessage: (state, action) => {
       state.messages.push({ role: 'user', content: action.payload, timestamp: new Date().toISOString() });
     },
@@ -78,5 +85,5 @@ const aiChatSlice = createSlice({
   },
 });
 
-export const { clearMessages, addUserMessage } = aiChatSlice.actions;
+export const { clearMessagesLocal, addUserMessage } = aiChatSlice.actions;
 export default aiChatSlice.reducer;

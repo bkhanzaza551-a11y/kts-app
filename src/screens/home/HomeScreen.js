@@ -73,7 +73,7 @@ export const HomeScreen = ({ navigation }) => {
   };
 
   return (
-    <View style={styles.container}>
+    <AnimatedScreen style={styles.container}>
       <ScrollView refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#FFD700" />}>
         
         <View style={[styles.header, { paddingTop: insets.top + 15 }]}>
@@ -262,7 +262,7 @@ export const HomeScreen = ({ navigation }) => {
           </View>
         </View>
       </Modal>
-    </View>
+    </AnimatedScreen>
   );
 };
 
@@ -346,6 +346,7 @@ const styles = StyleSheet.create({
   modalBtnSecondary: { paddingVertical: 12 },
   modalBtnSecondaryText: { color: '#888', fontSize: 14, fontWeight: '600' }
 });
+
 
 
 

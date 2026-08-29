@@ -27,14 +27,19 @@ export const SplashScreen = () => {
     ]).start();
 
     // Smooth, continuous indeterminate loader (Apple/Premium style sweep)
-    Animated.loop(
+    const loopAnimation = Animated.loop(
       Animated.timing(loaderAnim, {
         toValue: width * 0.4,
         duration: 1500,
         easing: Easing.inOut(Easing.quad),
         useNativeDriver: true,
       })
-    ).start();
+    );
+    loopAnimation.start();
+
+    return () => {
+      loopAnimation.stop();
+    };
   }, []);
 
   return (

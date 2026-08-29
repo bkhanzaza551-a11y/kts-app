@@ -16,6 +16,8 @@ export const triggerHaptic = (type = 'light') => {
       Vibration.vibrate(Platform.OS === 'ios' ? 20 : 50);
     } else if (type === 'success') {
       Vibration.vibrate([0, 30, 80, 30]);
+    } else if (type === 'error') {
+      Vibration.vibrate(Platform.OS === 'ios' ? [0, 50, 100, 50, 100, 50] : [0, 100, 80, 100, 80, 100]);
     }
   } catch (e) {
     console.log("Haptic error: ", e);

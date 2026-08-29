@@ -32,7 +32,7 @@ client.interceptors.response.use(
     if (error.response?.status === 401) {
       const currentRoute = error.config?.url || '';
       if (!currentRoute.includes('/login') && !currentRoute.includes('/register')) {
-        await storage.clearAll();
+        await storage.clearAuth();
         if (logoutCallback) {
           logoutCallback();
         }

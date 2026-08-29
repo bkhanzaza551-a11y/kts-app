@@ -6,6 +6,7 @@ import { Button } from '../../components/common/Button';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { validateEmail } from '../../utils/validators';
 import { triggerHaptic } from '../../utils/haptics';
+import client from '../../api/client';
 
 export const ForgotPasswordScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
@@ -23,7 +24,7 @@ export const ForgotPasswordScreen = ({ navigation }) => {
     ]).start();
   }, []);
 
-  const handleReset = () => {
+  const handleReset = async () => {
     triggerHaptic('light');
     const emailErr = validateEmail(email);
     if (emailErr) {
@@ -33,12 +34,16 @@ export const ForgotPasswordScreen = ({ navigation }) => {
     setError('');
     setIsLoading(true);
 
-    // Simulate API Call for now since we just need the UI flow to work
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      await client.post('/auth/forgot-password', { email });
       setIsSuccess(true);
       triggerHaptic('success');
-    }, 1500);
+    } catch (err) {
+      setError(err.message || 'Failed to send reset link. Please try again.');
+      triggerHaptic('error');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

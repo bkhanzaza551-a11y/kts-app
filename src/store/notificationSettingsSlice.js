@@ -146,7 +146,23 @@ const notificationSettingsSlice = createSlice({
         // Already updated optimistically
       })
       .addCase(toggleAllCategory.rejected, (s, a) => {
-        // Revert on error - re-fetch
+        // Revert on error - revert the optimistic update
+        const { category, isEnabled } = a.meta.arg;
+        const revertTo = !isEnabled;
+        const items = s.grouped[category] || [];
+        if (Array.isArray(items)) {
+          items.forEach((st) => {
+            st.is_enabled = revertTo;
+            s.settingsMap[st.slug] = revertTo;
+          });
+        }
+        s.settings.forEach((st) => {
+          if (st.category === category) {
+            st.is_enabled = revertTo;
+            s.settingsMap[st.slug] = revertTo;
+          }
+        });
+        s.enabledSlugs = Object.keys(s.settingsMap).filter((k) => s.settingsMap[k]);
       });
   },
 });
