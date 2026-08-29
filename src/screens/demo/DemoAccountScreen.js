@@ -5,6 +5,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Input } from '../../components/common/Input';
 import { Button } from '../../components/common/Button';
+import { triggerHaptic } from '../../utils/haptics';
 import client from '../../api/client';
 
 export const DemoAccountScreen = ({ navigation }) => {

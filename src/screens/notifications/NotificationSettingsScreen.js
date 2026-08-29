@@ -34,7 +34,7 @@ export const NotificationSettingsScreen = ({ navigation }) => {
 
   const handleToggleCategory = (category, value) => {
     triggerHaptic('light');
-    dispatch(toggleAllCategory({ category, value }));
+    dispatch(toggleAllCategory({ category, isEnabled: value }));
   };
 
   if (isLoading && !settings.length) {

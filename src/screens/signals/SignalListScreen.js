@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Skeleton } from '../../components/common/Skeleton';
+import { AnimatedScreen } from '../../components/common/AnimatedScreen';
 import { fetchSignals, fetchCategories, clearSignals } from '../../store/signalSlice';
 import { useCurrency } from '../../context/CurrencyContext';
 
@@ -38,7 +39,7 @@ export const SignalListScreen = ({ navigation }) => {
   const loadMore = () => { 
     // Fix: Prevent endless loop on empty list by checking items.length > 0
     if (!isLoading && page < lastPage && items.length > 0) {
-      dispatch(fetchSignals({ page: page + 1 })); 
+      dispatch(fetchSignals({ page: page })); 
     }
   };
   
@@ -269,5 +270,6 @@ const styles = StyleSheet.create({
   emptyTitle: { fontSize: 22, color: COLORS.white, fontWeight: '800', marginBottom: 12 },
   emptyDesc: { fontSize: 14, color: COLORS.grey, textAlign: 'center', lineHeight: 22, paddingHorizontal: 10 },
 });
+
 
 

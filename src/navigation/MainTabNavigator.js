@@ -55,16 +55,13 @@ export const MainTabNavigator = () => (
     <Tab.Screen name="Bots" component={BotNavigator} options={{
       tabBarIcon: ({ focused }) => <TabIcon name={focused ? 'lightning-bolt' : 'lightning-bolt-outline'} focused={focused} />,
     }} />
-    <Tab.Screen name="More" component={MoreNavigator} options={{
+        <Tab.Screen name="More" component={MoreNavigator} options={{
+      unmountOnBlur: true,
       tabBarIcon: ({ focused }) => <TabIcon name={focused ? 'view-grid' : 'view-grid-outline'} focused={focused} />,
-    }} listeners={({ navigation }) => ({
-      tabPress: (e) => {
-        e.preventDefault();
-        navigation.navigate('More', { screen: 'MoreHome' });
-      },
-    })} />
+    }} />
   </Tab.Navigator>
 );
+
 
 
 

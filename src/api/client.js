@@ -31,7 +31,7 @@ client.interceptors.response.use(
   async (error) => {
     if (error.response?.status === 401) {
       const currentRoute = error.config?.url || '';
-      if (currentRoute.includes('/login') || currentRoute.includes('/register')) {
+      if (!currentRoute.includes('/login') && !currentRoute.includes('/register')) {
         await storage.clearAll();
         if (logoutCallback) {
           logoutCallback();

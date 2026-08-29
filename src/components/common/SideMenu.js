@@ -5,6 +5,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
 import { logout } from '../../store/authSlice';
+import { triggerHaptic } from '../../utils/haptics';
 
 const { width, height } = Dimensions.get('window');
 const MENU_WIDTH = width * 0.75;

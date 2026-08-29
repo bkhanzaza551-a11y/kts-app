@@ -37,6 +37,24 @@ export const Button = ({ title, onPress, variant = 'primary', loading, disabled,
     );
   }
 
+  if (variant === 'outline') {
+    return (
+      <TouchableOpacity onPress={onPress} disabled={disabled || loading} activeOpacity={0.8} style={[styles.outline, disabled && styles.disabled, style]}>
+        {loading ? <ActivityIndicator color={COLORS.gold} /> : (
+          <>
+            {icon}
+            <Text style={styles.outlineText}>{title}</Text>
+            {rightIcon && (
+              <View style={styles.rightIconCircle}>
+                <Icon name={rightIcon} size={18} color={COLORS.primary} style={{marginLeft: 2}} />
+              </View>
+            )}
+          </>
+        )}
+      </TouchableOpacity>
+    );
+  }
+
   return null;
 };
 
@@ -71,5 +89,17 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   socialText: { ...TYPOGRAPHY.button, color: '#FFFFFF', fontWeight: '600', fontSize: 15 },
+  outline: {
+    height: 56,
+    borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'transparent',
+    borderWidth: 1.5,
+    borderColor: '#FFD700',
+    paddingHorizontal: SPACING.md,
+  },
+  outlineText: { ...TYPOGRAPHY.button, color: '#FFD700', fontWeight: '700', fontSize: 16, flex: 1, textAlign: 'center', letterSpacing: 0.5 },
   disabled: { opacity: 0.5 },
 });

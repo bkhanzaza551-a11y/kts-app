@@ -105,7 +105,7 @@ export default function AiChatScreen({ navigation }) {
     if (!messageText.trim()) return;
     
     triggerHaptic('light');
-    dispatch(sendMessage(messageText));
+    dispatch(sendMessage({ message: messageText }));
     setInput('');
   };
 

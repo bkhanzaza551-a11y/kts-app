@@ -43,6 +43,7 @@ export const COLORS = {
   black: '#0B0E11',
   white: '#EAECEF',
   gold: '#FCD535',
+  goldLight: '#F5E6B8',
   grey: '#848E9C',
   greyDark: '#555555',
   green: '#0ECB81',
