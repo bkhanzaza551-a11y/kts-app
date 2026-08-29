@@ -1,5 +1,5 @@
 ﻿import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, RefreshControl, Modal } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSelector } from 'react-redux';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -320,6 +320,18 @@ const styles = StyleSheet.create({
   signalPriceValue: { fontSize: 14, color: '#FFFFFF', fontWeight: '700' },
   
   emptyCard: { alignItems: 'center', padding: 40, marginHorizontal: SPACING.screen, backgroundColor: '#12161A', borderRadius: 12 },
-  emptyText: { fontSize: 14, color: '#888', marginTop: 12 },
+    emptyText: { fontSize: 14, color: '#888', marginTop: 12 },
+
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.8)', justifyContent: 'center', padding: 24 },
+  modalContent: { backgroundColor: '#12161A', borderRadius: 24, padding: 24, alignItems: 'center', borderWidth: 1, borderColor: '#1E2329' },
+  modalIconBox: { width: 64, height: 64, borderRadius: 32, backgroundColor: '#FFD700', alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
+  modalTitle: { fontSize: 20, color: '#FFFFFF', fontWeight: '800', marginBottom: 10, textAlign: 'center' },
+  modalText: { fontSize: 14, color: '#A0A0A0', textAlign: 'center', lineHeight: 22, marginBottom: 24 },
+  modalBtnPrimary: { backgroundColor: '#FFD700', width: '100%', paddingVertical: 16, borderRadius: 12, alignItems: 'center', marginBottom: 12 },
+  modalBtnPrimaryText: { color: '#0B0E11', fontSize: 16, fontWeight: '800' },
+  modalBtnSecondary: { paddingVertical: 12 },
+  modalBtnSecondaryText: { color: '#888', fontSize: 14, fontWeight: '600' }
 });
+
+
 

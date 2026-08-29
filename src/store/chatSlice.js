@@ -53,7 +53,16 @@ const chatSlice = createSlice({
         const { roomSlug, message } = a.payload;
         if (s.messages[roomSlug] && message?.data) s.messages[roomSlug].push(message.data);
       })
-      .addCase(fetchStickers.fulfilled, (s, a) => { s.stickers = a.payload.data; });
+      .addCase(fetchStickers.fulfilled, (s, a) => {
+        const packs = a.payload.data || [];
+        const flat = [];
+        packs.forEach(p => {
+          (p.stickers || []).forEach(st => {
+            flat.push({ ...st, pack_name: p.name });
+          });
+        });
+        s.stickers = flat;
+      });
   },
 });
 
