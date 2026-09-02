@@ -11,6 +11,7 @@ export const authApi = {
   resendEmailOtp: (data) => client.post('/resend-email-otp', data),
   getProfile: () => client.get('/profile'),
   updateProfile: (data) => client.put('/profile', data),
+  deleteAccount: () => client.delete('/profile'),
   changePassword: (data) => client.put('/change-password', data),
   forgotPassword: (data) => client.post('/forgot-password', data),
 };

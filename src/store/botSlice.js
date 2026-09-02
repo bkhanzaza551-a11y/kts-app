@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+﻿import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { botApi } from '../api/bots';
 
 export const fetchBots = createAsyncThunk('bots/fetch', async (_, { rejectWithValue }) => {
@@ -32,7 +32,9 @@ const botSlice = createSlice({
       .addCase(fetchBots.pending, (s) => { s.isLoading = true; })
       .addCase(fetchBots.fulfilled, (s, a) => { s.isLoading = false; s.bots = a.payload.data; })
       .addCase(fetchBots.rejected, (s, a) => { s.isLoading = false; s.error = a.payload; })
-      .addCase(fetchBotDetail.fulfilled, (s, a) => { s.currentBot = a.payload.data; })
+      .addCase(fetchBotDetail.pending, (s) => { s.isLoading = true; s.error = null; })
+      .addCase(fetchBotDetail.fulfilled, (s, a) => { s.isLoading = false; s.currentBot = a.payload.data; })
+      .addCase(fetchBotDetail.rejected, (s, a) => { s.isLoading = false; s.error = a.payload; })
       .addCase(fetchBotTrades.fulfilled, (s, a) => { s.trades[a.payload.id] = a.payload.data; })
       .addCase(toggleAutoTrade.fulfilled, (s, a) => {
         const idx = s.bots.findIndex(b => b.id === a.payload.id);
@@ -44,3 +46,4 @@ const botSlice = createSlice({
 
 export const { clearCurrentBot } = botSlice.actions;
 export default botSlice.reducer;
+

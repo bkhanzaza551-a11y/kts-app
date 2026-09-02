@@ -3,23 +3,38 @@ import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-nat
 import { COLORS } from '../../theme/colors';
 import { TYPOGRAPHY } from '../../theme/typography';
 import { SPACING } from '../../theme/spacing';
+import { RiskDisclaimer } from '../../components/common/RiskDisclaimer';
 import client from '../../api/client';
 
 export const LegalScreen = ({ route }) => {
   const { slug } = route.params || {};
+  const targetSlug = slug || 'privacy-policy';
   const [content, setContent] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchPage();
-  }, [slug]);
+  }, [targetSlug]);
+
+  const stripHtml = (html) => {
+    if (!html) return '';
+    return html
+      .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+      .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+      .replace(/<[^>]+>/g, '\n')
+      .replace(/\n\s*\n/g, '\n\n')
+      .trim();
+  };
 
   const fetchPage = async () => {
     try {
-      const res = await client.get(`/legal/${slug}`);
+      const res = await client.get(`/legal/${targetSlug}`);
       setContent(res.data.data);
     } catch (e) {
-      setContent({ title: 'Page Not Found', content: 'This page could not be loaded.' });
+      setContent({ 
+        title: targetSlug === 'terms-conditions' ? 'Terms & Conditions' : 'Privacy Policy', 
+        content: 'Official legal documentation for KTS 10 Pips Bots. For complete details, visit our website or contact support.' 
+      });
     }
     setLoading(false);
   };
@@ -32,10 +47,13 @@ export const LegalScreen = ({ route }) => {
     );
   }
 
+  const cleanBody = content?.content ? stripHtml(content.content) : 'No content available.';
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.title}>{content?.title || 'Legal'}</Text>
-      <Text style={styles.body}>{content?.content || 'No content available.'}</Text>
+      <Text style={styles.title}>{content?.title || 'Legal Document'}</Text>
+      <Text style={styles.body}>{cleanBody}</Text>
+      <RiskDisclaimer style={{ marginTop: 30 }} />
     </ScrollView>
   );
 };

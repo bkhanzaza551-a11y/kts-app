@@ -50,6 +50,15 @@ export const clearChatMessages = createAsyncThunk('aiChat/clearMessages', async 
   dispatch({ type: 'aiChat/clearMessagesLocal' });
 });
 
+export const reportMessage = createAsyncThunk('aiChat/reportMessage', async ({ messageId, reason }, { rejectWithValue }) => {
+  try {
+    const res = await aiChatApi.report(messageId, reason);
+    return res.data;
+  } catch (err) {
+    return rejectWithValue(err.message || 'Failed to report message');
+  }
+});
+
 const aiChatSlice = createSlice({
   name: 'aiChat',
   initialState: {
@@ -81,7 +90,9 @@ const aiChatSlice = createSlice({
         }
       })
       .addCase(sendMessage.rejected, (state, action) => { state.loading = false; state.error = action.payload; })
-      .addCase(fetchChatStatus.fulfilled, (state, action) => { state.status = action.payload; });
+      .addCase(fetchChatStatus.fulfilled, (state, action) => { state.status = action.payload; })
+      .addCase(reportMessage.fulfilled, (state) => { state.reportSuccess = true; })
+      .addCase(reportMessage.rejected, (state) => { state.reportSuccess = false; });
   },
 });
 

@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useDispatch, useSelector } from 'react-redux';
@@ -6,6 +6,7 @@ import { CurrencySwitcher } from '../../components/common/CurrencySwitcher';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { triggerHaptic } from '../../utils/haptics';
 import { toggleHaptic } from '../../store/appSettingsSlice';
+import { AnimatedScreen } from '../../components/common/AnimatedScreen';
 
 const COLORS = {
   bg: '#0B0E11',
@@ -56,7 +57,8 @@ export const MoreScreen = ({ navigation }) => {
       title: 'Support & Legal', 
       items: [
         { icon: 'help-circle-outline', iconColor: '#4CAF50', label: 'Help Center', screen: 'Support' },
-        { icon: 'shield-check-outline', iconColor: '#607D8B', label: 'Privacy Policy', screen: 'Legal' },
+        { icon: 'shield-check-outline', iconColor: '#607D8B', label: 'Privacy Policy', screen: 'Legal', params: { slug: 'privacy-policy' } },
+        { icon: 'file-certificate-outline', iconColor: '#00BCD4', label: 'Terms & Conditions', screen: 'Legal', params: { slug: 'terms-conditions' } },
       ]
     }
   ];
@@ -71,7 +73,7 @@ export const MoreScreen = ({ navigation }) => {
     if (item.isTab) {
       navigation.navigate(item.screen);
     } else {
-      navigation.navigate(item.screen);
+      navigation.navigate(item.screen, item.params);
     }
   };
 

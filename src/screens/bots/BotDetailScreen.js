@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+﻿import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { COLORS } from '../../theme/colors';
@@ -14,7 +14,7 @@ import { useCurrency } from '../../context/CurrencyContext';
 export const BotDetailScreen = ({ route, navigation }) => {
   const { botId } = route.params;
   const dispatch = useDispatch();
-  const { currentBot } = useSelector(s => s.bots);
+  const { currentBot, isLoading, error } = useSelector(s => s.bots);
   const { formatAmount } = useCurrency();
 
   useEffect(() => {
@@ -22,7 +22,9 @@ export const BotDetailScreen = ({ route, navigation }) => {
     return () => dispatch(clearCurrentBot());
   }, [dispatch, botId]);
 
-  if (!currentBot) return <View style={styles.container}><Text style={styles.loading}>Loading...</Text></View>;
+  if (isLoading) return <View style={styles.container}><Text style={styles.loading}>Loading...</Text></View>;
+  if (error) return <View style={styles.container}><Text style={[styles.loading, { color: COLORS.red }]}>{error}</Text></View>;
+  if (!currentBot) return <View style={styles.container}><Text style={styles.loading}>Bot not found</Text></View>;
 
   const profitPct = currentBot.balance ? ((currentBot.total_profit / currentBot.balance) * 100).toFixed(1) : 0;
 
@@ -93,3 +95,4 @@ const styles = StyleSheet.create({
   configValue: { ...TYPOGRAPHY.body2, color: COLORS.white, fontWeight: '600' },
   actions: { gap: SPACING.md, marginTop: SPACING.lg },
 });
+

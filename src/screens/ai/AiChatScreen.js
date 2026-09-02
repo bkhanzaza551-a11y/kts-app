@@ -1,9 +1,9 @@
-﻿import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, TextInput, FlatList, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, Animated, Easing } from 'react-native';
+import React, { useState, useRef, useEffect } from 'react';
+import { View, Text, TextInput, FlatList, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, Animated, Easing, Alert } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { sendMessage, clearChatMessages, loadChatHistory } from '../../store/aiChatSlice';
+import { sendMessage, clearChatMessages, loadChatHistory, reportMessage } from '../../store/aiChatSlice';
 import { triggerHaptic } from '../../utils/haptics';
 
 const COLORS = { 
@@ -109,8 +109,43 @@ export default function AiChatScreen({ navigation }) {
     setInput('');
   };
 
+  const handleReport = (message) => {
+    Alert.alert(
+      'Report Message',
+      'Why are you reporting this message?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Inappropriate Content', onPress: () => submitReport(message, 'inappropriate') },
+        { text: 'Misleading Information', onPress: () => submitReport(message, 'misleading') },
+        { text: 'Spam', onPress: () => submitReport(message, 'spam') },
+        { text: 'Other', onPress: () => submitReport(message, 'other') },
+      ]
+    );
+  };
+
+  const handleReport = (message) => {
+    Alert.alert(
+      'Report Message',
+      'Why are you reporting this message?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Inappropriate Content', onPress: () => submitReport(message, 'inappropriate') },
+        { text: 'Misleading Information', onPress: () => submitReport(message, 'misleading') },
+        { text: 'Spam', onPress: () => submitReport(message, 'spam') },
+        { text: 'Other', onPress: () => submitReport(message, 'other') },
+      ]
+    );
+  };
+
+  const submitReport = (message, reason) => {
+    triggerHaptic('light');
+    dispatch(reportMessage({ messageId: message.id, reason }));
+    Alert.alert('Thank You', 'Your report has been submitted and will be reviewed.');
+  };
+
   const renderMessage = ({ item }) => {
-    const isUser = item.sender === 'user';
+    const isUser = item.role === 'user' || item.sender === 'user';
+    const messageContent = item.content || item.text || item.message || '';
     return (
       <View style={[styles.messageWrapper, isUser ? styles.msgRight : styles.msgLeft]}>
         {!isUser && (
@@ -119,7 +154,16 @@ export default function AiChatScreen({ navigation }) {
           </View>
         )}
         <View style={[styles.bubble, isUser ? styles.userBubble : styles.aiBubble]}>
-          <Text style={[styles.bubbleText, isUser ? styles.userText : styles.aiText]}>{item.text}</Text>
+          <Text style={[styles.bubbleText, isUser ? styles.userText : styles.aiText]}>{messageContent}</Text>
+          {!isUser && (
+            <TouchableOpacity 
+              style={styles.reportBtn} 
+              onPress={() => handleReport(item)}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <Icon name="flag-outline" size={14} color="#666" />
+            </TouchableOpacity>
+          )}
         </View>
       </View>
     );
@@ -156,6 +200,12 @@ export default function AiChatScreen({ navigation }) {
         <TouchableOpacity onPress={() => { triggerHaptic('light'); dispatch(clearChatMessages()); }} style={styles.iconBtn}>
           <Icon name="refresh" size={22} color="#A0A0A0" />
         </TouchableOpacity>
+      </View>
+
+      {/* Compliance Disclaimer Sub-bar */}
+      <View style={{ backgroundColor: 'rgba(255, 215, 0, 0.05)', paddingVertical: 6, paddingHorizontal: 16, borderBottomWidth: 1, borderBottomColor: '#1A1E24', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+        <Icon name="shield-alert-outline" size={13} color="#FFD700" />
+        <Text style={{ fontSize: 11, color: '#8A939E', fontWeight: '500' }}>AI insights are for education & analysis only. Not financial advice.</Text>
       </View>
 
       {/* Main Chat Area */}
@@ -261,6 +311,7 @@ const styles = StyleSheet.create({
   bubbleText: { fontSize: 14, lineHeight: 22 },
   userText: { color: '#0B0E11', fontWeight: '600' },
   aiText: { color: '#EAEAEA' },
+  reportBtn: { position: 'absolute', bottom: -8, right: 8, padding: 4 },
   
   typingContainer: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14, backgroundColor: '#13171B', alignSelf: 'flex-start', borderTopLeftRadius: 18, borderTopRightRadius: 18, borderBottomRightRadius: 18, borderBottomLeftRadius: 4, marginLeft: 40, marginBottom: 16, borderWidth: 1, borderColor: '#1E2329' },
   dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: COLORS.gold, marginRight: 5 },

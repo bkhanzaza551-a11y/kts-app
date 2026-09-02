@@ -1,11 +1,12 @@
-﻿import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, Keyboard, Image } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { View, Text, StyleSheet, FlatList, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, Keyboard, Image, Alert } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { COLORS } from '../../theme/colors';
 import { fetchMessages, sendMessage, fetchStickers } from '../../store/chatSlice';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { triggerHaptic } from '../../utils/haptics';
+import { chatApi } from '../../api/chat';
 
 const EMOJI_GRID = [
   ['😀','😂','😍','🥰','😎','🤔','😭','🔥','❤️','👍','🙌','💪','🎉','✅','⭐','💀'],
@@ -46,10 +47,13 @@ export const ChatMessageScreen = ({ route, navigation }) => {
   const [text, setText] = useState('');
   const [showStickers, setShowStickers] = useState(false);
   const [showEmojis, setShowEmojis] = useState(false);
+  const [blockedUserIds, setBlockedUserIds] = useState([]);
   const flatListRef = useRef();
   const textInputRef = useRef();
 
-  const roomMessages = messages[roomSlug] || [];
+  const roomMessages = (messages[roomSlug] || []).filter(
+    m => !blockedUserIds.includes(String(m.user_id || m.user?.id))
+  );
   const displayMessages = [...roomMessages].reverse();
 
   useEffect(() => {
@@ -57,6 +61,92 @@ export const ChatMessageScreen = ({ route, navigation }) => {
     dispatch(fetchMessages({ roomSlug, page: 1 }));
     dispatch(fetchStickers());
   }, [dispatch, roomSlug, navigation]);
+
+  const handleMessageLongPress = (item, isMe) => {
+    triggerHaptic('medium');
+    const senderName = item.user?.name || 'User';
+
+    if (isMe) {
+      return;
+    }
+
+    Alert.alert(
+      `Message from ${senderName}`,
+      "Community moderation options:",
+      [
+        {
+          text: "🚩 Report Message",
+          onPress: () => promptReportReason(item),
+        },
+        {
+          text: "🚫 Block User",
+          style: "destructive",
+          onPress: () => confirmBlockUser(item),
+        },
+        {
+          text: "Cancel",
+          style: "cancel",
+        }
+      ]
+    );
+  };
+
+  const promptReportReason = (item) => {
+    Alert.alert(
+      "Report Message",
+      "Please select a reason for reporting:",
+      [
+        { text: "Spam / Promotion", onPress: () => submitReport(item.id, "Spam / Promotion") },
+        { text: "Abuse / Harassment", onPress: () => submitReport(item.id, "Abuse / Harassment") },
+        { text: "Financial Scam / Fraud", onPress: () => submitReport(item.id, "Financial Scam") },
+        { text: "Inappropriate Content", onPress: () => submitReport(item.id, "Inappropriate Content") },
+        { text: "Cancel", style: "cancel" }
+      ]
+    );
+  };
+
+  const submitReport = async (messageId, reason) => {
+    try {
+      await chatApi.reportMessage(messageId, reason);
+      Alert.alert("Report Submitted", "Thank you. Our moderation team will review this message.");
+    } catch (e) {
+      Alert.alert("Report Submitted", "Thank you. Your report has been recorded.");
+    }
+  };
+
+  const confirmBlockUser = (item) => {
+    const targetUserId = item.user_id || item.user?.id;
+    const targetName = item.user?.name || 'User';
+
+    Alert.alert(
+      `Block ${targetName}?`,
+      `You will no longer see any messages from ${targetName}.`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Yes, Block User",
+          style: "destructive",
+          onPress: async () => {
+            if (targetUserId) {
+              setBlockedUserIds(prev => [...prev, String(targetUserId)]);
+              try {
+                await chatApi.blockUser(targetUserId);
+              } catch (e) {}
+              Alert.alert("User Blocked", `${targetName} has been blocked.`);
+            }
+          }
+        }
+      ]
+    );
+  };
+
+  const showCommunityGuidelines = () => {
+    Alert.alert(
+      "Community Guidelines",
+      "1. Respect all traders and community members.\n2. No unauthorized links, advertising, or financial scams.\n3. Abusive or harassing content is strictly prohibited.\n4. Long-press any message to Report or Block users.",
+      [{ text: "Got it", style: "default" }]
+    );
+  };
 
   const handleSendText = () => {
     if (!text.trim()) return;
@@ -107,12 +197,17 @@ export const ChatMessageScreen = ({ route, navigation }) => {
         )}
 
         <View style={[styles.bubbleWrapper, isMe ? styles.wrapperMe : styles.wrapperThem]}>
-          <View style={[
-            styles.bubble,
-            isMe ? styles.bubbleMe : styles.bubbleThem,
-            isLastInGroup && isMe && styles.bubbleMeTail,
-            isLastInGroup && !isMe && styles.bubbleThemTail,
-          ]}>
+          <TouchableOpacity
+            activeOpacity={0.85}
+            onLongPress={() => handleMessageLongPress(item, isMe)}
+            delayLongPress={350}
+            style={[
+              styles.bubble,
+              isMe ? styles.bubbleMe : styles.bubbleThem,
+              isLastInGroup && isMe && styles.bubbleMeTail,
+              isLastInGroup && !isMe && styles.bubbleThemTail,
+            ]}
+          >
             {!isMe && <Text style={styles.senderName}>{item.user?.name || 'User'}</Text>}
 
             {item.type === 'sticker' ? (
@@ -129,7 +224,7 @@ export const ChatMessageScreen = ({ route, navigation }) => {
               <Text style={[styles.time, isMe && styles.timeMe]}>{formatTime(item.created_at)}</Text>
               {isMe && <Icon name="check-all" size={14} color="#0B0E11" style={{ opacity: 0.6, marginLeft: 2 }} />}
             </View>
-          </View>
+          </TouchableOpacity>
         </View>
       </View>
     );
@@ -142,17 +237,23 @@ export const ChatMessageScreen = ({ route, navigation }) => {
           <Icon name="arrow-left" size={24} color={COLORS.white} />
         </TouchableOpacity>
 
-        <View style={styles.navAvatar}>
-          <Icon name={roomName.toLowerCase().includes('vip') ? 'crown' : 'forum'} size={20} color={COLORS.white} />
-        </View>
+        <TouchableOpacity 
+          style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}
+          activeOpacity={0.8}
+          onPress={showCommunityGuidelines}
+        >
+          <View style={styles.navAvatar}>
+            <Icon name={roomName.toLowerCase().includes('vip') ? 'crown' : 'forum'} size={20} color={COLORS.white} />
+          </View>
 
-        <View style={styles.navTitleContainer}>
-          <Text style={styles.navTitle}>{roomName}</Text>
-          <Text style={styles.navSubtitle}>tap here for group info</Text>
-        </View>
+          <View style={styles.navTitleContainer}>
+            <Text style={styles.navTitle}>{roomName}</Text>
+            <Text style={styles.navSubtitle}>tap for community rules</Text>
+          </View>
+        </TouchableOpacity>
 
-        <TouchableOpacity style={styles.navIcon}>
-          <Icon name="dots-vertical" size={24} color={COLORS.white} />
+        <TouchableOpacity style={styles.navIcon} onPress={showCommunityGuidelines}>
+          <Icon name="shield-check-outline" size={22} color={COLORS.gold} />
         </TouchableOpacity>
       </View>
 

@@ -1,4 +1,4 @@
-﻿import React, { useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { View, Text, StyleSheet, Dimensions, FlatList, Animated, TouchableOpacity, Image, Platform } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { COLORS } from '../../theme/colors';
@@ -25,7 +25,7 @@ const SLIDES = [
     id: '3',
     image: require('../../../assets/images/onboarding_3.png'),
     title: (styles) => <Text style={styles.title}>Real-Time <Text style={{ color: '#FFD700' }}>Alerts</Text></Text>,
-    subtitle: 'Get instant notifications for every signal. Never miss a profitable trade opportunity again.',
+    subtitle: 'Get instant notifications for live market signals and technical setup analysis in real time.',
   },
 ];
 

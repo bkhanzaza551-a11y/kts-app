@@ -7,4 +7,7 @@ export const aiChatApi = {
   status: () => client.get('/ai-chat/status'),
 
   stats: () => client.get('/ai-chat/stats'),
+
+  report: (messageId, reason) =>
+    client.post('/ai-chat/report', { message_id: messageId, reason }),
 };

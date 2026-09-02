@@ -1,8 +1,9 @@
-﻿import React from 'react';
+import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCurrency } from '../../context/CurrencyContext';
+import { RiskDisclaimer } from '../../components/common/RiskDisclaimer';
 
 const COLORS = {
   bg: '#0B0E11',
@@ -109,6 +110,9 @@ export const BotPurchaseScreen = ({ navigation }) => {
             </TouchableOpacity>
           </View>
         ))}
+
+        {/* Financial Risk Warning */}
+        <RiskDisclaimer style={{ marginTop: 8, marginBottom: 20 }} />
       </ScrollView>
     </View>
   );

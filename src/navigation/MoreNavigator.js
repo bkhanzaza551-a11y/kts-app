@@ -1,10 +1,11 @@
-﻿import React from 'react';
+import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { COLORS } from '../theme/colors';
 import { TYPOGRAPHY } from '../theme/typography';
 import { MoreScreen } from '../screens/more/MoreScreen';
 import { ProfileScreen } from '../screens/profile/ProfileScreen';
 import { EditProfileScreen } from '../screens/profile/EditProfileScreen';
+import { ProfileOnboardingScreen } from '../screens/profile/ProfileOnboardingScreen';
 import { NotificationScreen } from '../screens/notifications/NotificationScreen';
 import { NotificationSettingsScreen } from '../screens/notifications/NotificationSettingsScreen';
 import { NewsDetailScreen } from '../screens/notifications/NewsDetailScreen';
@@ -13,6 +14,8 @@ import { EducationScreen } from '../screens/education/EducationScreen';
 import { CourseDetailScreen } from '../screens/education/CourseDetailScreen';
 import { DemoAccountScreen } from '../screens/demo/DemoAccountScreen';
 import { PaymentPlansScreen } from '../screens/payments/PaymentPlansScreen';
+import { CheckoutScreen } from '../screens/payments/CheckoutScreen';
+import { PaymentSuccessScreen } from '../screens/payments/PaymentSuccessScreen';
 import { PaymentHistoryScreen } from '../screens/payments/PaymentHistoryScreen';
 import { LegalScreen } from '../screens/more/LegalScreen';
 import { ChangePasswordScreen } from '../screens/profile/ChangePasswordScreen';
@@ -33,11 +36,14 @@ export const MoreNavigator = () => (
     <Stack.Screen name="MoreHome" component={MoreScreen} options={{ headerShown: false }} />
     <Stack.Screen name="Profile" component={ProfileScreen} options={{ title: 'Profile' }} />
     <Stack.Screen name="EditProfile" component={EditProfileScreen} options={{ title: 'Edit Profile' }} />
+    <Stack.Screen name="ProfileOnboarding" component={ProfileOnboardingScreen} options={{ headerShown: false }} />
     <Stack.Screen name="Notifications" component={NotificationScreen} options={{ title: 'Notifications' }} />
     <Stack.Screen name="Education" component={EducationScreen} options={{ title: 'Education' }} />
     <Stack.Screen name="CourseDetail" component={CourseDetailScreen} options={{ title: 'Course Detail' }} />
     <Stack.Screen name="Demo" component={DemoAccountScreen} options={{ title: 'Demo Account' }} />
     <Stack.Screen name="Payments" component={PaymentPlansScreen} options={{ title: 'Plans' }} />
+    <Stack.Screen name="Checkout" component={CheckoutScreen} options={{ title: 'Checkout' }} />
+    <Stack.Screen name="PaymentSuccess" component={PaymentSuccessScreen} options={{ headerShown: false }} />
     <Stack.Screen name="PaymentHistory" component={PaymentHistoryScreen} options={{ title: 'Payment History' }} />
     <Stack.Screen name="Legal" component={LegalScreen} options={{ title: 'Legal' }} />
     <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} options={{ title: 'Change Password' }} />

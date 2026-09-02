@@ -8,4 +8,6 @@ export const chatApi = {
   getStickers: () => client.get('/chat/stickers'),
   useSticker: (data) => client.post('/stickers/use', data),
   getAllStickers: () => client.get('/stickers'),
+  reportMessage: (messageId, reason) => client.post(`/chat/messages/${messageId}/report`, { reason }),
+  blockUser: (userId) => client.post(`/chat/users/${userId}/block`),
 };

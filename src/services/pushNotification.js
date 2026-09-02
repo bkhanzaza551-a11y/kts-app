@@ -85,42 +85,46 @@ export function setupNotificationListeners(navigation) {
       store.dispatch(fetchSignals());
     }
 
-    // Show in-app alert for foreground
-    if (title && body) {
-      Alert.alert(title, body, [
-        { text: 'OK', onPress: () => {
-          if (data.signal_id && navigation) {
-            navigation.navigate('Signals');
-          }
-        }},
-      ]);
-    }
-  });
+      // Show in-app alert for foreground
+      if (title && body) {
+        Alert.alert(title, body, [
+          { text: 'OK', onPress: () => {
+            if (data.signal_id && navigation) {
+              navigation.navigate('Markets', { screen: 'SignalDetail', params: { signalId: data.signal_id } });
+            } else if (navigation) {
+              navigation.navigate('Markets');
+            }
+          }},
+        ]);
+      }
+    });
 
-  // Background/quit tap handler
-  messaging().onNotificationOpenedApp(remoteMessage => {
-    console.log('Notification opened:', remoteMessage);
-    const data = remoteMessage.data || {};
-
-    if (data.signal_id && navigation) {
-      navigation.navigate('Signals');
-    } else if (data.type === 'signal_closed' || data.type === 'signal_new') {
-      navigation.navigate('Signals');
-    }
-  });
-
-  // Quit state tap handler
-  messaging().getInitialNotification().then(remoteMessage => {
-    if (remoteMessage) {
-      console.log('Quit state notification:', remoteMessage);
+    // Background/quit tap handler
+    messaging().onNotificationOpenedApp(remoteMessage => {
+      console.log('Notification opened:', remoteMessage);
       const data = remoteMessage.data || {};
-      setTimeout(() => {
-        if (data.signal_id && navigation) {
-          navigation.navigate('Signals');
-        }
-      }, 2000);
-    }
-  });
+
+      if (data.signal_id && navigation) {
+        navigation.navigate('Markets', { screen: 'SignalDetail', params: { signalId: data.signal_id } });
+      } else if (navigation) {
+        navigation.navigate('Markets');
+      }
+    });
+
+    // Quit state tap handler
+    messaging().getInitialNotification().then(remoteMessage => {
+      if (remoteMessage) {
+        console.log('Quit state notification:', remoteMessage);
+        const data = remoteMessage.data || {};
+        setTimeout(() => {
+          if (data.signal_id && navigation) {
+            navigation.navigate('Markets', { screen: 'SignalDetail', params: { signalId: data.signal_id } });
+          } else if (navigation) {
+            navigation.navigate('Markets');
+          }
+        }, 2000);
+      }
+    });
 
   // Token refresh
   messaging().onTokenRefresh(async newToken => {

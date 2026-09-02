@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState, useLayoutEffect, useMemo } from 'react';
+import React, { useEffect, useState, useLayoutEffect, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Alert, TextInput, Modal, FlatList, KeyboardAvoidingView, Platform, Linking } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -160,7 +160,7 @@ export const EditProfileScreen = ({ navigation }) => {
           <Icon name="information" size={24} color="#2196F3" />
           <View style={{ flex: 1, marginLeft: 12 }}>
             <Text style={styles.bannerTitle}>Why add a Demo Account?</Text>
-            <Text style={styles.bannerText}>Linking a Demo Account is strictly required to test our MT5 AI Bots risk-free. Your bot demo requests will be securely routed to this MT5 demo account.</Text>
+            <Text style={styles.bannerText}>Linking a Demo Account is strictly required to test our MT5 AI Bots in a virtual demo environment. Your bot demo requests will be securely routed to this MT5 demo account.</Text>
           </View>
         </View>
 

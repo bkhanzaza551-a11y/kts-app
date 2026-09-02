@@ -1,12 +1,15 @@
-﻿import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, RefreshControl, Modal } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchNotifications, fetchUnreadCount } from '../../store/notificationSlice';
+import { fetchLatest } from '../../store/signalSlice';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { SPACING } from '../../theme/spacing';
 import { CurrencySwitcher } from '../../components/common/CurrencySwitcher';
 import { SideMenu } from '../../components/common/SideMenu';
+import { AnimatedScreen } from '../../components/common/AnimatedScreen';
+import { RiskDisclaimer } from '../../components/common/RiskDisclaimer';
 
 export const HomeScreen = ({ navigation }) => {
   const insets = useSafeAreaInsets();
@@ -24,11 +27,14 @@ export const HomeScreen = ({ navigation }) => {
   useEffect(() => {
     dispatch(fetchNotifications());
     dispatch(fetchUnreadCount());
+    dispatch(fetchLatest());
   }, [dispatch]);
 
   useEffect(() => {
-    if (user && !user.demo_account_id) {
+    if (user && !user.is_profile_completed && !user.demo_account_id) {
       setShowProfilePrompt(true);
+    } else {
+      setShowProfilePrompt(false);
     }
   }, [user]);
 
@@ -52,9 +58,14 @@ export const HomeScreen = ({ navigation }) => {
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await fetchMarkets();
+    await Promise.all([
+      fetchMarkets(),
+      dispatch(fetchLatest()),
+      dispatch(fetchNotifications()),
+      dispatch(fetchUnreadCount()),
+    ]);
     setRefreshing(false);
-  }, []);
+  }, [dispatch]);
 
   const quickActions = [
     { icon: 'chart-line', label: 'Signals', screen: 'Markets' },
@@ -115,8 +126,8 @@ export const HomeScreen = ({ navigation }) => {
               
               <View style={styles.heroStatsRow}>
                 <View style={styles.heroStatItem}>
-                  <Text style={styles.heroStatValue}>94%</Text>
-                  <Text style={styles.heroStatLabel}>Win Rate</Text>
+                  <Text style={styles.heroStatValue}>94%*</Text>
+                  <Text style={styles.heroStatLabel}>Sample Rate</Text>
                 </View>
                 <View style={styles.heroStatDivider} />
                 <View style={styles.heroStatItem}>
@@ -129,6 +140,8 @@ export const HomeScreen = ({ navigation }) => {
                   <Text style={styles.heroStatLabel}>Signals</Text>
                 </View>
               </View>
+
+              <Text style={styles.heroFootnote}>*Based on historical test samples. Past performance is not indicative of future results.</Text>
               
               <TouchableOpacity style={styles.heroMainBtn} onPress={() => navigation.navigate('Bots')}>
                 <Text style={styles.heroMainBtnText}>Access AI Bots</Text>
@@ -227,6 +240,9 @@ export const HomeScreen = ({ navigation }) => {
               </View>
             </View>
           ))}
+
+          {/* Financial Risk Warning */}
+          <RiskDisclaimer style={{ marginTop: 24, marginBottom: 12 }} />
         </View>
       </ScrollView>
 
@@ -241,13 +257,13 @@ export const HomeScreen = ({ navigation }) => {
               <Icon name="account-edit-outline" size={32} color="#0B0E11" />
             </View>
             <Text style={styles.modalTitle}>Complete Your Profile</Text>
-            <Text style={styles.modalText}>Please link your Demo MT5 account in your profile to request and test AI Bots risk-free.</Text>
+            <Text style={styles.modalText}>Please link your Demo MT5 account in your profile to request and test AI Bots in a virtual demo environment.</Text>
             
             <TouchableOpacity 
               style={styles.modalBtnPrimary}
               onPress={() => {
                 setShowProfilePrompt(false);
-                navigation.navigate('More', { screen: 'Profile' });
+                navigation.navigate('More', { screen: 'ProfileOnboarding' });
               }}
             >
               <Text style={styles.modalBtnPrimaryText}>Complete Profile Now</Text>
@@ -291,6 +307,7 @@ const styles = StyleSheet.create({
   heroStatValue: { fontSize: 16, color: '#FFFFFF', fontWeight: '700' },
   heroStatLabel: { fontSize: 11, color: '#888', marginTop: 4 },
   heroStatDivider: { width: 1, height: '100%', backgroundColor: '#2A2E35' },
+  heroFootnote: { fontSize: 10, color: '#7E8B9B', fontStyle: 'italic', textAlign: 'center', marginBottom: 14, lineHeight: 14 },
   heroMainBtn: { backgroundColor: '#FFD700', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 12, borderRadius: 8, gap: 8 },
   heroMainBtnText: { fontSize: 14, color: '#0B0E11', fontWeight: '700' },
 

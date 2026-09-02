@@ -1,10 +1,11 @@
-﻿import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl, ActivityIndicator, ScrollView } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Skeleton } from '../../components/common/Skeleton';
 import { AnimatedScreen } from '../../components/common/AnimatedScreen';
+import { RiskDisclaimer } from '../../components/common/RiskDisclaimer';
 import { fetchSignals, fetchCategories, clearSignals } from '../../store/signalSlice';
 import { useCurrency } from '../../context/CurrencyContext';
 
@@ -213,6 +214,7 @@ export const SignalListScreen = ({ navigation }) => {
         renderItem={renderSignal}
         ListHeaderComponent={renderHeader}
         ListEmptyComponent={renderEmpty}
+        ListFooterComponent={filteredItems.length > 0 ? <RiskDisclaimer style={{ marginTop: 16 }} /> : null}
         contentContainerStyle={styles.list}
         showsVerticalScrollIndicator={false}
         onEndReached={loadMore}

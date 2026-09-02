@@ -1,4 +1,4 @@
-﻿import React, { useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl, Platform } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -7,6 +7,7 @@ import { fetchBots } from '../../store/botSlice';
 import { formatWinRate } from '../../utils/formatters';
 import { useCurrency } from '../../context/CurrencyContext';
 import { Skeleton } from '../../components/common/Skeleton';
+import { RiskDisclaimer } from '../../components/common/RiskDisclaimer';
 
 const COLORS = {
   bg: '#0B0E11',
@@ -149,6 +150,7 @@ export const BotListScreen = ({ navigation }) => {
         keyExtractor={(item) => String(item.id)}
         renderItem={renderBot}
         ListEmptyComponent={renderEmpty}
+        ListFooterComponent={bots.length > 0 ? <RiskDisclaimer style={{ marginTop: 16 }} /> : null}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.gold} />}

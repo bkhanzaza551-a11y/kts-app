@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState, useLayoutEffect } from 'react';
+import React, { useEffect, useState, useLayoutEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Dimensions } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { WebView } from 'react-native-webview';
@@ -41,8 +41,8 @@ export const SignalDetailScreen = ({ route, navigation }) => {
   if (isLoading || !signal) {
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()}>
+        <View style={styles.navbar}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
             <Icon name="arrow-left" size={24} color={COLORS.white} />
           </TouchableOpacity>
         </View>
