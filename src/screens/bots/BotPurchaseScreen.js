@@ -23,7 +23,7 @@ const AVAILABLE_BOTS = [
     description: 'High-frequency scalping on EURUSD, GBPUSD', 
     price: 99, 
     monthly: 29, 
-    features: ['Auto Trade Execution', '85% Historical Win Rate', '24/5 Forex Trading', 'Dynamic Risk Management'],
+    features: ['Auto Trade Execution', 'Algorithmic Rule Strategy', '24/5 Forex Trading', 'Dynamic Risk Management'],
     popular: true
   },
   { 

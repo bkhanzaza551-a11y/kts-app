@@ -7,12 +7,13 @@ import { COLORS } from '../../theme/colors';
 import { useCurrency } from '../../context/CurrencyContext';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Skeleton } from '../../components/common/Skeleton';
+import { RiskDisclaimer } from '../../components/common/RiskDisclaimer';
 import client from '../../api/client';
 
 const { width } = Dimensions.get('window');
 
 export const SignalDetailScreen = ({ route, navigation }) => {
-  const { signalId } = route.params;
+  const { signalId } = route.params || {};
   const [signal, setSignal] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [chartLoading, setChartLoading] = useState(true);
@@ -260,6 +261,7 @@ export const SignalDetailScreen = ({ route, navigation }) => {
 
         </View>
 
+        <RiskDisclaimer style={{ marginTop: 16, marginBottom: 30 }} />
       </ScrollView>
     </View>
   );

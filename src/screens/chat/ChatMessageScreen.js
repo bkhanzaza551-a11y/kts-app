@@ -38,7 +38,7 @@ const formatTime = (dateString) => {
 };
 
 export const ChatMessageScreen = ({ route, navigation }) => {
-  const { roomSlug, roomName } = route.params;
+  const { roomSlug = 'general', roomName = 'Community Chat' } = route.params || {};
   const dispatch = useDispatch();
   const { messages, stickers } = useSelector(s => s.chat);
   const { user } = useSelector(s => s.auth);

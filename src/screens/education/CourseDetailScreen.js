@@ -10,7 +10,7 @@ import { fetchCourseDetail } from '../../store/educationSlice';
 import { useCurrency } from '../../context/CurrencyContext';
 
 export const CourseDetailScreen = ({ route, navigation }) => {
-  const { courseId } = route.params;
+  const { courseId } = route.params || {};
   const dispatch = useDispatch();
   const { currentCourse: course, isLoading } = useSelector(s => s.education);
   const { formatAmount } = useCurrency();

@@ -11,7 +11,7 @@ import { fetchBotTrades } from '../../store/botSlice';
 import { useCurrency } from '../../context/CurrencyContext';
 
 export const BotTradesScreen = ({ route }) => {
-  const { botId } = route.params;
+  const { botId } = route.params || {};
   const dispatch = useDispatch();
   const { trades, isLoading } = useSelector(s => s.bots);
   const { formatAmount } = useCurrency();

@@ -1,4 +1,4 @@
-﻿import React, { useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { COLORS } from '../../theme/colors';
@@ -10,9 +10,10 @@ import { Button } from '../../components/common/Button';
 import { fetchBotDetail, toggleAutoTrade, clearCurrentBot } from '../../store/botSlice';
 import { formatWinRate } from '../../utils/formatters';
 import { useCurrency } from '../../context/CurrencyContext';
+import { RiskDisclaimer } from '../../components/common/RiskDisclaimer';
 
 export const BotDetailScreen = ({ route, navigation }) => {
-  const { botId } = route.params;
+  const { botId } = route.params || {};
   const dispatch = useDispatch();
   const { currentBot, isLoading, error } = useSelector(s => s.bots);
   const { formatAmount } = useCurrency();
@@ -70,6 +71,8 @@ export const BotDetailScreen = ({ route, navigation }) => {
           variant={currentBot.auto_trade ? 'outline' : 'primary'}
           onPress={() => dispatch(toggleAutoTrade(botId))} />
       </View>
+
+      <RiskDisclaimer style={{ marginTop: 20 }} />
     </ScrollView>
   );
 };

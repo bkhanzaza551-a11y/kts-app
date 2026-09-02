@@ -1,4 +1,4 @@
-﻿import React, { useLayoutEffect } from 'react';
+import React, { useLayoutEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { COLORS } from '../../theme/colors';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { formatRelativeTime } from '../../utils/formatters';
 
 export const NewsDetailScreen = ({ route, navigation }) => {
-  const { news } = route.params;
+  const { news = {} } = route.params || {};
   const insets = useSafeAreaInsets();
 
   useLayoutEffect(() => {
@@ -22,7 +22,7 @@ export const NewsDetailScreen = ({ route, navigation }) => {
     }
   };
 
-  const theme = getIconAndColor(news.type);
+  const theme = getIconAndColor(news?.type);
 
   return (
     <View style={styles.container}>

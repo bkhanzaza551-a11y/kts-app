@@ -1,14 +1,16 @@
 ﻿import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, TouchableOpacity, Animated, Easing, ImageBackground } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, TouchableOpacity, Animated, Easing, ImageBackground, Alert } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { COLORS } from '../../theme/colors';
 import { TYPOGRAPHY } from '../../theme/typography';
 import { SPACING, RADIUS } from '../../theme/spacing';
 import { Button } from '../../components/common/Button';
 import { Input } from '../../components/common/Input';
-import { register, clearError } from '../../store/authSlice';
+import { register, googleLogin, clearError } from '../../store/authSlice';
 import { validateName, validateEmail, validatePassword, validateConfirmPassword } from '../../utils/validators';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import '../../config/google';
 
 export const RegisterScreen = ({ navigation }) => {
   const [name, setName] = useState('');
@@ -50,6 +52,24 @@ export const RegisterScreen = ({ navigation }) => {
     if (Object.values(errs).some(Boolean)) { setErrors(errs); return; }
     setErrors({});
     dispatch(register({ name, email, password, password_confirmation: confirm }));
+  };
+
+  const handleGoogleLogin = async () => {
+    try {
+      await GoogleSignin.hasPlayServices();
+      const userInfo = await GoogleSignin.signIn();
+      
+      dispatch(googleLogin({
+        google_id: userInfo.user.id,
+        email: userInfo.user.email,
+        name: userInfo.user.name,
+        avatar: userInfo.user.photo,
+      }));
+    } catch (err) {
+      if (err.code !== '-5') {
+        Alert.alert('Google Login Failed', 'Unable to sign in with Google. Please try again.');
+      }
+    }
   };
 
   return (
@@ -137,7 +157,7 @@ export const RegisterScreen = ({ navigation }) => {
               title="Continue with Google" 
               variant="social" 
               icon={<Icon name="google" size={20} color={COLORS.white} />} 
-              onPress={() => {}} 
+              onPress={handleGoogleLogin} 
             />
 
             <View style={styles.footer}>
