@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, TouchableOpacity, Animated, Easing, ImageBackground, Alert } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { COLORS } from '../../theme/colors';
@@ -40,17 +40,20 @@ export const LoginScreen = ({ navigation }) => {
   const handleGoogleLogin = async () => {
     try {
       await GoogleSignin.hasPlayServices();
-      const userInfo = await GoogleSignin.signIn();
+      const response = await GoogleSignin.signIn();
+      const userObj = response?.data?.user || response?.user || response;
       
-      dispatch(googleLogin({
-        google_id: userInfo.user.id,
-        email: userInfo.user.email,
-        name: userInfo.user.name,
-        avatar: userInfo.user.photo,
-      }));
+      if (userObj?.email) {
+        dispatch(googleLogin({
+          google_id: userObj.id || response?.data?.user?.id || 'google_' + Date.now(),
+          email: userObj.email,
+          name: userObj.name || 'Trader',
+          avatar: userObj.photo || null,
+        }));
+      }
     } catch (err) {
-      if (err.code !== '-5') {
-        Alert.alert('Google Login Failed', 'Unable to sign in with Google. Please try again.');
+      if (err?.code !== '-5' && err?.code !== 'SIGN_IN_CANCELLED' && err?.code !== '12501') {
+        Alert.alert('Google Login', 'Unable to sign in with Google. Please try again.');
       }
     }
   };
