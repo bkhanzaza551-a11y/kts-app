@@ -11,7 +11,7 @@ export const setLogoutCallback = (cb) => {
 
 const client = axios.create({
   baseURL: API_BASE,
-  timeout: 15000,
+  timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
@@ -38,7 +38,16 @@ client.interceptors.response.use(
         }
       }
     }
-    const message = error.response?.data?.message || error.message || 'Network error';
+
+    let message = 'Network connection issue. Please check your internet and try again.';
+    if (error.response?.data?.message) {
+      message = error.response.data.message;
+    } else if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
+      message = 'Request timed out. Please try again.';
+    } else if (error.message && !error.message.includes('Network Error')) {
+      message = error.message;
+    }
+
     return Promise.reject(new Error(message));
   }
 );

@@ -42,13 +42,40 @@ export const ChangeSecurityCodeScreen = ({ navigation }) => {
       <Text style={styles.subtitle}>Enter your current security code and set a new 6-digit code.</Text>
 
       <Text style={styles.label}>Current Security Code</Text>
-      <TextInput style={styles.input} value={currentCode} onChangeText={setCurrentCode} keyboardType="numeric" maxLength={6} secureTextEntry placeholder="Enter current code" placeholderTextColor={COLORS.grey} />
+      <TextInput
+        style={styles.input}
+        value={currentCode}
+        onChangeText={(t) => setCurrentCode(t.replace(/[^0-9]/g, ''))}
+        keyboardType="numeric"
+        maxLength={6}
+        secureTextEntry
+        placeholder="Enter current code"
+        placeholderTextColor={COLORS.grey}
+      />
 
       <Text style={styles.label}>New Security Code</Text>
-      <TextInput style={styles.input} value={newCode} onChangeText={setNewCode} keyboardType="numeric" maxLength={6} secureTextEntry placeholder="Enter new 6-digit code" placeholderTextColor={COLORS.grey} />
+      <TextInput
+        style={styles.input}
+        value={newCode}
+        onChangeText={(t) => setNewCode(t.replace(/[^0-9]/g, ''))}
+        keyboardType="numeric"
+        maxLength={6}
+        secureTextEntry
+        placeholder="Enter new 6-digit code"
+        placeholderTextColor={COLORS.grey}
+      />
 
       <Text style={styles.label}>Confirm New Security Code</Text>
-      <TextInput style={styles.input} value={confirmCode} onChangeText={setConfirmCode} keyboardType="numeric" maxLength={6} secureTextEntry placeholder="Confirm new code" placeholderTextColor={COLORS.grey} />
+      <TextInput
+        style={styles.input}
+        value={confirmCode}
+        onChangeText={(t) => setConfirmCode(t.replace(/[^0-9]/g, ''))}
+        keyboardType="numeric"
+        maxLength={6}
+        secureTextEntry
+        placeholder="Confirm new code"
+        placeholderTextColor={COLORS.grey}
+      />
 
       <Button title={loading ? 'Changing...' : 'Change Security Code'} onPress={handleSubmit} disabled={loading} style={styles.btn} />
     </ScrollView>

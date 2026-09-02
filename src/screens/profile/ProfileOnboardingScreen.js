@@ -30,12 +30,33 @@ import client from '../../api/client';
 
 const { width } = Dimensions.get('window');
 
-const COUNTRIES = [
-  'Pakistan', 'United Arab Emirates', 'Saudi Arabia', 'United States',
-  'United Kingdom', 'Canada', 'Australia', 'India', 'Germany', 'France',
-  'Turkey', 'Malaysia', 'Singapore', 'Qatar', 'Oman', 'Bahrain', 'Kuwait',
-  'Bangladesh', 'Sri Lanka', 'South Africa', 'Nigeria', 'Kenya', 'Egypt'
-];
+const COUNTRY_DATA = {
+  'Pakistan': { code: '+92', flag: '🇵🇰' },
+  'United Arab Emirates': { code: '+971', flag: '🇦🇪' },
+  'Saudi Arabia': { code: '+966', flag: '🇸🇦' },
+  'United States': { code: '+1', flag: '🇺🇸' },
+  'United Kingdom': { code: '+44', flag: '🇬🇧' },
+  'India': { code: '+91', flag: '🇮🇳' },
+  'Canada': { code: '+1', flag: '🇨🇦' },
+  'Australia': { code: '+61', flag: '🇦🇺' },
+  'Germany': { code: '+49', flag: '🇩🇪' },
+  'France': { code: '+33', flag: '🇫🇷' },
+  'Turkey': { code: '+90', flag: '🇹🇷' },
+  'Malaysia': { code: '+60', flag: '🇲🇾' },
+  'Singapore': { code: '+65', flag: '🇸🇬' },
+  'Qatar': { code: '+974', flag: '🇶🇦' },
+  'Oman': { code: '+968', flag: '🇴🇲' },
+  'Bahrain': { code: '+973', flag: '🇧🇭' },
+  'Kuwait': { code: '+965', flag: '🇰🇼' },
+  'Bangladesh': { code: '+880', flag: '🇧🇩' },
+  'Sri Lanka': { code: '+94', flag: '🇱🇰' },
+  'South Africa': { code: '+27', flag: '🇿🇦' },
+  'Nigeria': { code: '+234', flag: '🇳🇬' },
+  'Kenya': { code: '+254', flag: '🇰🇪' },
+  'Egypt': { code: '+20', flag: '🇪🇬' },
+};
+
+const COUNTRIES = Object.keys(COUNTRY_DATA);
 
 const CITIES = {
   'Pakistan': ['Karachi', 'Lahore', 'Islamabad', 'Rawalpindi', 'Faisalabad', 'Multan', 'Peshawar', 'Quetta', 'Sialkot', 'Gujranwala', 'Hyderabad'],
@@ -61,7 +82,7 @@ const DEMO_SERVERS = {
 export const ProfileOnboardingScreen = ({ navigation }) => {
   const insets = useSafeAreaInsets();
   const dispatch = useDispatch();
-  const { user } = useSelector(s => s.auth);
+  const { user } = useSelector((s) => s.auth);
 
   // Stepper State (1: Personal, 2: Demo Account, 3: Real Account)
   const [currentStep, setCurrentStep] = useState(1);
@@ -74,11 +95,12 @@ export const ProfileOnboardingScreen = ({ navigation }) => {
   const [showPhotoPicker, setShowPhotoPicker] = useState(false);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [country, setCountry] = useState('Pakistan');
+  const [countryCode, setCountryCode] = useState('+92');
+  const [city, setCity] = useState('');
   const [gender, setGender] = useState('male');
   const [phone, setPhone] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
-  const [country, setCountry] = useState('');
-  const [city, setCity] = useState('');
 
   // Step 2: Demo Account State
   const [brokerName, setBrokerName] = useState('Exness');
@@ -103,15 +125,26 @@ export const ProfileOnboardingScreen = ({ navigation }) => {
     if (user) {
       setName(user.name || '');
       setEmail(user.email || '');
-      setPhone(user.phone || '');
-      setWhatsapp(user.whatsapp || user.phone || '');
-      setGender(user.gender || 'male');
-      setCountry(user.country || '');
+      const userCountry = user.country || 'Pakistan';
+      setCountry(userCountry);
+      setCountryCode(COUNTRY_DATA[userCountry]?.code || '+92');
       setCity(user.city || '');
+      setGender(user.gender || 'male');
+      
+      // Clean up phone number from previous prefixes
+      let rawPhone = user.phone || '';
+      let rawWhatsapp = user.whatsapp || '';
+      Object.values(COUNTRY_DATA).forEach(({ code }) => {
+        rawPhone = rawPhone.replace(code, '').trim();
+        rawWhatsapp = rawWhatsapp.replace(code, '').trim();
+      });
+      setPhone(rawPhone.replace(/[^0-9]/g, ''));
+      setWhatsapp(rawWhatsapp.replace(/[^0-9]/g, '') || rawPhone.replace(/[^0-9]/g, ''));
+
       setBrokerName(user.broker_name || 'Exness');
-      setDemoAccountId(user.demo_account_id || '');
+      setDemoAccountId((user.demo_account_id || '').replace(/[^0-9]/g, ''));
       setDemoAccountServer(user.demo_account_server || 'Exness-MT5Trial');
-      setRealAccountId(user.real_account_id || '');
+      setRealAccountId((user.real_account_id || '').replace(/[^0-9]/g, ''));
       setRealAccountServer(user.real_account_server || 'Exness-MT5Real');
       if (user.avatar) {
         setAvatarUri(user.avatar);
@@ -197,6 +230,10 @@ export const ProfileOnboardingScreen = ({ navigation }) => {
         Alert.alert('Name Required', 'Please enter your full name to proceed.');
         return;
       }
+      if (!country.trim()) {
+        Alert.alert('Country Required', 'Please select your country.');
+        return;
+      }
       if (!phone.trim()) {
         Alert.alert('Phone Required', 'Please enter your phone number so we can verify your trading account.');
         return;
@@ -210,7 +247,7 @@ export const ProfileOnboardingScreen = ({ navigation }) => {
           'Please enter your MT5 Demo Account Number to proceed. You can create a free account using the link above.',
           [
             { text: 'Enter Account', style: 'cancel' },
-            { text: 'Skip Demo', onPress: () => { setCurrentStep(3); updateProgress(3); } }
+            { text: 'Skip Demo', onPress: () => { setCurrentStep(3); updateProgress(3); } },
           ]
         );
         return;
@@ -231,13 +268,17 @@ export const ProfileOnboardingScreen = ({ navigation }) => {
 
   // Submit Profile & Finalize Onboarding
   const handleCompleteProfile = async (skipReal = false) => {
+    if (saving) return;
     triggerHaptic('light');
     setSaving(true);
     try {
+      const cleanPhone = phone.trim() ? `${countryCode} ${phone.trim()}` : '';
+      const cleanWhatsapp = whatsapp.trim() ? `${countryCode} ${whatsapp.trim()}` : cleanPhone;
+
       const payload = {
         name: name.trim(),
-        phone: phone.trim(),
-        whatsapp: whatsapp.trim() || phone.trim(),
+        phone: cleanPhone,
+        whatsapp: cleanWhatsapp,
         gender: gender,
         country: country.trim(),
         city: city.trim(),
@@ -268,7 +309,8 @@ export const ProfileOnboardingScreen = ({ navigation }) => {
       setShowSuccessModal(true);
     } catch (e) {
       triggerHaptic('heavy');
-      Alert.alert('Submission Error', e.message || 'Failed to update profile. Please try again.');
+      const errMessage = e.response?.data?.message || e.message || 'Failed to update profile. Please try again.';
+      Alert.alert('Submission Notice', errMessage);
     } finally {
       setSaving(false);
     }
@@ -309,6 +351,8 @@ export const ProfileOnboardingScreen = ({ navigation }) => {
     triggerHaptic('light');
     if (pickerConfig.type === 'country') {
       setCountry(item);
+      const code = COUNTRY_DATA[item]?.code || '+92';
+      setCountryCode(code);
       setCity('');
     } else if (pickerConfig.type === 'city') {
       setCity(item);
@@ -323,7 +367,7 @@ export const ProfileOnboardingScreen = ({ navigation }) => {
 
   const filteredDropdownData = useMemo(() => {
     if (!searchQuery.trim()) return pickerConfig.data;
-    return pickerConfig.data.filter(i => i.toLowerCase().includes(searchQuery.toLowerCase()));
+    return pickerConfig.data.filter((i) => i.toLowerCase().includes(searchQuery.toLowerCase()));
   }, [searchQuery, pickerConfig.data]);
 
   return (
@@ -444,7 +488,7 @@ export const ProfileOnboardingScreen = ({ navigation }) => {
               <View style={styles.card}>
                 <Text style={styles.cardHeading}>Personal Information</Text>
 
-                {/* Full Name */}
+                {/* 1. Full Name */}
                 <View style={styles.field}>
                   <Text style={styles.label}>Full Name *</Text>
                   <View style={styles.inputWrapper}>
@@ -455,11 +499,12 @@ export const ProfileOnboardingScreen = ({ navigation }) => {
                       onChangeText={setName}
                       placeholder="e.g. John Doe"
                       placeholderTextColor="#555"
+                      autoCapitalize="words"
                     />
                   </View>
                 </View>
 
-                {/* Email (Readonly / Pre-filled) */}
+                {/* 2. Email Address */}
                 <View style={styles.field}>
                   <Text style={styles.label}>Email Address</Text>
                   <View style={[styles.inputWrapper, styles.inputDisabled]}>
@@ -475,7 +520,32 @@ export const ProfileOnboardingScreen = ({ navigation }) => {
                   </View>
                 </View>
 
-                {/* Gender Selector */}
+                {/* 3. Country & 4. City Dropdowns */}
+                <View style={styles.rowFields}>
+                  <View style={[styles.field, { flex: 1, marginRight: 8 }]}>
+                    <Text style={styles.label}>Country *</Text>
+                    <TouchableOpacity style={styles.dropdownBtn} activeOpacity={0.7} onPress={openCountryPicker}>
+                      <Icon name="earth" size={18} color={country ? COLORS.gold : COLORS.grey} style={styles.inputIcon} />
+                      <Text style={[styles.dropdownBtnText, !country && { color: '#555' }]} numberOfLines={1}>
+                        {country || 'Select'}
+                      </Text>
+                      <Icon name="chevron-down" size={18} color={COLORS.grey} />
+                    </TouchableOpacity>
+                  </View>
+
+                  <View style={[styles.field, { flex: 1, marginLeft: 8 }]}>
+                    <Text style={styles.label}>City</Text>
+                    <TouchableOpacity style={styles.dropdownBtn} activeOpacity={0.7} onPress={openCityPicker}>
+                      <Icon name="city-variant-outline" size={18} color={city ? COLORS.white : COLORS.grey} style={styles.inputIcon} />
+                      <Text style={[styles.dropdownBtnText, !city && { color: '#555' }]} numberOfLines={1}>
+                        {city || 'Select'}
+                      </Text>
+                      <Icon name="chevron-down" size={18} color={COLORS.grey} />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+
+                {/* 5. Gender Selector */}
                 <View style={styles.field}>
                   <Text style={styles.label}>Gender</Text>
                   <View style={styles.genderRow}>
@@ -483,7 +553,7 @@ export const ProfileOnboardingScreen = ({ navigation }) => {
                       { id: 'male', label: 'Male', icon: 'gender-male' },
                       { id: 'female', label: 'Female', icon: 'gender-female' },
                       { id: 'other', label: 'Other', icon: 'account-question-outline' },
-                    ].map(g => (
+                    ].map((g) => (
                       <TouchableOpacity
                         key={g.id}
                         style={[styles.genderCard, gender === g.id && styles.genderCardActive]}
@@ -506,26 +576,30 @@ export const ProfileOnboardingScreen = ({ navigation }) => {
                   </View>
                 </View>
 
-                {/* Phone Number */}
+                {/* 6. Phone Number */}
                 <View style={styles.field}>
                   <Text style={styles.label}>Phone Number *</Text>
                   <View style={styles.inputWrapper}>
-                    <Icon name="phone-outline" size={20} color={COLORS.grey} style={styles.inputIcon} />
+                    <View style={styles.countryCodeBadge}>
+                      <Text style={styles.countryCodeText}>{countryCode}</Text>
+                    </View>
                     <TextInput
                       style={styles.input}
                       value={phone}
                       onChangeText={(val) => {
-                        setPhone(val);
-                        if (!whatsapp) setWhatsapp(val);
+                        const num = val.replace(/[^0-9]/g, '');
+                        setPhone(num);
+                        if (!whatsapp) setWhatsapp(num);
                       }}
-                      placeholder="+92 300 1234567"
+                      placeholder="3001234567"
                       placeholderTextColor="#555"
-                      keyboardType="phone-pad"
+                      keyboardType="numeric"
+                      maxLength={15}
                     />
                   </View>
                 </View>
 
-                {/* WhatsApp Number */}
+                {/* 7. WhatsApp Number */}
                 <View style={styles.field}>
                   <View style={styles.labelRow}>
                     <Text style={styles.label}>WhatsApp Number</Text>
@@ -536,43 +610,20 @@ export const ProfileOnboardingScreen = ({ navigation }) => {
                     )}
                   </View>
                   <View style={styles.inputWrapper}>
-                    <Icon name="whatsapp" size={20} color="#25D366" style={styles.inputIcon} />
+                    <View style={[styles.countryCodeBadge, { borderColor: 'rgba(37, 211, 102, 0.3)' }]}>
+                      <Text style={[styles.countryCodeText, { color: '#25D366' }]}>{countryCode}</Text>
+                    </View>
                     <TextInput
                       style={styles.input}
                       value={whatsapp}
-                      onChangeText={setWhatsapp}
-                      placeholder="+92 300 1234567"
+                      onChangeText={(val) => setWhatsapp(val.replace(/[^0-9]/g, ''))}
+                      placeholder="3001234567"
                       placeholderTextColor="#555"
-                      keyboardType="phone-pad"
+                      keyboardType="numeric"
+                      maxLength={15}
                     />
                   </View>
                 </View>
-
-                {/* Country & City Dropdowns */}
-                <View style={styles.rowFields}>
-                  <View style={[styles.field, { flex: 1, marginRight: 8 }]}>
-                    <Text style={styles.label}>Country</Text>
-                    <TouchableOpacity style={styles.dropdownBtn} activeOpacity={0.7} onPress={openCountryPicker}>
-                      <Icon name="earth" size={18} color={country ? COLORS.white : COLORS.grey} style={styles.inputIcon} />
-                      <Text style={[styles.dropdownBtnText, !country && { color: '#555' }]} numberOfLines={1}>
-                        {country || 'Select'}
-                      </Text>
-                      <Icon name="chevron-down" size={18} color={COLORS.grey} />
-                    </TouchableOpacity>
-                  </View>
-
-                  <View style={[styles.field, { flex: 1, marginLeft: 8 }]}>
-                    <Text style={styles.label}>City</Text>
-                    <TouchableOpacity style={styles.dropdownBtn} activeOpacity={0.7} onPress={openCityPicker}>
-                      <Icon name="city-variant-outline" size={18} color={city ? COLORS.white : COLORS.grey} style={styles.inputIcon} />
-                      <Text style={[styles.dropdownBtnText, !city && { color: '#555' }]} numberOfLines={1}>
-                        {city || 'Select'}
-                      </Text>
-                      <Icon name="chevron-down" size={18} color={COLORS.grey} />
-                    </TouchableOpacity>
-                  </View>
-                </View>
-
               </View>
 
               {/* Continue to Step 2 Button */}
@@ -651,14 +702,14 @@ export const ProfileOnboardingScreen = ({ navigation }) => {
 
                 {/* Demo MT5 Account Number */}
                 <View style={styles.field}>
-                  <Text style={styles.label}>Demo MT5 Account Number *</Text>
+                  <Text style={styles.label}>Demo Account Number *</Text>
                   <View style={styles.inputWrapper}>
                     <Icon name="pound" size={20} color={COLORS.grey} style={styles.inputIcon} />
                     <TextInput
                       style={styles.input}
                       value={demoAccountId}
-                      onChangeText={setDemoAccountId}
-                      placeholder="e.g. 10293847"
+                      onChangeText={(val) => setDemoAccountId(val.replace(/[^0-9]/g, ''))}
+                      placeholder="e.g. 50293847"
                       placeholderTextColor="#555"
                       keyboardType="numeric"
                     />
@@ -669,7 +720,7 @@ export const ProfileOnboardingScreen = ({ navigation }) => {
                 <View style={styles.field}>
                   <Text style={styles.label}>Demo Server Name</Text>
                   <View style={styles.inputWrapper}>
-                    <Icon name="server" size={20} color={COLORS.grey} style={styles.inputIcon} />
+                    <Icon name="server-network" size={20} color={COLORS.grey} style={styles.inputIcon} />
                     <TextInput
                       style={styles.input}
                       value={demoAccountServer}
@@ -679,62 +730,28 @@ export const ProfileOnboardingScreen = ({ navigation }) => {
                     />
                   </View>
                 </View>
-
-                {/* Demo Email (Optional) */}
-                <View style={styles.field}>
-                  <Text style={styles.label}>Broker Registered Email (Optional)</Text>
-                  <View style={styles.inputWrapper}>
-                    <Icon name="email-outline" size={20} color={COLORS.grey} style={styles.inputIcon} />
-                    <TextInput
-                      style={styles.input}
-                      value={demoAccountEmail}
-                      onChangeText={setDemoAccountEmail}
-                      placeholder="Email registered with broker"
-                      placeholderTextColor="#555"
-                      keyboardType="email-address"
-                      autoCapitalize="none"
-                    />
-                  </View>
-                </View>
-
               </View>
 
-              {/* Navigation Buttons */}
-              <View style={styles.buttonRow}>
+              {/* Navigation Actions */}
+              <View style={styles.actionRow}>
                 <TouchableOpacity style={styles.secondaryBtn} activeOpacity={0.8} onPress={handlePrevStep}>
-                  <Icon name="arrow-left" size={18} color={COLORS.white} />
+                  <Icon name="arrow-left" size={20} color={COLORS.white} />
                   <Text style={styles.secondaryBtnText}>Back</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity style={[styles.primaryBtn, { flex: 2 }]} activeOpacity={0.8} onPress={handleNextStep}>
-                  <Text style={styles.primaryBtnText}>Next: Real Account</Text>
-                  <Icon name="arrow-right" size={18} color="#0B0E11" />
+                  <Text style={styles.primaryBtnText}>Continue to Step 3</Text>
+                  <Icon name="arrow-right" size={20} color="#0B0E11" />
                 </TouchableOpacity>
               </View>
 
             </View>
           )}
 
-          {/* STEP 3: REAL MT5 ACCOUNT SETUP (WITH SKIP OPTION) */}
+          {/* STEP 3: REAL MT5 ACCOUNT SETUP */}
           {currentStep === 3 && (
             <View style={styles.stepContent}>
               
-              {/* Real Account Intro Banner */}
-              <View style={[styles.guideCard, { borderColor: 'rgba(0, 200, 83, 0.3)' }]}>
-                <View style={styles.guideHeader}>
-                  <View style={[styles.guideIconWrapper, { backgroundColor: 'rgba(0, 200, 83, 0.15)', borderColor: '#00C853' }]}>
-                    <Icon name="shield-check" size={24} color="#00C853" />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={[styles.guideTitle, { color: '#00C853' }]}>Real MT5 Account (Optional)</Text>
-                    <Text style={styles.guideSubtitle}>
-                      Link your Real MT5 account when you are ready to copy live signals and run automated live bots.
-                    </Text>
-                  </View>
-                </View>
-              </View>
-
-              {/* Real Account Form */}
               <View style={styles.card}>
                 <Text style={styles.cardHeading}>Real MT5 Credentials</Text>
 
@@ -746,8 +763,8 @@ export const ProfileOnboardingScreen = ({ navigation }) => {
                     <TextInput
                       style={styles.input}
                       value={realAccountId}
-                      onChangeText={setRealAccountId}
-                      placeholder="e.g. 50293847"
+                      onChangeText={(val) => setRealAccountId(val.replace(/[^0-9]/g, ''))}
+                      placeholder="e.g. 313133131"
                       placeholderTextColor="#555"
                       keyboardType="numeric"
                     />
@@ -785,7 +802,6 @@ export const ProfileOnboardingScreen = ({ navigation }) => {
                     />
                   </View>
                 </View>
-
               </View>
 
               {/* Action Buttons: Skip vs Complete */}
@@ -796,7 +812,7 @@ export const ProfileOnboardingScreen = ({ navigation }) => {
                 onPress={() => handleCompleteProfile(false)}
               >
                 {saving ? (
-                  <ActivityIndicator color="#0B0E11" />
+                  <ActivityIndicator color="#0B0E11" size="small" />
                 ) : (
                   <>
                     <Text style={styles.primaryBtnText}>Complete Profile & Finish</Text>
@@ -848,16 +864,6 @@ export const ProfileOnboardingScreen = ({ navigation }) => {
               </View>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.photoSheetOption} onPress={handleLaunchGallery}>
-              <View style={[styles.photoOptionIcon, { backgroundColor: 'rgba(156, 39, 176, 0.15)' }]}>
-                <Icon name="folder-image" size={22} color="#AB47BC" />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.photoOptionText}>Browse Files</Text>
-                <Text style={styles.photoOptionSub}>Upload from files & storage</Text>
-              </View>
-            </TouchableOpacity>
-
             {avatarUri && (
               <TouchableOpacity style={styles.photoSheetOption} onPress={handleRemovePhoto}>
                 <View style={[styles.photoOptionIcon, { backgroundColor: 'rgba(255, 68, 68, 0.15)' }]}>
@@ -868,10 +874,6 @@ export const ProfileOnboardingScreen = ({ navigation }) => {
                 </View>
               </TouchableOpacity>
             )}
-
-            <TouchableOpacity style={styles.cancelBtn} onPress={() => setShowPhotoPicker(false)}>
-              <Text style={styles.cancelBtnText}>Cancel</Text>
-            </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -899,7 +901,6 @@ export const ProfileOnboardingScreen = ({ navigation }) => {
               </TouchableOpacity>
             </View>
 
-            {/* Search Input */}
             <View style={styles.searchWrapper}>
               <Icon name="magnify" size={22} color={COLORS.grey} style={styles.searchIcon} />
               <TextInput
@@ -910,23 +911,18 @@ export const ProfileOnboardingScreen = ({ navigation }) => {
                 onChangeText={setSearchQuery}
                 autoCorrect={false}
               />
-              {searchQuery.length > 0 && (
-                <TouchableOpacity onPress={() => setSearchQuery('')}>
-                  <Icon name="close" size={20} color={COLORS.grey} />
-                </TouchableOpacity>
-              )}
             </View>
 
             <FlatList
               data={filteredDropdownData}
               keyExtractor={(item, idx) => item + idx}
               showsVerticalScrollIndicator={false}
-              keyboardShouldPersistTaps="handled"
-              contentContainerStyle={{ paddingBottom: 20 }}
               renderItem={({ item }) => {
                 const isSelected =
                   pickerConfig.type === 'country' ? country === item :
                   pickerConfig.type === 'city' ? city === item : brokerName === item;
+
+                const flag = pickerConfig.type === 'country' ? COUNTRY_DATA[item]?.flag : null;
 
                 return (
                   <TouchableOpacity
@@ -934,16 +930,18 @@ export const ProfileOnboardingScreen = ({ navigation }) => {
                     activeOpacity={0.7}
                     onPress={() => handleSelectOption(item)}
                   >
-                    <Text style={[styles.sheetItemText, isSelected && styles.sheetItemTextActive]}>
-                      {item}
-                    </Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                      {flag && <Text style={{ fontSize: 20, marginRight: 10 }}>{flag}</Text>}
+                      <Text style={[styles.sheetItemText, isSelected && styles.sheetItemTextActive]}>
+                        {item}
+                      </Text>
+                    </View>
                     {isSelected && <Icon name="check-circle" size={22} color={COLORS.gold} />}
                   </TouchableOpacity>
                 );
               }}
               ListEmptyComponent={
                 <View style={styles.emptySearch}>
-                  <Icon name="text-search" size={36} color="#444" />
                   <Text style={styles.emptySearchText}>No matches found</Text>
                 </View>
               }
@@ -954,18 +952,22 @@ export const ProfileOnboardingScreen = ({ navigation }) => {
 
       {/* CELEBRATORY SUCCESS MODAL */}
       <Modal visible={showSuccessModal} transparent animationType="fade">
-        <View style={styles.modalOverlay}>
+        <View style={styles.successModalOverlay}>
           <View style={styles.successModalCard}>
             <View style={styles.successBadge}>
-              <Icon name="check-decagram" size={54} color={COLORS.gold} />
+              <Icon name="check-decagram" size={48} color="#FFD700" />
             </View>
             <Text style={styles.successTitle}>Profile Setup Completed! 🎉</Text>
             <Text style={styles.successMessage}>
               Your profile and MT5 trading accounts have been successfully saved. You now have full access to KTS AI Bots and automated signals!
             </Text>
 
-            <TouchableOpacity style={styles.primaryBtn} activeOpacity={0.8} onPress={handleFinishOnboarding}>
-              <Text style={styles.primaryBtnText}>Go to Dashboard</Text>
+            <TouchableOpacity
+              style={styles.successBtn}
+              activeOpacity={0.85}
+              onPress={handleFinishOnboarding}
+            >
+              <Text style={styles.successBtnText}>Go to Dashboard</Text>
               <Icon name="rocket-launch" size={20} color="#0B0E11" />
             </TouchableOpacity>
           </View>
@@ -978,330 +980,101 @@ export const ProfileOnboardingScreen = ({ navigation }) => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0B0E11' },
-  
-  navbar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: SPACING.screen,
-    paddingBottom: 14,
-    backgroundColor: '#12161A',
-    borderBottomWidth: 1,
-    borderBottomColor: '#1E2329',
-  },
+  navbar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: SPACING.screen, paddingBottom: 14, backgroundColor: '#12161A', borderBottomWidth: 1, borderBottomColor: '#1E2329' },
   navBtn: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
   navCenter: { alignItems: 'center' },
   navTitle: { fontSize: 17, color: COLORS.white, fontWeight: '800' },
   navStepText: { fontSize: 12, color: COLORS.gold, fontWeight: '700', marginTop: 2 },
-
-  /* Stepper Progress Indicator */
-  stepperContainer: {
-    backgroundColor: '#12161A',
-    paddingHorizontal: SPACING.screen,
-    paddingTop: 12,
-    paddingBottom: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#1E2329',
-  },
+  stepperContainer: { backgroundColor: '#12161A', paddingHorizontal: SPACING.screen, paddingTop: 12, paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: '#1E2329' },
   stepsRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
   stepItem: { alignItems: 'center', minWidth: 60 },
-  stepCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#1E2329',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1.5,
-    borderColor: '#2A2E35',
-    marginBottom: 4,
-  },
+  stepCircle: { width: 32, height: 32, borderRadius: 16, backgroundColor: '#1E2329', alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderColor: '#2A2E35', marginBottom: 4 },
   stepCircleActive: { backgroundColor: COLORS.gold, borderColor: COLORS.gold },
   stepNumber: { fontSize: 13, color: '#888', fontWeight: '800' },
   stepNumberActive: { color: '#0B0E11' },
-  stepLabel: { fontSize: 11, color: '#666', fontWeight: '600' },
-  stepLabelActive: { color: COLORS.white, fontWeight: '700' },
-  stepDivider: { flex: 1, height: 2, backgroundColor: '#1E2329', marginHorizontal: 8, marginBottom: 16 },
+  stepLabel: { fontSize: 11, color: '#888', fontWeight: '600' },
+  stepLabelActive: { color: COLORS.gold, fontWeight: '700' },
+  stepDivider: { flex: 1, height: 2, backgroundColor: '#1E2329', marginHorizontal: 8, marginTop: -16 },
   stepDividerActive: { backgroundColor: COLORS.gold },
-
-  progressBarTrack: { height: 4, backgroundColor: '#1E2329', borderRadius: 2, overflow: 'hidden' },
-  progressBarFill: { height: '100%', backgroundColor: COLORS.gold, borderRadius: 2 },
-
+  progressBarTrack: { height: 3, backgroundColor: '#1E2329', borderRadius: 1.5, overflow: 'hidden' },
+  progressBarFill: { height: '100%', backgroundColor: COLORS.gold },
   scrollContent: { padding: SPACING.screen },
-  stepContent: {},
-
-  /* Avatar Section */
-  avatarSection: { alignItems: 'center', marginVertical: 16 },
-  avatarContainer: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-    backgroundColor: COLORS.gold,
-    alignItems: 'center',
-    justifyContent: 'center',
-    position: 'relative',
-    borderWidth: 2,
-    borderColor: COLORS.gold,
-    elevation: 6,
-    shadowColor: COLORS.gold,
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 4 },
-  },
-  avatarImage: { width: 92, height: 92, borderRadius: 46 },
-  avatarPlaceholder: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' },
-  avatarLetter: { fontSize: 38, color: '#0B0E11', fontWeight: '900' },
-  cameraBadge: {
-    position: 'absolute',
-    bottom: -2,
-    right: -2,
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: COLORS.gold,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: '#0B0E11',
-  },
-  avatarHint: { fontSize: 12, color: COLORS.grey, marginTop: 10, fontWeight: '600' },
-
-  /* Form Card & Fields */
-  card: {
-    backgroundColor: '#12161A',
-    borderRadius: 16,
-    padding: 18,
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: '#1E2329',
-  },
-  cardHeading: { fontSize: 16, color: COLORS.white, fontWeight: '800', marginBottom: 18, letterSpacing: 0.5 },
+  stepContent: { gap: 16 },
+  avatarSection: { alignItems: 'center', marginVertical: 10 },
+  avatarContainer: { width: 90, height: 90, borderRadius: 45, position: 'relative', backgroundColor: '#1E2329', borderWidth: 2, borderColor: COLORS.gold },
+  avatarImage: { width: '100%', height: '100%', borderRadius: 45 },
+  avatarPlaceholder: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  avatarLetter: { fontSize: 36, color: COLORS.gold, fontWeight: '800' },
+  cameraBadge: { position: 'absolute', bottom: 0, right: 0, width: 28, height: 28, borderRadius: 14, backgroundColor: COLORS.gold, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#12161A' },
+  avatarHint: { fontSize: 12, color: COLORS.grey, marginTop: 8, fontWeight: '500' },
+  card: { backgroundColor: '#12161A', borderRadius: 16, padding: 18, borderWidth: 1, borderColor: '#1E2329' },
+  cardHeading: { fontSize: 16, color: COLORS.white, fontWeight: '800', marginBottom: 16 },
   field: { marginBottom: 16 },
-  labelRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  label: { fontSize: 12, color: COLORS.grey, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 8 },
-  sameAsPhone: { fontSize: 11, color: COLORS.gold, fontWeight: '700', marginBottom: 8 },
-  
-  inputWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#0B0E11',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#1E2329',
-    paddingHorizontal: 12,
-  },
-  inputDisabled: { opacity: 0.7, borderColor: '#1A1E24' },
-  inputIcon: { marginRight: 8 },
-  input: { flex: 1, paddingVertical: 13, fontSize: 15, color: COLORS.white, fontWeight: '500' },
-
-  rowFields: { flexDirection: 'row', justifyContent: 'space-between' },
-
-  /* Gender Cards */
+  label: { fontSize: 12, color: COLORS.grey, fontWeight: '700', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.5 },
+  labelRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
+  sameAsPhone: { fontSize: 11, color: COLORS.gold, fontWeight: '700' },
+  inputWrapper: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#0B0E11', borderRadius: 12, borderWidth: 1, borderColor: '#1E2329', paddingHorizontal: 12 },
+  inputDisabled: { opacity: 0.6 },
+  inputIcon: { marginRight: 10 },
+  input: { flex: 1, paddingVertical: 12, fontSize: 14, color: COLORS.white, fontWeight: '500' },
+  countryCodeBadge: { paddingVertical: 4, paddingHorizontal: 8, backgroundColor: 'rgba(255, 215, 0, 0.1)', borderRadius: 6, marginRight: 10, borderWidth: 1, borderColor: 'rgba(255, 215, 0, 0.25)' },
+  countryCodeText: { fontSize: 13, color: COLORS.gold, fontWeight: '700' },
+  rowFields: { flexDirection: 'row' },
+  dropdownBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#0B0E11', borderRadius: 12, borderWidth: 1, borderColor: '#1E2329', paddingHorizontal: 12, paddingVertical: 13 },
+  dropdownBtnText: { flex: 1, fontSize: 14, color: COLORS.white, fontWeight: '500' },
   genderRow: { flexDirection: 'row', gap: 10 },
-  genderCard: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#0B0E11',
-    borderRadius: 12,
-    paddingVertical: 12,
-    borderWidth: 1,
-    borderColor: '#1E2329',
-    gap: 6,
-  },
+  genderCard: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#0B0E11', borderRadius: 12, paddingVertical: 12, borderWidth: 1, borderColor: '#1E2329', gap: 6 },
   genderCardActive: { backgroundColor: COLORS.gold, borderColor: COLORS.gold },
-  genderLabel: { fontSize: 13, color: COLORS.grey, fontWeight: '700' },
-  genderLabelActive: { color: '#0B0E11' },
-
-  /* Dropdown Buttons */
-  dropdownBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#0B0E11',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#1E2329',
-    paddingHorizontal: 12,
-    paddingVertical: 13,
-  },
-  dropdownBtnText: { flex: 1, fontSize: 14, color: COLORS.white, fontWeight: '600' },
-
-  /* Guide Card in Step 2 & 3 */
-  guideCard: {
-    backgroundColor: '#12161A',
-    borderRadius: 16,
-    padding: 18,
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 215, 0, 0.25)',
-  },
+  genderLabel: { fontSize: 13, color: COLORS.grey, fontWeight: '600' },
+  genderLabelActive: { color: '#0B0E11', fontWeight: '800' },
+  guideCard: { backgroundColor: '#12161A', borderRadius: 16, padding: 18, borderWidth: 1, borderColor: '#1E2329' },
   guideHeader: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 16 },
-  guideIconWrapper: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(255, 215, 0, 0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 215, 0, 0.3)',
-  },
-  guideTitle: { fontSize: 16, color: COLORS.gold, fontWeight: '800' },
-  guideSubtitle: { fontSize: 12, color: COLORS.grey, marginTop: 4, lineHeight: 16 },
-
-  exnessBtn: {
-    backgroundColor: COLORS.gold,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 13,
-    borderRadius: 10,
-    marginBottom: 18,
-    gap: 8,
-  },
-  exnessBtnText: { color: '#0B0E11', fontSize: 14, fontWeight: '800' },
-
-  timeline: { paddingLeft: 4 },
-  timelineRow: { flexDirection: 'row', minHeight: 48 },
-  timelineIndicator: { alignItems: 'center', marginRight: 12 },
-  timelineNumBg: { width: 22, height: 22, borderRadius: 11, backgroundColor: COLORS.gold, alignItems: 'center', justifyContent: 'center' },
-  timelineNumText: { color: '#0B0E11', fontSize: 11, fontWeight: '900' },
-  timelineLine: { width: 2, flex: 1, backgroundColor: '#1E2329', marginVertical: -2 },
-  timelineContent: { flex: 1, paddingBottom: 12 },
-  timelineTitle: { fontSize: 13, color: COLORS.white, fontWeight: '700', marginBottom: 2 },
-  timelineDesc: { fontSize: 11, color: '#888', lineHeight: 15 },
-
-  /* Buttons */
-  buttonRow: { flexDirection: 'row', gap: 12, marginTop: 4 },
-  primaryBtn: {
-    backgroundColor: COLORS.gold,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 16,
-    borderRadius: 14,
-    gap: 8,
-    elevation: 4,
-    shadowColor: COLORS.gold,
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 4 },
-  },
-  primaryBtnText: { fontSize: 15, color: '#0B0E11', fontWeight: '800', letterSpacing: 0.5 },
-
-  secondaryBtn: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#1E2329',
-    borderRadius: 14,
-    paddingVertical: 16,
-    borderWidth: 1,
-    borderColor: '#2A2E35',
-    gap: 6,
-  },
-  secondaryBtnText: { fontSize: 14, color: COLORS.white, fontWeight: '700' },
-
-  skipOutlineBtn: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 16,
-    borderRadius: 14,
-    marginTop: 12,
-    borderWidth: 1.5,
-    borderColor: '#2A2E35',
-    backgroundColor: '#12161A',
-  },
-  skipOutlineBtnText: { fontSize: 14, color: COLORS.grey, fontWeight: '700' },
-
-  /* Photo Sheet Modal */
+  guideIconWrapper: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255, 215, 0, 0.1)', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(255, 215, 0, 0.2)' },
+  guideTitle: { fontSize: 16, color: COLORS.white, fontWeight: '800' },
+  guideSubtitle: { fontSize: 12, color: COLORS.grey, marginTop: 2, lineHeight: 16 },
+  exnessBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: COLORS.gold, borderRadius: 12, paddingVertical: 12, gap: 8, marginBottom: 18 },
+  exnessBtnText: { fontSize: 13, color: '#0B0E11', fontWeight: '800' },
+  timeline: { gap: 12 },
+  timelineRow: { flexDirection: 'row', gap: 12 },
+  timelineIndicator: { alignItems: 'center', width: 24 },
+  timelineNumBg: { width: 24, height: 24, borderRadius: 12, backgroundColor: 'rgba(255, 215, 0, 0.15)', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: COLORS.gold },
+  timelineNumText: { fontSize: 11, color: COLORS.gold, fontWeight: '800' },
+  timelineLine: { width: 2, flex: 1, backgroundColor: '#1E2329', marginVertical: 4 },
+  timelineContent: { flex: 1 },
+  timelineTitle: { fontSize: 13, color: COLORS.white, fontWeight: '700' },
+  timelineDesc: { fontSize: 11, color: COLORS.grey, marginTop: 2, lineHeight: 16 },
+  actionRow: { flexDirection: 'row', gap: 12, marginTop: 8 },
+  primaryBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: COLORS.gold, paddingVertical: 15, borderRadius: 14, gap: 8 },
+  primaryBtnText: { fontSize: 14, color: '#0B0E11', fontWeight: '800', letterSpacing: 0.3 },
+  secondaryBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#1E2329', borderRadius: 14, paddingVertical: 15, borderWidth: 1, borderColor: '#2A2E35', gap: 6 },
+  secondaryBtnText: { fontSize: 13, color: COLORS.white, fontWeight: '700' },
+  skipOutlineBtn: { alignItems: 'center', justifyContent: 'center', paddingVertical: 15, borderRadius: 14, marginTop: 10, borderWidth: 1.5, borderColor: '#2A2E35', backgroundColor: '#12161A' },
+  skipOutlineBtnText: { fontSize: 13, color: COLORS.grey, fontWeight: '700' },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },
   modalDismissArea: { flex: 1 },
-  photoSheet: {
-    backgroundColor: '#12161A',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    padding: 20,
-    borderWidth: 1,
-    borderColor: '#1E2329',
-  },
+  photoSheet: { backgroundColor: '#12161A', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, borderWidth: 1, borderColor: '#1E2329' },
   sheetHandle: { width: 40, height: 4, borderRadius: 2, backgroundColor: '#333', alignSelf: 'center', marginBottom: 16 },
   photoSheetTitle: { fontSize: 18, color: COLORS.white, fontWeight: '800', textAlign: 'center', marginBottom: 20 },
-  photoSheetOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: '#1A1E24',
-    gap: 14,
-  },
+  photoSheetOption: { flexDirection: 'row', alignItems: 'center', paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: '#1A1E24', gap: 14 },
   photoOptionIcon: { width: 42, height: 42, borderRadius: 21, alignItems: 'center', justifyContent: 'center' },
   photoOptionText: { fontSize: 15, color: COLORS.white, fontWeight: '700' },
   photoOptionSub: { fontSize: 11, color: COLORS.grey, marginTop: 2 },
-  cancelBtn: { paddingVertical: 16, alignItems: 'center', marginTop: 10 },
-  cancelBtnText: { fontSize: 15, color: COLORS.grey, fontWeight: '700' },
-
-  /* Dropdown Bottom Sheet */
-  bottomSheet: {
-    backgroundColor: '#12161A',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    maxHeight: '80%',
-    minHeight: '50%',
-    padding: 20,
-  },
+  bottomSheet: { backgroundColor: '#12161A', borderTopLeftRadius: 24, borderTopRightRadius: 24, maxHeight: '80%', minHeight: '50%', padding: 20 },
   sheetHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
   sheetTitle: { fontSize: 18, color: COLORS.white, fontWeight: '800' },
-  searchWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#0B0E11',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#1E2329',
-    paddingHorizontal: 12,
-    marginBottom: 14,
-  },
+  searchWrapper: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#0B0E11', borderRadius: 12, borderWidth: 1, borderColor: '#1E2329', paddingHorizontal: 12, marginBottom: 14 },
   searchIcon: { marginRight: 8 },
   searchInput: { flex: 1, paddingVertical: 11, fontSize: 14, color: COLORS.white, fontWeight: '500' },
-  sheetItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: '#1A1E24',
-  },
+  sheetItem: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 15, borderBottomWidth: 1, borderBottomColor: '#1A1E24' },
   sheetItemText: { fontSize: 15, color: COLORS.grey, fontWeight: '500' },
   sheetItemTextActive: { color: COLORS.gold, fontWeight: '800' },
   emptySearch: { alignItems: 'center', paddingVertical: 30 },
   emptySearchText: { color: '#666', fontSize: 14, marginTop: 8 },
-
-  /* Success Modal */
-  successModalCard: {
-    backgroundColor: '#12161A',
-    margin: 24,
-    borderRadius: 24,
-    padding: 24,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: COLORS.gold,
-    alignSelf: 'center',
-    width: width - 48,
-  },
-  successBadge: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: 'rgba(255, 215, 0, 0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 215, 0, 0.3)',
-  },
-  successTitle: { fontSize: 20, color: COLORS.white, fontWeight: '800', textAlign: 'center', marginBottom: 10 },
-  successMessage: { fontSize: 13, color: COLORS.grey, textAlign: 'center', lineHeight: 20, marginBottom: 24 },
+  successModalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.85)', justifyContent: 'center', alignItems: 'center', padding: 24 },
+  successModalCard: { backgroundColor: '#12161A', borderRadius: 24, padding: 28, alignItems: 'center', borderWidth: 1.5, borderColor: 'rgba(255, 215, 0, 0.4)', width: '100%', maxWidth: 360, shadowColor: '#FFD700', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.25, shadowRadius: 16, elevation: 12 },
+  successBadge: { width: 76, height: 76, borderRadius: 38, backgroundColor: 'rgba(255, 215, 0, 0.1)', alignItems: 'center', justifyContent: 'center', marginBottom: 16, borderWidth: 1, borderColor: 'rgba(255, 215, 0, 0.3)' },
+  successTitle: { fontSize: 20, color: '#FFFFFF', fontWeight: '800', textAlign: 'center', marginBottom: 10 },
+  successMessage: { fontSize: 13, color: '#94A3B8', textAlign: 'center', lineHeight: 20, marginBottom: 20 },
+  successBtn: { width: '100%', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFD700', paddingVertical: 15, borderRadius: 14, shadowColor: '#FFD700', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 6 },
+  successBtnText: { fontSize: 15, color: '#0B0E11', fontWeight: '800', letterSpacing: 0.4, marginRight: 6 },
 });

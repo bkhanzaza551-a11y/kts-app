@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, Alert, KeyboardAvoidingView, Platform, TouchableOpacity, Linking } from 'react-native';
 import { useSelector } from 'react-redux';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -152,7 +152,7 @@ export const DemoAccountScreen = ({ navigation }) => {
             <Input 
                 label="Exness Account Number *" 
               value={accountNumber} 
-              onChangeText={setAccountNumber} 
+              onChangeText={(t) => setAccountNumber(t.replace(/[^0-9]/g, ''))} 
               placeholder="e.g. 12345678" 
               keyboardType="number-pad"
               icon="card-account-details-outline" 
@@ -174,7 +174,7 @@ export const DemoAccountScreen = ({ navigation }) => {
             <Input 
                 label="Phone Number (Optional)" 
               value={phone} 
-              onChangeText={setPhone} 
+              onChangeText={(t) => setPhone(t.replace(/[^0-9+ ]/g, ''))} 
               placeholder="Your phone number" 
               keyboardType="phone-pad" 
               icon="phone-outline" 
@@ -185,7 +185,7 @@ export const DemoAccountScreen = ({ navigation }) => {
             <Input 
                 label="Deposit Amount" 
               value={depositAmount} 
-              onChangeText={setDepositAmount} 
+              onChangeText={(t) => setDepositAmount(t.replace(/[^0-9]/g, ''))} 
               placeholder="e.g. 10000" 
               keyboardType="number-pad" 
               icon="cash-multiple" 
