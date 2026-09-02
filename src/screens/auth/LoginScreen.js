@@ -39,7 +39,7 @@ export const LoginScreen = ({ navigation }) => {
 
   const handleGoogleLogin = async () => {
     try {
-      await GoogleSignin.hasPlayServices();
+      await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
       const response = await GoogleSignin.signIn();
       const userObj = response?.data?.user || response?.user || response;
       
@@ -53,7 +53,8 @@ export const LoginScreen = ({ navigation }) => {
       }
     } catch (err) {
       if (err?.code !== '-5' && err?.code !== 'SIGN_IN_CANCELLED' && err?.code !== '12501') {
-        Alert.alert('Google Login', 'Unable to sign in with Google. Please try again.');
+        const errorMsg = err?.message || 'Unable to sign in with Google. Please try again.';
+        Alert.alert('Google Login', errorMsg);
       }
     }
   };

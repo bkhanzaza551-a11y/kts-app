@@ -13,13 +13,20 @@ export const OtpVerificationScreen = ({ navigation, route }) => {
   const [focusedIndex, setFocusedIndex] = useState(-1);
   const inputs = useRef([]);
   const dispatch = useDispatch();
-  const { isLoading, error, isSecurityCodePending, isEmailVerificationPending, pendingEmail } = useSelector(s => s.auth);
+  const { isLoading, error, isSecurityCodePending, isEmailVerificationPending, pendingEmail, pendingOtp } = useSelector(s => s.auth);
 
   const userEmail = verificationEmail || pendingEmail || '';
 
   useEffect(() => {
     if (!isEmailVerification && isSecurityCodePending) navigation.replace('SecurityCode');
   }, [isSecurityCodePending, isEmailVerification]);
+
+  useEffect(() => {
+    if (pendingOtp && pendingOtp.length === 6) {
+      const digits = pendingOtp.split('');
+      setOtp(digits);
+    }
+  }, [pendingOtp]);
 
   const handleChange = (text, index) => {
     if (text.length > 1) text = text.slice(-1);

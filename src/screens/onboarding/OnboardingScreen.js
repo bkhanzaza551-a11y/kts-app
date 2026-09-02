@@ -6,7 +6,6 @@ import {
   Dimensions,
   Animated,
   TouchableOpacity,
-  Image,
   Platform,
   Easing,
   StatusBar,
@@ -14,7 +13,7 @@ import {
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { COLORS } from '../../theme/colors';
 import { TYPOGRAPHY } from '../../theme/typography';
-import { SPACING, RADIUS } from '../../theme/spacing';
+import { SPACING } from '../../theme/spacing';
 import { Button } from '../../components/common/Button';
 
 const { width, height } = Dimensions.get('window');
@@ -46,24 +45,22 @@ const SLIDES = [
   },
 ];
 
-const SlideItem = ({ item, index, scrollX, glowAnim }) => {
+const SlideItem = ({ item, index, scrollX }) => {
   const inputRange = [(index - 1) * width, index * width, (index + 1) * width];
 
-  // Slow-mo image scale effect
+  // Pure Native Driver Interpolations
   const imageScale = scrollX.interpolate({
     inputRange,
-    outputRange: [1.18, 1.0, 1.18],
+    outputRange: [1.15, 1.0, 1.15],
     extrapolate: 'clamp',
   });
 
-  // Smooth parallax translation
   const imageTranslateX = scrollX.interpolate({
     inputRange,
-    outputRange: [width * 0.22, 0, -width * 0.22],
+    outputRange: [width * 0.2, 0, -width * 0.2],
     extrapolate: 'clamp',
   });
 
-  // Text smooth fade & slide
   const textOpacity = scrollX.interpolate({
     inputRange,
     outputRange: [0, 1, 0],
@@ -72,19 +69,13 @@ const SlideItem = ({ item, index, scrollX, glowAnim }) => {
 
   const titleTranslateY = scrollX.interpolate({
     inputRange,
-    outputRange: [35, 0, -35],
+    outputRange: [30, 0, -30],
     extrapolate: 'clamp',
   });
 
   const subTranslateY = scrollX.interpolate({
     inputRange,
-    outputRange: [50, 0, -50],
-    extrapolate: 'clamp',
-  });
-
-  const badgeOpacity = scrollX.interpolate({
-    inputRange,
-    outputRange: [0, 1, 0],
+    outputRange: [45, 0, -45],
     extrapolate: 'clamp',
   });
 
@@ -96,19 +87,8 @@ const SlideItem = ({ item, index, scrollX, glowAnim }) => {
 
   return (
     <View style={styles.slide}>
-      {/* Top Visual Area with Parallax and Glowing Aura */}
+      {/* Top Visual Area */}
       <View style={styles.visualArea}>
-        {/* Subtle Ambient Golden Glow Behind Image */}
-        <Animated.View
-          style={[
-            styles.ambientGlow,
-            {
-              transform: [{ scale: glowAnim }],
-              opacity: textOpacity,
-            },
-          ]}
-        />
-
         <View style={styles.imageContainer}>
           <Animated.Image
             source={item.image}
@@ -136,7 +116,7 @@ const SlideItem = ({ item, index, scrollX, glowAnim }) => {
           style={[
             styles.badgePill,
             {
-              opacity: badgeOpacity,
+              opacity: textOpacity,
               transform: [{ scale: badgeScale }],
             },
           ]}
@@ -179,53 +159,29 @@ export const OnboardingScreen = ({ onFinish }) => {
 
   // Entrance animations (slow-mo fade in on screen start)
   const screenFadeAnim = useRef(new Animated.Value(0)).current;
-  const bottomSlideAnim = useRef(new Animated.Value(40)).current;
-
-  // Continuous breathing ambient glow animation
-  const glowAnim = useRef(new Animated.Value(1)).current;
+  const bottomSlideAnim = useRef(new Animated.Value(30)).current;
 
   useEffect(() => {
-    // Cinematic initial entrance
+    // 100% Native Driver Cinematic Entrance
     Animated.parallel([
       Animated.timing(screenFadeAnim, {
         toValue: 1,
-        duration: 900,
+        duration: 700,
         easing: Easing.out(Easing.cubic),
         useNativeDriver: true,
       }),
       Animated.timing(bottomSlideAnim, {
         toValue: 0,
-        duration: 900,
+        duration: 700,
         easing: Easing.out(Easing.cubic),
         useNativeDriver: true,
       }),
     ]).start();
-
-    // Infinite breathing slow-motion pulse
-    const pulseLoop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(glowAnim, {
-          toValue: 1.12,
-          duration: 3000,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: true,
-        }),
-        Animated.timing(glowAnim, {
-          toValue: 1.0,
-          duration: 3000,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: true,
-        }),
-      ])
-    );
-    pulseLoop.start();
-
-    return () => pulseLoop.stop();
   }, []);
 
   const onViewableItemsChanged = useRef(({ viewableItems }) => {
-    if (viewableItems.length > 0) {
-      setCurrent(viewableItems[0].index);
+    if (viewableItems && viewableItems.length > 0) {
+      setCurrent(viewableItems[0].index ?? 0);
     }
   }).current;
 
@@ -258,7 +214,7 @@ export const OnboardingScreen = ({ onFinish }) => {
         )}
       </View>
 
-      {/* Carousel FlatList */}
+      {/* Carousel FlatList using 100% useNativeDriver: true */}
       <Animated.FlatList
         ref={flatListRef}
         data={SLIDES}
@@ -271,7 +227,7 @@ export const OnboardingScreen = ({ onFinish }) => {
         keyExtractor={(item) => item.id}
         onScroll={Animated.event(
           [{ nativeEvent: { contentOffset: { x: scrollX } } }],
-          { useNativeDriver: false }
+          { useNativeDriver: true }
         )}
         scrollEventThrottle={16}
         renderItem={({ item, index }) => (
@@ -279,7 +235,6 @@ export const OnboardingScreen = ({ onFinish }) => {
             item={item}
             index={index}
             scrollX={scrollX}
-            glowAnim={glowAnim}
           />
         )}
       />
@@ -291,41 +246,17 @@ export const OnboardingScreen = ({ onFinish }) => {
           { transform: [{ translateY: bottomSlideAnim }] },
         ]}
       >
-        {/* Animated Expanding Dots */}
+        {/* Modern Dot Indicators */}
         <View style={styles.dots}>
-          {SLIDES.map((_, i) => {
-            const inputRange = [(i - 1) * width, i * width, (i + 1) * width];
-
-            const dotWidth = scrollX.interpolate({
-              inputRange,
-              outputRange: [8, 28, 8],
-              extrapolate: 'clamp',
-            });
-            const opacity = scrollX.interpolate({
-              inputRange,
-              outputRange: [0.35, 1, 0.35],
-              extrapolate: 'clamp',
-            });
-            const bgColor = scrollX.interpolate({
-              inputRange,
-              outputRange: ['#475569', '#FFD700', '#475569'],
-              extrapolate: 'clamp',
-            });
-
-            return (
-              <Animated.View
-                key={i.toString()}
-                style={[
-                  styles.dot,
-                  {
-                    width: dotWidth,
-                    opacity,
-                    backgroundColor: bgColor,
-                  },
-                ]}
-              />
-            );
-          })}
+          {SLIDES.map((_, i) => (
+            <View
+              key={i.toString()}
+              style={[
+                styles.dot,
+                i === current ? styles.dotActive : styles.dotInactive,
+              ]}
+            />
+          ))}
         </View>
 
         {/* CTA Button */}
@@ -382,15 +313,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     overflow: 'hidden',
   },
-  ambientGlow: {
-    position: 'absolute',
-    width: width * 0.75,
-    height: width * 0.75,
-    borderRadius: (width * 0.75) / 2,
-    backgroundColor: 'rgba(255, 215, 0, 0.12)',
-    top: '15%',
-    zIndex: 1,
-  },
   imageContainer: {
     width: '100%',
     height: '100%',
@@ -405,11 +327,9 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    height: 120,
-    backgroundColor: 'transparent',
-    borderBottomWidth: 120,
-    borderBottomColor: '#000000',
-    opacity: 0.95,
+    height: 80,
+    backgroundColor: '#000000',
+    opacity: 0.6,
   },
 
   textArea: {
@@ -481,6 +401,14 @@ const styles = StyleSheet.create({
   dot: {
     height: 8,
     borderRadius: 4,
+  },
+  dotActive: {
+    width: 26,
+    backgroundColor: '#FFD700',
+  },
+  dotInactive: {
+    width: 8,
+    backgroundColor: '#334155',
   },
   actionBtn: {
     width: '100%',
