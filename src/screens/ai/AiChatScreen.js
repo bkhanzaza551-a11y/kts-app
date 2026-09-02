@@ -123,20 +123,6 @@ export default function AiChatScreen({ navigation }) {
     );
   };
 
-  const handleReport = (message) => {
-    Alert.alert(
-      'Report Message',
-      'Why are you reporting this message?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Inappropriate Content', onPress: () => submitReport(message, 'inappropriate') },
-        { text: 'Misleading Information', onPress: () => submitReport(message, 'misleading') },
-        { text: 'Spam', onPress: () => submitReport(message, 'spam') },
-        { text: 'Other', onPress: () => submitReport(message, 'other') },
-      ]
-    );
-  };
-
   const submitReport = (message, reason) => {
     triggerHaptic('light');
     dispatch(reportMessage({ messageId: message.id, reason }));
