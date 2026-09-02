@@ -154,7 +154,11 @@ const authSlice = createSlice({
       .addCase(verifyEmailOtp.rejected, (s, a) => { s.isLoading = false; s.error = a.payload; })
 
       .addCase(resendEmailOtp.pending, (s) => { s.isLoading = true; s.error = null; })
-      .addCase(resendEmailOtp.fulfilled, (s) => { s.isLoading = false; })
+      .addCase(resendEmailOtp.fulfilled, (s, a) => { 
+        s.isLoading = false; 
+        const d = a.payload.data || a.payload;
+        if (d.otp) s.pendingOtp = d.otp;
+      })
       .addCase(resendEmailOtp.rejected, (s, a) => { s.isLoading = false; s.error = a.payload; })
 
       .addCase(verifySecurityCode.pending, (s) => { s.isLoading = true; s.error = null; })
