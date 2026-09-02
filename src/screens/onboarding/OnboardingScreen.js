@@ -1,9 +1,20 @@
-import React, { useRef, useState } from 'react';
-import { View, Text, StyleSheet, Dimensions, FlatList, Animated, TouchableOpacity, Image, Platform } from 'react-native';
+import React, { useRef, useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Dimensions,
+  Animated,
+  TouchableOpacity,
+  Image,
+  Platform,
+  Easing,
+  StatusBar,
+} from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { COLORS } from '../../theme/colors';
 import { TYPOGRAPHY } from '../../theme/typography';
-import { SPACING } from '../../theme/spacing';
+import { SPACING, RADIUS } from '../../theme/spacing';
 import { Button } from '../../components/common/Button';
 
 const { width, height } = Dimensions.get('window');
@@ -12,30 +23,210 @@ const SLIDES = [
   {
     id: '1',
     image: require('../../../assets/images/onboarding_1.jpg'),
-    title: (styles) => <Text style={styles.title}>Trade <Text style={{ color: '#FFD700' }}>Smarter</Text></Text>,
-    subtitle: 'Empower your trading journey with advanced tools, deep insights, and real-time market data.',
+    badge: 'SMART TRADING',
+    titleMain: 'Trade',
+    titleAccent: 'Smarter',
+    subtitle: 'Empower your trading journey with advanced algorithmic tools, deep technical insights, and real-time market data.',
   },
   {
     id: '2',
     image: require('../../../assets/images/onboarding_2.png'),
-    title: (styles) => <Text style={styles.title}>Learn & Trade{'\n'}<Text style={{ color: '#FFD700' }}>with KTS Bot</Text></Text>,
-    subtitle: 'Your AI trading guide that teaches, guides, and helps you grow from beginner to pro.',
+    badge: 'AI ASSISTANT',
+    titleMain: 'Learn & Trade',
+    titleAccent: 'with KTS Bot',
+    subtitle: 'Your intelligent AI companion that guides, teaches, and helps you master the markets with clarity.',
   },
   {
     id: '3',
     image: require('../../../assets/images/onboarding_3.png'),
-    title: (styles) => <Text style={styles.title}>Real-Time <Text style={{ color: '#FFD700' }}>Alerts</Text></Text>,
-    subtitle: 'Get instant notifications for live market signals and technical setup analysis in real time.',
+    badge: 'LIVE ALERTS',
+    titleMain: 'Real-Time',
+    titleAccent: 'Market Signals',
+    subtitle: 'Receive instant notifications for high-probability setups, real-time price action, and market momentum.',
   },
 ];
+
+const SlideItem = ({ item, index, scrollX, glowAnim }) => {
+  const inputRange = [(index - 1) * width, index * width, (index + 1) * width];
+
+  // Slow-mo image scale effect
+  const imageScale = scrollX.interpolate({
+    inputRange,
+    outputRange: [1.18, 1.0, 1.18],
+    extrapolate: 'clamp',
+  });
+
+  // Smooth parallax translation
+  const imageTranslateX = scrollX.interpolate({
+    inputRange,
+    outputRange: [width * 0.22, 0, -width * 0.22],
+    extrapolate: 'clamp',
+  });
+
+  // Text smooth fade & slide
+  const textOpacity = scrollX.interpolate({
+    inputRange,
+    outputRange: [0, 1, 0],
+    extrapolate: 'clamp',
+  });
+
+  const titleTranslateY = scrollX.interpolate({
+    inputRange,
+    outputRange: [35, 0, -35],
+    extrapolate: 'clamp',
+  });
+
+  const subTranslateY = scrollX.interpolate({
+    inputRange,
+    outputRange: [50, 0, -50],
+    extrapolate: 'clamp',
+  });
+
+  const badgeOpacity = scrollX.interpolate({
+    inputRange,
+    outputRange: [0, 1, 0],
+    extrapolate: 'clamp',
+  });
+
+  const badgeScale = scrollX.interpolate({
+    inputRange,
+    outputRange: [0.8, 1, 0.8],
+    extrapolate: 'clamp',
+  });
+
+  return (
+    <View style={styles.slide}>
+      {/* Top Visual Area with Parallax and Glowing Aura */}
+      <View style={styles.visualArea}>
+        {/* Subtle Ambient Golden Glow Behind Image */}
+        <Animated.View
+          style={[
+            styles.ambientGlow,
+            {
+              transform: [{ scale: glowAnim }],
+              opacity: textOpacity,
+            },
+          ]}
+        />
+
+        <View style={styles.imageContainer}>
+          <Animated.Image
+            source={item.image}
+            style={[
+              styles.image,
+              {
+                transform: [
+                  { scale: imageScale },
+                  { translateX: imageTranslateX },
+                ],
+              },
+            ]}
+            resizeMode="cover"
+          />
+        </View>
+
+        {/* Gradient shadow overlay for seamless blend */}
+        <View style={styles.gradientOverlay} />
+      </View>
+
+      {/* Bottom Text Area with Staggered Fade & Slide */}
+      <View style={styles.textArea}>
+        {/* Category Pill Badge */}
+        <Animated.View
+          style={[
+            styles.badgePill,
+            {
+              opacity: badgeOpacity,
+              transform: [{ scale: badgeScale }],
+            },
+          ]}
+        >
+          <View style={styles.badgeDot} />
+          <Text style={styles.badgeText}>{item.badge}</Text>
+        </Animated.View>
+
+        {/* Animated Title */}
+        <Animated.View
+          style={{
+            opacity: textOpacity,
+            transform: [{ translateY: titleTranslateY }],
+          }}
+        >
+          <Text style={styles.title}>
+            {item.titleMain}{' '}
+            <Text style={styles.titleGold}>{item.titleAccent}</Text>
+          </Text>
+        </Animated.View>
+
+        {/* Animated Subtitle */}
+        <Animated.View
+          style={{
+            opacity: textOpacity,
+            transform: [{ translateY: subTranslateY }],
+          }}
+        >
+          <Text style={styles.subtitle}>{item.subtitle}</Text>
+        </Animated.View>
+      </View>
+    </View>
+  );
+};
 
 export const OnboardingScreen = ({ onFinish }) => {
   const [current, setCurrent] = useState(0);
   const scrollX = useRef(new Animated.Value(0)).current;
   const flatListRef = useRef(null);
 
+  // Entrance animations (slow-mo fade in on screen start)
+  const screenFadeAnim = useRef(new Animated.Value(0)).current;
+  const bottomSlideAnim = useRef(new Animated.Value(40)).current;
+
+  // Continuous breathing ambient glow animation
+  const glowAnim = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    // Cinematic initial entrance
+    Animated.parallel([
+      Animated.timing(screenFadeAnim, {
+        toValue: 1,
+        duration: 900,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.timing(bottomSlideAnim, {
+        toValue: 0,
+        duration: 900,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    // Infinite breathing slow-motion pulse
+    const pulseLoop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(glowAnim, {
+          toValue: 1.12,
+          duration: 3000,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(glowAnim, {
+          toValue: 1.0,
+          duration: 3000,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ])
+    );
+    pulseLoop.start();
+
+    return () => pulseLoop.stop();
+  }, []);
+
   const onViewableItemsChanged = useRef(({ viewableItems }) => {
-    if (viewableItems.length > 0) setCurrent(viewableItems[0].index);
+    if (viewableItems.length > 0) {
+      setCurrent(viewableItems[0].index);
+    }
   }).current;
 
   const handleNext = () => {
@@ -47,16 +238,27 @@ export const OnboardingScreen = ({ onFinish }) => {
   };
 
   return (
-    <View style={styles.container}>
-      {/* Floating Skip Button */}
+    <Animated.View style={[styles.container, { opacity: screenFadeAnim }]}>
+      <StatusBar barStyle="light-content" backgroundColor="#000000" translucent />
+
+      {/* Floating Header with Glassmorphism Skip Button */}
       <View style={styles.header}>
         {current < SLIDES.length - 1 ? (
-          <TouchableOpacity onPress={onFinish} style={styles.skipBtn} hitSlop={{top:10, bottom:10, left:10, right:10}}>
+          <TouchableOpacity
+            onPress={onFinish}
+            style={styles.skipBtn}
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            activeOpacity={0.7}
+          >
             <Text style={styles.skipText}>Skip</Text>
+            <Icon name="chevron-right" size={16} color="#94A3B8" />
           </TouchableOpacity>
-        ) : <View />}
+        ) : (
+          <View style={{ width: 60 }} />
+        )}
       </View>
 
+      {/* Carousel FlatList */}
       <Animated.FlatList
         ref={flatListRef}
         data={SLIDES}
@@ -71,52 +273,62 @@ export const OnboardingScreen = ({ onFinish }) => {
           [{ nativeEvent: { contentOffset: { x: scrollX } } }],
           { useNativeDriver: false }
         )}
-        renderItem={({ item }) => (
-          <View style={styles.slide}>
-            
-            <View style={styles.visualArea}>
-              <Image source={item.image} style={styles.image} resizeMode="cover" />
-            </View>
-
-            <View style={styles.textArea}>
-              {item.title(styles)}
-              <Text style={styles.subtitle}>{item.subtitle}</Text>
-            </View>
-
-          </View>
+        scrollEventThrottle={16}
+        renderItem={({ item, index }) => (
+          <SlideItem
+            item={item}
+            index={index}
+            scrollX={scrollX}
+            glowAnim={glowAnim}
+          />
         )}
       />
 
-      <View style={styles.bottomSheet}>
+      {/* Bottom Controls Sheet */}
+      <Animated.View
+        style={[
+          styles.bottomSheet,
+          { transform: [{ translateY: bottomSlideAnim }] },
+        ]}
+      >
+        {/* Animated Expanding Dots */}
         <View style={styles.dots}>
           {SLIDES.map((_, i) => {
             const inputRange = [(i - 1) * width, i * width, (i + 1) * width];
-            
+
             const dotWidth = scrollX.interpolate({
               inputRange,
-              outputRange: [8, 24, 8],
+              outputRange: [8, 28, 8],
               extrapolate: 'clamp',
             });
             const opacity = scrollX.interpolate({
               inputRange,
-              outputRange: [0.3, 1, 0.3],
+              outputRange: [0.35, 1, 0.35],
               extrapolate: 'clamp',
             });
             const bgColor = scrollX.interpolate({
               inputRange,
-              outputRange: ['#888888', '#FFD700', '#888888'],
+              outputRange: ['#475569', '#FFD700', '#475569'],
               extrapolate: 'clamp',
             });
 
             return (
               <Animated.View
                 key={i.toString()}
-                style={[styles.dot, { width: dotWidth, opacity, backgroundColor: bgColor }]}
+                style={[
+                  styles.dot,
+                  {
+                    width: dotWidth,
+                    opacity,
+                    backgroundColor: bgColor,
+                  },
+                ]}
               />
             );
           })}
         </View>
 
+        {/* CTA Button */}
         <Button
           title={current === SLIDES.length - 1 ? 'GET STARTED' : 'Next'}
           onPress={handleNext}
@@ -124,50 +336,158 @@ export const OnboardingScreen = ({ onFinish }) => {
           rightIcon="arrow-right"
           style={styles.actionBtn}
         />
-      </View>
-    </View>
+      </Animated.View>
+    </Animated.View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000000' },
-  header: { 
-    position: 'absolute',
-    top: 50,
-    right: 20,
-    zIndex: 10
+  container: {
+    flex: 1,
+    backgroundColor: '#000000',
   },
-  skipBtn: { padding: SPACING.sm },
-  skipText: { fontSize: 15, color: '#FFFFFF', fontWeight: '600' },
-  
-  slide: { width, flex: 1 },
+  header: {
+    position: 'absolute',
+    top: Platform.OS === 'ios' ? 56 : 42,
+    right: 20,
+    zIndex: 10,
+  },
+  skipBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
+  },
+  skipText: {
+    fontSize: 13,
+    color: '#E2E8F0',
+    fontWeight: '600',
+    letterSpacing: 0.3,
+    marginRight: 2,
+  },
+
+  slide: {
+    width,
+    flex: 1,
+  },
   visualArea: {
-    height: height * 0.60,
+    height: height * 0.58,
     width: '100%',
     position: 'relative',
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  ambientGlow: {
+    position: 'absolute',
+    width: width * 0.75,
+    height: width * 0.75,
+    borderRadius: (width * 0.75) / 2,
+    backgroundColor: 'rgba(255, 215, 0, 0.12)',
+    top: '15%',
+    zIndex: 1,
+  },
+  imageContainer: {
+    width: '100%',
+    height: '100%',
+    overflow: 'hidden',
   },
   image: {
     width: '100%',
     height: '100%',
   },
-  
+  gradientOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 120,
+    backgroundColor: 'transparent',
+    borderBottomWidth: 120,
+    borderBottomColor: '#000000',
+    opacity: 0.95,
+  },
+
   textArea: {
-    height: height * 0.20,
-    paddingHorizontal: SPACING.screen * 1.5,
+    height: height * 0.22,
+    paddingHorizontal: SPACING.screen * 1.2,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: -20,
+    marginTop: -10,
+    zIndex: 2,
   },
-  title: { fontSize: 32, color: '#FFFFFF', textAlign: 'center', fontWeight: '700', marginBottom: 12, letterSpacing: 0.5 },
-  subtitle: { ...TYPOGRAPHY.body1, color: '#CCCCCC', textAlign: 'center', lineHeight: 24, fontSize: 15 },
-  
-  bottomSheet: { 
+  badgePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 4,
+    paddingHorizontal: 12,
+    backgroundColor: 'rgba(255, 215, 0, 0.12)',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 215, 0, 0.3)',
+    marginBottom: 10,
+  },
+  badgeDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#FFD700',
+    marginRight: 6,
+  },
+  badgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#FFD700',
+    letterSpacing: 0.8,
+  },
+  title: {
+    fontSize: 30,
+    color: '#FFFFFF',
+    textAlign: 'center',
+    fontWeight: '800',
+    marginBottom: 8,
+    letterSpacing: 0.4,
+    lineHeight: 38,
+  },
+  titleGold: {
+    color: '#FFD700',
+  },
+  subtitle: {
+    ...TYPOGRAPHY.body1,
+    color: '#94A3B8',
+    textAlign: 'center',
+    lineHeight: 22,
+    fontSize: 14,
+    paddingHorizontal: 10,
+  },
+
+  bottomSheet: {
     height: height * 0.20,
-    paddingHorizontal: SPACING.screen, 
-    paddingBottom: 40,
-    justifyContent: 'flex-end'
+    paddingHorizontal: SPACING.screen,
+    paddingBottom: Platform.OS === 'ios' ? 44 : 32,
+    justifyContent: 'flex-end',
+    zIndex: 3,
   },
-  dots: { flexDirection: 'row', justifyContent: 'center', marginBottom: 30, gap: 8 },
-  dot: { height: 8, borderRadius: 4 },
-  actionBtn: { width: '100%' },
+  dots: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginBottom: 26,
+    gap: 8,
+  },
+  dot: {
+    height: 8,
+    borderRadius: 4,
+  },
+  actionBtn: {
+    width: '100%',
+    shadowColor: '#FFD700',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 6,
+  },
 });
