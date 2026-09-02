@@ -86,7 +86,7 @@ export const RegisterScreen = ({ navigation }) => {
           </TouchableOpacity>
           <View style={styles.logoCenter}>
             <Text style={styles.logoTitle}>KTS</Text>
-            <Text style={styles.logoSub}>10 PIPS BOTS</Text>
+            <Text style={styles.logoSub}>MARKETS</Text>
           </View>
         </View>
 

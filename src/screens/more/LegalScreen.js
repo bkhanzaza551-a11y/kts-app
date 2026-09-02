@@ -33,7 +33,7 @@ export const LegalScreen = ({ route }) => {
     } catch (e) {
       setContent({ 
         title: targetSlug === 'terms-conditions' ? 'Terms & Conditions' : 'Privacy Policy', 
-        content: 'Official legal documentation for KTS 10 Pips Bots. For complete details, visit our website or contact support.' 
+        content: 'Official legal documentation for KTS Markets. For complete details, visit our website or contact support.' 
       });
     }
     setLoading(false);
