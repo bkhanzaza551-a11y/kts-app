@@ -39,11 +39,16 @@ export const AppNavigator = () => {
   // Setup push notifications when logged in
   useEffect(() => {
     if (isLoggedIn) {
-      requestNotificationPermission().then(granted => {
-        if (granted) {
-          registerDeviceWithBackend();
-        }
-      });
+      // Delay to ensure Firebase is fully initialized
+      const timer = setTimeout(() => {
+        requestNotificationPermission().then(granted => {
+          console.log('[App] Notification permission granted:', granted);
+          if (granted) {
+            registerDeviceWithBackend();
+          }
+        });
+      }, 1500);
+      return () => clearTimeout(timer);
     }
   }, [isLoggedIn]);
 
