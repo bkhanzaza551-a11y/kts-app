@@ -40,7 +40,9 @@ const saveMessages = async (messages) => {
   try {
     const toSave = messages.slice(-50);
     await AsyncStorage.setItem(MESSAGES_KEY, JSON.stringify(toSave));
-  } catch (e) {}
+  } catch (e) {
+    console.warn('Failed to save AI chat messages:', e);
+  }
 };
 
 export const clearChatMessages = createAsyncThunk('aiChat/clearMessages', async (_, { dispatch }) => {
@@ -67,6 +69,7 @@ const aiChatSlice = createSlice({
     loading: false,
     error: null,
     needs_human_support: false,
+    reportSuccess: false,
   },
   reducers: {
     clearMessagesLocal: (state) => { state.messages = []; },

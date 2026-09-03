@@ -172,7 +172,7 @@ const authSlice = createSlice({
       .addCase(verifySecurityCode.rejected, (s, a) => { s.isLoading = false; s.error = a.payload; })
 
       .addCase(loadProfile.pending, (s) => { s.isLoading = true; })
-      .addCase(loadProfile.fulfilled, (s, a) => { const u = a.payload.data?.user || a.payload.user; s.user = u; storage.setUser(u); s.isLoading = false; })
+      .addCase(loadProfile.fulfilled, (s, a) => { const u = a.payload.data?.user || a.payload.user; if (u) { s.user = u; storage.setUser(u); } s.isLoading = false; })
       .addCase(loadProfile.rejected, (s) => { s.isLoading = false; })
       .addCase(logout.fulfilled, (s) => {
         s.user = null; s.token = null; s.isLoggedIn = false;

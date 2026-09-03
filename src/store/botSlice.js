@@ -30,12 +30,12 @@ const botSlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(fetchBots.pending, (s) => { s.isLoading = true; })
-      .addCase(fetchBots.fulfilled, (s, a) => { s.isLoading = false; s.bots = a.payload.data; })
+      .addCase(fetchBots.fulfilled, (s, a) => { s.isLoading = false; s.bots = a.payload.data || []; })
       .addCase(fetchBots.rejected, (s, a) => { s.isLoading = false; s.error = a.payload; })
       .addCase(fetchBotDetail.pending, (s) => { s.isLoading = true; s.error = null; })
       .addCase(fetchBotDetail.fulfilled, (s, a) => { s.isLoading = false; s.currentBot = a.payload.data; })
       .addCase(fetchBotDetail.rejected, (s, a) => { s.isLoading = false; s.error = a.payload; })
-      .addCase(fetchBotTrades.fulfilled, (s, a) => { s.trades[a.payload.id] = a.payload.data; })
+      .addCase(fetchBotTrades.fulfilled, (s, a) => { s.trades[a.payload.id] = a.payload.data || []; })
       .addCase(toggleAutoTrade.fulfilled, (s, a) => {
         const idx = s.bots.findIndex(b => b.id === a.payload.id);
         if (idx >= 0) s.bots[idx].auto_trade = a.payload.data.auto_trade;

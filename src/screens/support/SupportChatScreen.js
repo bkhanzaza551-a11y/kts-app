@@ -107,10 +107,16 @@ export default function SupportChatScreen({ navigation, route }) {
     }
 
     try {
-      const token = await (await import('../../utils/storage')).storage.getToken();
-      await client.post(`/support/tickets/${currentTicketId}/reply`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data', Authorization: `Bearer ${token}` },
-      });
+      const formDataObj = new FormData();
+      formDataObj.append('message', input.trim() || (selectedFile ? 'Sent an attachment' : ''));
+      if (selectedFile) {
+        formDataObj.append('attachment', {
+          uri: selectedFile.uri,
+          type: selectedFile.type || 'image/jpeg',
+          name: selectedFile.fileName || 'attachment.jpg',
+        });
+      }
+      await client.post(`/support/tickets/${currentTicketId}/reply`, formDataObj);
       setSelectedFile(null);
       setInput('');
       dispatch(loadSupportMessages(currentTicketId));
@@ -142,9 +148,9 @@ export default function SupportChatScreen({ navigation, route }) {
           </Text>
           {hasAttachment && (
             <View style={styles.attachmentContainer}>
-              {hasAttachment.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
+              {(typeof hasAttachment === 'string' ? hasAttachment : hasAttachment?.url || '').match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
                 <Image
-                  source={{ uri: `https://kts-backend-production.up.railway.app/storage/${hasAttachment}` }}
+                  source={{ uri: `https://kts-backend-production.up.railway.app/storage/${typeof hasAttachment === 'string' ? hasAttachment : hasAttachment?.url || ''}` }}
                   style={styles.attachmentImage}
                   resizeMode="cover"
                 />
@@ -154,7 +160,7 @@ export default function SupportChatScreen({ navigation, route }) {
                   onPress={() => {/* open file */}}
                 >
                   <Icon name="file-document-outline" size={20} color={COLORS.gold} />
-                  <Text style={styles.fileName}>{hasAttachment.split('/').pop()}</Text>
+                  <Text style={styles.fileName}>{(typeof hasAttachment === 'string' ? hasAttachment : hasAttachment?.url || '').split('/').pop()}</Text>
                 </TouchableOpacity>
               )}
             </View>

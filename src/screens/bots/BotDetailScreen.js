@@ -27,7 +27,7 @@ export const BotDetailScreen = ({ route, navigation }) => {
   if (error) return <View style={styles.container}><Text style={[styles.loading, { color: COLORS.red }]}>{error}</Text></View>;
   if (!currentBot) return <View style={styles.container}><Text style={styles.loading}>Bot not found</Text></View>;
 
-  const profitPct = currentBot.balance ? ((currentBot.total_profit / currentBot.balance) * 100).toFixed(1) : 0;
+  const profitPct = currentBot.balance ? ((currentBot.total_profit / currentBot.balance) * 100).toFixed(1) : '0';
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>

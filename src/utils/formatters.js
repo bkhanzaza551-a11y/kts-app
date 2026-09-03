@@ -54,6 +54,6 @@ export const formatRelativeTime = (date) => {
 };
 
 export const formatWinRate = (wins, total) => {
-  if (!total) return '0%';
+  if (!total || wins == null) return '0%';
   return `${((wins / total) * 100).toFixed(1)}%`;
 };

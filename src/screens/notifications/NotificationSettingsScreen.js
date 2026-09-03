@@ -56,8 +56,9 @@ export const NotificationSettingsScreen = ({ navigation }) => {
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>
-        {Object.keys(grouped).filter(cat => cat !== 'bots').map((category) => {
-          const categorySettings = grouped[category];
+        {Object.keys(grouped || {}).filter(cat => cat !== 'bots').map((category) => {
+          const categorySettings = grouped[category] || [];
+          if (!Array.isArray(categorySettings)) return null;
           const enabledCount = categorySettings.filter(s => s.is_enabled).length;
           const allEnabled = enabledCount === categorySettings.length;
 

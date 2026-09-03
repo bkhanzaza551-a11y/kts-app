@@ -35,7 +35,7 @@ export const ForgotPasswordScreen = ({ navigation }) => {
     setIsLoading(true);
 
     try {
-      await client.post('/auth/forgot-password', { email });
+      await client.post('/forgot-password', { email });
       setIsSuccess(true);
       triggerHaptic('success');
     } catch (err) {

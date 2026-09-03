@@ -17,7 +17,7 @@ export const storage = {
     const json = await AsyncStorage.getItem(KEYS.USER);
     return json ? JSON.parse(json) : null;
   },
-  setUser: (user) => AsyncStorage.setItem(KEYS.USER, JSON.stringify(user)),
+  setUser: (user) => user ? AsyncStorage.setItem(KEYS.USER, JSON.stringify(user)) : AsyncStorage.removeItem(KEYS.USER),
   removeUser: () => AsyncStorage.removeItem(KEYS.USER),
 
   isOnboarded: async () => {

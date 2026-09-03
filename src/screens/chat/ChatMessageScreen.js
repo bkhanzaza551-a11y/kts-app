@@ -79,6 +79,7 @@ export const ChatMessageScreen = ({ route, navigation }) => {
   }, [cooldown]);
 
   const startCooldown = () => {
+    if (cooldownTimer.current) clearInterval(cooldownTimer.current);
     setCooldown(10);
     cooldownTimer.current = setInterval(() => {
       setCooldown(prev => {

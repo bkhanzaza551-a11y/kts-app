@@ -41,6 +41,7 @@ export const HomeScreen = ({ navigation }) => {
   const fetchMarkets = async () => {
     try {
       const res = await fetch('https://api.binance.com/api/v3/ticker/24hr?symbols=%5B%22BTCUSDT%22,%22ETHUSDT%22,%22BNBUSDT%22,%22SOLUSDT%22,%22XRPUSDT%22%5D');
+      if (!res.ok) return;
       const data = await res.json();
       if (Array.isArray(data)) {
         setLiveMarkets(data);
@@ -227,15 +228,15 @@ export const HomeScreen = ({ navigation }) => {
               <View style={styles.signalPrices}>
                 <View style={styles.signalPriceCol}>
                   <Text style={styles.signalPriceLabel}>Entry</Text>
-                  <Text style={styles.signalPriceValue}>{Number(signal.entry_price).toFixed(4)}</Text>
+                  <Text style={styles.signalPriceValue}>{Number(signal?.entry_price ?? 0).toFixed(4)}</Text>
                 </View>
                 <View style={styles.signalPriceCol}>
                   <Text style={styles.signalPriceLabel}>Take Profit</Text>
-                  <Text style={[styles.signalPriceValue, { color: '#00C853' }]}>{Number(signal.take_profit).toFixed(4)}</Text>
+                  <Text style={[styles.signalPriceValue, { color: '#00C853' }]}>{Number(signal?.take_profit ?? 0).toFixed(4)}</Text>
                 </View>
                 <View style={styles.signalPriceCol}>
                   <Text style={styles.signalPriceLabel}>Stop Loss</Text>
-                  <Text style={[styles.signalPriceValue, { color: '#FF4444' }]}>{Number(signal.stop_loss).toFixed(4)}</Text>
+                  <Text style={[styles.signalPriceValue, { color: '#FF4444' }]}>{Number(signal?.stop_loss ?? 0).toFixed(4)}</Text>
                 </View>
               </View>
             </View>

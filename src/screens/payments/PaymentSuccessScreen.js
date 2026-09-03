@@ -7,7 +7,7 @@ import { Button } from '../../components/common/Button';
 import { useCurrency } from '../../context/CurrencyContext';
 
 export const PaymentSuccessScreen = ({ route, navigation }) => {
-  const { amount, name } = route.params || {};
+  const { amount = 0, name = 'Plan' } = route.params || {};
   const { formatAmount } = useCurrency();
 
   return (

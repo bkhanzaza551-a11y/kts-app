@@ -19,7 +19,7 @@ export const OtpVerificationScreen = ({ navigation, route }) => {
 
   useEffect(() => {
     if (!isEmailVerification && isSecurityCodePending) navigation.replace('SecurityCode');
-  }, [isSecurityCodePending, isEmailVerification]);
+  }, [isSecurityCodePending, isEmailVerification, navigation]);
 
   useEffect(() => {
     if (pendingOtp && pendingOtp.length === 6) {

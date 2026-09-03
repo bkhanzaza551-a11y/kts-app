@@ -10,13 +10,14 @@ import { setToken, setUser } from '../store/authSlice';
 import { requestNotificationPermission, registerDeviceWithBackend, setupNotificationListeners } from '../services/pushNotification';
 
 export const AppNavigator = () => {
-  const [isReady, setIsReady] = useState(true);
+  const [isReady, setIsReady] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const { isLoggedIn } = useSelector(s => s.auth);
   const dispatch = useDispatch();
   const navRef = useRef(null);
 
   useEffect(() => {
+    let timer;
     const init = async () => {
       try {
         const onboarded = await storage.isOnboarded();
@@ -31,9 +32,10 @@ export const AppNavigator = () => {
       } catch (e) {
         setShowOnboarding(false);
       }
-      setTimeout(() => setIsReady(false), 2000);
+      timer = setTimeout(() => setIsReady(true), 2000);
     };
     init();
+    return () => { if (timer) clearTimeout(timer); };
   }, []);
 
   // Setup push notifications when logged in
@@ -60,7 +62,7 @@ export const AppNavigator = () => {
     }
   }, [isLoggedIn]);
 
-  if (isReady) return <SplashScreen />;
+  if (!isReady) return <SplashScreen />;
 
   return (
     <NavigationContainer ref={navRef}>

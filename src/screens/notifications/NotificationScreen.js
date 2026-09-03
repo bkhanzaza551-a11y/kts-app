@@ -86,7 +86,7 @@ export const NotificationScreen = ({ navigation }) => {
       ) : (
         <FlatList
           data={items}
-          keyExtractor={(item) => item.id.toString()}
+          keyExtractor={(item) => String(item.id || Math.random())}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
           renderItem={renderNewsItem}

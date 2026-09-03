@@ -36,7 +36,7 @@ export const RegisterScreen = ({ navigation }) => {
     if (isEmailVerificationPending && pendingEmail) {
       navigation.replace('OtpVerification', { emailVerification: true, email: pendingEmail });
     }
-  }, [isEmailVerificationPending, pendingEmail]);
+  }, [isEmailVerificationPending, pendingEmail, navigation]);
 
   const handleRegister = () => {
     if (!agree) {

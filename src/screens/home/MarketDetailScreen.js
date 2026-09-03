@@ -29,7 +29,7 @@ export const MarketDetailScreen = ({ route, navigation }) => {
 
   const currentPrice = marketData ? Number(marketData.lastPrice) : Number(price);
   const formattedPrice = currentPrice < 1 ? currentPrice.toFixed(4) : currentPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  const currentChange = marketData ? Number(marketData.priceChangePercent).toFixed(2) : Number(change).toFixed(2);
+  const currentChange = marketData ? Number(marketData.priceChangePercent).toFixed(2) : Number(change || 0).toFixed(2);
   const isPositive = Number(currentChange) >= 0;
   const color = isPositive ? '#00C853' : '#FF4444';
 

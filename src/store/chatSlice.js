@@ -36,12 +36,12 @@ const chatSlice = createSlice({
       const { roomSlug, message } = a.payload;
       if (s.messages[roomSlug]) s.messages[roomSlug].push(message);
     },
-    clearMessages: (s, a) => { s.messages[a.payload] = [] },
+    clearMessages: (s, a) => { if (s.messages[a.payload]) s.messages[a.payload] = [] },
   },
   extraReducers: (builder) => {
     builder
       .addCase(fetchRooms.pending, (s) => { s.isLoadingRooms = true; })
-      .addCase(fetchRooms.fulfilled, (s, a) => { s.isLoadingRooms = false; s.rooms = a.payload.data; })
+      .addCase(fetchRooms.fulfilled, (s, a) => { s.isLoadingRooms = false; s.rooms = a.payload.data || []; })
       .addCase(fetchRooms.rejected, (s, a) => { s.isLoadingRooms = false; s.error = a.payload; })
       .addCase(fetchMessages.pending, (s) => { s.isLoadingMessages = true; })
       .addCase(fetchMessages.fulfilled, (s, a) => {

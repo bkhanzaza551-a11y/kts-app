@@ -26,17 +26,18 @@ const signalSlice = createSlice({
       .addCase(fetchSignals.fulfilled, (s, a) => {
         s.isLoading = false;
         const data = a.payload.data;
-        if (s.page === 1) s.items = data.data;
-        else s.items = [...s.items, ...data.data];
-        s.lastPage = data.last_page;
-        s.page = data.current_page + 1;
+        const list = data?.data || data || [];
+        if (s.page === 1) s.items = list;
+        else s.items = [...s.items, ...list];
+        s.lastPage = data?.last_page ?? 1;
+        s.page = (data?.current_page ?? 0) + 1;
       })
       .addCase(fetchSignals.rejected, (s, a) => { s.isLoading = false; s.error = a.payload; })
       .addCase(fetchLatest.pending, (s) => { s.isLoading = true; })
-      .addCase(fetchLatest.fulfilled, (s, a) => { s.isLoading = false; s.latest = a.payload.data; })
+      .addCase(fetchLatest.fulfilled, (s, a) => { s.isLoading = false; s.latest = a.payload.data || []; })
       .addCase(fetchLatest.rejected, (s, a) => { s.isLoading = false; s.error = a.payload; })
       .addCase(fetchCategories.pending, (s) => { s.isLoading = true; })
-      .addCase(fetchCategories.fulfilled, (s, a) => { s.isLoading = false; s.categories = a.payload.data; })
+      .addCase(fetchCategories.fulfilled, (s, a) => { s.isLoading = false; s.categories = a.payload.data || []; })
       .addCase(fetchCategories.rejected, (s, a) => { s.isLoading = false; s.error = a.payload; });
   },
 });

@@ -25,8 +25,10 @@ const educationSlice = createSlice({
       .addCase(fetchCourses.pending, (s) => { s.isLoading = true; })
       .addCase(fetchCourses.fulfilled, (s, a) => { s.isLoading = false; s.courses = a.payload.data?.data || a.payload.data; })
       .addCase(fetchCourses.rejected, (s, a) => { s.isLoading = false; s.error = a.payload; })
-      .addCase(fetchCourseDetail.fulfilled, (s, a) => { s.currentCourse = a.payload.data; })
-      .addCase(fetchCategories.fulfilled, (s, a) => { s.categories = a.payload.data; });
+      .addCase(fetchCourseDetail.pending, (s) => { s.isLoading = true; })
+      .addCase(fetchCourseDetail.fulfilled, (s, a) => { s.isLoading = false; s.currentCourse = a.payload.data; })
+      .addCase(fetchCourseDetail.rejected, (s, a) => { s.isLoading = false; s.error = a.payload; })
+      .addCase(fetchCategories.fulfilled, (s, a) => { s.categories = a.payload.data || []; });
   },
 });
 

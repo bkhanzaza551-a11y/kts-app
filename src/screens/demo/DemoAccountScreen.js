@@ -88,7 +88,6 @@ export const DemoAccountScreen = ({ navigation }) => {
     } finally {
       setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
