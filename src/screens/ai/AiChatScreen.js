@@ -16,6 +16,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { sendMessage, clearChatMessages, loadChatHistory, reportMessage } from '../../store/aiChatSlice';
+import { createSupportTicket } from '../../store/supportChatSlice';
 import { triggerHaptic } from '../../utils/haptics';
 
 const COLORS = {
@@ -66,7 +67,7 @@ export default function AiChatScreen({ navigation }) {
   const flatListRef = useRef(null);
   const dispatch = useDispatch();
 
-  const { messages, loading, error } = useSelector((s) => s.aiChat);
+  const { messages, loading, error, needs_human_support } = useSelector((s) => s.aiChat);
   const { token, isLoggedIn } = useSelector((s) => s.auth);
 
   // Animations
@@ -160,9 +161,21 @@ export default function AiChatScreen({ navigation }) {
     Alert.alert('Thank You', 'Your report has been submitted and will be reviewed.');
   };
 
+  const handleConnectSupport = async () => {
+    triggerHaptic('light');
+    const result = await dispatch(createSupportTicket());
+    if (result.meta.requestStatus === 'fulfilled') {
+      navigation.navigate('SupportChat', { ticketId: result.payload.id });
+    } else {
+      Alert.alert('Error', 'Failed to create support ticket. Please try again.');
+    }
+  };
+
   const renderMessage = ({ item }) => {
     const isUser = item.role === 'user' || item.sender === 'user';
     const messageContent = item.content || item.text || item.message || '';
+    const showSupportButton = item.needs_human_support && !isUser;
+
     return (
       <View style={[styles.messageWrapper, isUser ? styles.msgRight : styles.msgLeft]}>
         {!isUser && (
@@ -174,6 +187,15 @@ export default function AiChatScreen({ navigation }) {
           <Text style={[styles.bubbleText, isUser ? styles.userText : styles.aiText]}>
             {messageContent}
           </Text>
+          {showSupportButton && (
+            <TouchableOpacity
+              style={styles.connectSupportBtn}
+              onPress={handleConnectSupport}
+            >
+              <Icon name="headset" size={16} color="#000" />
+              <Text style={styles.connectSupportText}>Connect with Support</Text>
+            </TouchableOpacity>
+          )}
           {!isUser && (
             <TouchableOpacity
               style={styles.reportBtn}
@@ -650,6 +672,22 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginVertical: 4,
     paddingHorizontal: 16,
+  },
+  connectSupportBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFD700',
+    borderRadius: 20,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    marginTop: 10,
+    gap: 6,
+  },
+  connectSupportText: {
+    color: '#000',
+    fontSize: 13,
+    fontWeight: '700',
   },
 });
 

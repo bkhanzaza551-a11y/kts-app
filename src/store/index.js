@@ -8,6 +8,7 @@ import educationReducer from './educationSlice';
 import notificationReducer from './notificationSlice';
 import notificationSettingsReducer from './notificationSettingsSlice';
 import aiChatReducer from './aiChatSlice';
+import supportChatReducer from './supportChatSlice';
 import appSettingsReducer from './appSettingsSlice';
 
 export const store = configureStore({
@@ -21,6 +22,7 @@ export const store = configureStore({
     notifications: notificationReducer,
     notificationSettings: notificationSettingsReducer,
     aiChat: aiChatReducer,
+    supportChat: supportChatReducer,
     appSettings: appSettingsReducer,
   },
   middleware: (getDefaultMiddleware) =>

@@ -66,6 +66,7 @@ const aiChatSlice = createSlice({
     status: null,
     loading: false,
     error: null,
+    needs_human_support: false,
   },
   reducers: {
     clearMessagesLocal: (state) => { state.messages = []; },
@@ -84,8 +85,15 @@ const aiChatSlice = createSlice({
             state.messages.push({ role: 'user', content: action.payload.user_message, timestamp: action.payload.timestamp });
           }
           if (action.payload.response) {
-            state.messages.push({ role: 'assistant', content: action.payload.response, timestamp: action.payload.timestamp, model: action.payload.model });
+            state.messages.push({
+              role: 'assistant',
+              content: action.payload.response,
+              timestamp: action.payload.timestamp,
+              model: action.payload.model,
+              needs_human_support: action.payload.needs_human_support || false,
+            });
           }
+          state.needs_human_support = action.payload.needs_human_support || false;
           saveMessages(state.messages);
         }
       })
