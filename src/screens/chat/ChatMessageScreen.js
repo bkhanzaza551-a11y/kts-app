@@ -9,9 +9,11 @@ import { triggerHaptic } from '../../utils/haptics';
 import { chatApi } from '../../api/chat';
 
 const EMOJI_GRID = [
-  ['😀','😂','😍','🥰','😎','🤔','😭','🔥','❤️','👍','🙌','💪','🎉','✅','⭐','💀'],
-  ['🙏','👏','🤝','💯','🤣','😊','😘','🥳','😏','😢','😤','👀','💔','🎶','💰','🏆'],
-  ['⚡','🚀','💎','📈','📉','💡','🔒','📢','🚨','⏰','📱','💻','🌍','🕌','📌','🎯'],
+  ['😀','😂','😍','🥰','😎','🤔','😭','🔥'],
+  ['❤️','👍','🙌','💪','🎉','✅','⭐','💀'],
+  ['🙏','👏','🤝','💯','🤣','😊','😘','🥳'],
+  ['😏','😢','😤','👀','💔','🎶','💰','🏆'],
+  ['⚡','🚀','💎','📈','📉','💡','🔒','📢'],
 ];
 
 const isSameDay = (date1, date2) => {
@@ -212,9 +214,13 @@ export const ChatMessageScreen = ({ route, navigation }) => {
 
             {item.type === 'sticker' ? (
               item.sticker?.image_url ? (
-                <Image source={{ uri: item.sticker.image_url }} style={styles.stickerImage} resizeMode="contain" />
+                <Image
+                  source={{ uri: item.sticker.image_url.startsWith('http') ? item.sticker.image_url : `https://kts-backend-production.up.railway.app/storage/${item.sticker.image_url}` }}
+                  style={styles.stickerImage}
+                  resizeMode="contain"
+                />
               ) : (
-                <Text style={styles.stickerEmoji}>{item.sticker_emoji || '🔥'}</Text>
+                <Text style={styles.stickerEmoji}>🔥</Text>
               )
             ) : (
               <Text style={[styles.messageText, isMe && styles.messageTextMe]}>{item.message || item.filtered_message}</Text>
@@ -296,7 +302,11 @@ export const ChatMessageScreen = ({ route, navigation }) => {
                 renderItem={({ item }) => (
                   <TouchableOpacity style={styles.stickerItem} onPress={() => handleSendSticker(item)}>
                     {item.image_url ? (
-                      <Image source={{ uri: item.image_url }} style={styles.stickerThumb} resizeMode="contain" />
+                      <Image
+                        source={{ uri: item.image_url.startsWith('http') ? item.image_url : `https://kts-backend-production.up.railway.app/storage/${item.image_url}` }}
+                        style={styles.stickerThumb}
+                        resizeMode="contain"
+                      />
                     ) : (
                       <Text style={styles.stickerItemEmoji}>🔥</Text>
                     )}
@@ -394,9 +404,9 @@ const styles = StyleSheet.create({
 
   // Emoji Tray
   emojiTray: { backgroundColor: '#12161A', borderTopWidth: 1, borderTopColor: '#1E2329', paddingVertical: 8, paddingHorizontal: 4 },
-  emojiRow: { flexDirection: 'row', justifyContent: 'space-around', marginBottom: 4 },
-  emojiBtn: { padding: 8, alignItems: 'center', justifyContent: 'center' },
-  emojiText: { fontSize: 28 },
+  emojiRow: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', marginBottom: 4 },
+  emojiBtn: { width: '12.5%', padding: 6, alignItems: 'center', justifyContent: 'center' },
+  emojiText: { fontSize: 26 },
 
   // Sticker Tray
   stickerTray: { height: 260, backgroundColor: '#12161A', borderTopWidth: 1, borderTopColor: '#1E2329', padding: 10 },

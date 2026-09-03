@@ -7,50 +7,6 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:294042310331:android:7be277caa442a3f4ee3b9e",
-        "android_client_info": {
-          "package_name": "com.example.laptop_harbor"
-        }
-      },
-      "oauth_client": [
-        {
-          "client_id": "294042310331-03va7sjlun476b48ktlq3pcbp4488hb9.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.example.laptop_harbor",
-            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
-          }
-        },
-        {
-          "client_id": "294042310331-3i686pnl7nlvh9tq780h9ftvs16ld55n.apps.googleusercontent.com",
-          "client_type": 3
-        }
-      ],
-      "api_key": [
-        {
-          "current_key": "AIzaSyD9WYIqBaB2GG3ZnKQOYRGGgMaooCC_UYU"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": [
-            {
-              "client_id": "294042310331-3i686pnl7nlvh9tq780h9ftvs16ld55n.apps.googleusercontent.com",
-              "client_type": 3
-            },
-            {
-              "client_id": "294042310331-0sf5ripov09luq0u92q6se25hdps6mda.apps.googleusercontent.com",
-              "client_type": 2,
-              "ios_info": {
-                "bundle_id": "com.example.laptopHarbor"
-              }
-            }
-          ]
-        }
-      }
-    },
-    {
-      "client_info": {
         "mobilesdk_app_id": "1:294042310331:android:1f1a3060b17c2ad5ee3b9e",
         "android_client_info": {
           "package_name": "com.ktsmarkets"
@@ -81,13 +37,6 @@
             {
               "client_id": "294042310331-3i686pnl7nlvh9tq780h9ftvs16ld55n.apps.googleusercontent.com",
               "client_type": 3
-            },
-            {
-              "client_id": "294042310331-0sf5ripov09luq0u92q6se25hdps6mda.apps.googleusercontent.com",
-              "client_type": 2,
-              "ios_info": {
-                "bundle_id": "com.example.laptopHarbor"
-              }
             }
           ]
         }
