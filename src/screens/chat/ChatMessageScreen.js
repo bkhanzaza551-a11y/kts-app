@@ -1,8 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, Keyboard, Image, Alert } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, Keyboard, Image, Alert, Animated, Easing } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { COLORS } from '../../theme/colors';
+import { TYPOGRAPHY } from '../../theme/typography';
+import { SPACING, RADIUS } from '../../theme/spacing';
 import { fetchMessages, sendMessage, fetchStickers } from '../../store/chatSlice';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { triggerHaptic } from '../../utils/haptics';
@@ -50,8 +52,11 @@ export const ChatMessageScreen = ({ route, navigation }) => {
   const [showStickers, setShowStickers] = useState(false);
   const [showEmojis, setShowEmojis] = useState(false);
   const [blockedUserIds, setBlockedUserIds] = useState([]);
+  const [cooldown, setCooldown] = useState(0);
+  const cooldownTimer = useRef(null);
   const flatListRef = useRef();
   const textInputRef = useRef();
+  const cooldownAnim = useRef(new Animated.Value(1)).current;
 
   const roomMessages = (messages[roomSlug] || []).filter(
     m => !blockedUserIds.includes(String(m.user_id || m.user?.id))
@@ -62,7 +67,30 @@ export const ChatMessageScreen = ({ route, navigation }) => {
     navigation.setOptions({ headerShown: false });
     dispatch(fetchMessages({ roomSlug, page: 1 }));
     dispatch(fetchStickers());
+    return () => { if (cooldownTimer.current) clearInterval(cooldownTimer.current); };
   }, [dispatch, roomSlug, navigation]);
+
+  useEffect(() => {
+    if (cooldown > 0) {
+      Animated.timing(cooldownAnim, { toValue: 0, duration: cooldown * 1000, easing: Easing.linear, useNativeDriver: false }).start();
+    } else {
+      cooldownAnim.setValue(1);
+    }
+  }, [cooldown]);
+
+  const startCooldown = () => {
+    setCooldown(10);
+    cooldownTimer.current = setInterval(() => {
+      setCooldown(prev => {
+        if (prev <= 1) {
+          clearInterval(cooldownTimer.current);
+          cooldownTimer.current = null;
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
 
   const handleMessageLongPress = (item, isMe) => {
     triggerHaptic('medium');
@@ -151,16 +179,19 @@ export const ChatMessageScreen = ({ route, navigation }) => {
   };
 
   const handleSendText = () => {
-    if (!text.trim()) return;
+    if (!text.trim() || cooldown > 0) return;
     triggerHaptic('light');
     dispatch(sendMessage({ roomSlug, data: { message: text.trim(), type: 'text' } }));
     setText('');
+    startCooldown();
   };
 
   const handleSendSticker = (sticker) => {
+    if (cooldown > 0) return;
     triggerHaptic('light');
     dispatch(sendMessage({ roomSlug, data: { type: 'sticker', sticker_id: sticker.id } }));
     setShowStickers(false);
+    startCooldown();
   };
 
   const toggleStickers = () => {
@@ -321,33 +352,52 @@ export const ChatMessageScreen = ({ route, navigation }) => {
 
         {/* Input Bar */}
         <View style={[styles.inputBar, { paddingBottom: Math.max(insets.bottom, 12) }]}>
+          {/* Cooldown Timer Bar */}
+          {cooldown > 0 && (
+            <View style={styles.cooldownContainer}>
+              <View style={styles.cooldownBarBg}>
+                <Animated.View style={[styles.cooldownBarFill, { width: cooldownAnim.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] }) }]} />
+              </View>
+              <Text style={styles.cooldownText}>Wait {cooldown}s to send next message</Text>
+            </View>
+          )}
+
           {/* Emoji button */}
-          <TouchableOpacity style={styles.iconBtn} onPress={toggleEmojis}>
-            <Icon name={showEmojis ? "keyboard" : "emoticon-outline"} size={26} color={showEmojis ? COLORS.gold : COLORS.grey} />
+          <TouchableOpacity style={styles.iconBtn} onPress={toggleEmojis} disabled={cooldown > 0}>
+            <Icon name={showEmojis ? "keyboard" : "emoticon-outline"} size={26} color={cooldown > 0 ? '#444' : (showEmojis ? COLORS.gold : COLORS.grey)} />
           </TouchableOpacity>
 
-          <View style={styles.inputWrapper}>
+          <View style={[styles.inputWrapper, cooldown > 0 && styles.inputWrapperDisabled]}>
             <TextInput
               ref={textInputRef}
               style={styles.textInput}
-              value={text}
-              onChangeText={setText}
+              value={cooldown > 0 ? '' : text}
+              onChangeText={cooldown > 0 ? null : setText}
               onFocus={() => { setShowEmojis(false); setShowStickers(false); }}
-              placeholder="Message..."
-              placeholderTextColor="#666"
+              placeholder={cooldown > 0 ? `Cooldown ${cooldown}s...` : "Message..."}
+              placeholderTextColor={cooldown > 0 ? COLORS.gold : '#666'}
               multiline
               maxLength={1000}
+              editable={cooldown === 0}
             />
           </View>
 
           {/* Sticker button */}
-          <TouchableOpacity style={styles.iconBtn} onPress={toggleStickers}>
-            <Icon name={showStickers ? "keyboard" : "sticker-emoji"} size={26} color={showStickers ? COLORS.gold : COLORS.grey} />
+          <TouchableOpacity style={styles.iconBtn} onPress={toggleStickers} disabled={cooldown > 0}>
+            <Icon name={showStickers ? "keyboard" : "sticker-emoji"} size={26} color={cooldown > 0 ? '#444' : (showStickers ? COLORS.gold : COLORS.grey)} />
           </TouchableOpacity>
 
           {/* Send button */}
-          <TouchableOpacity style={styles.sendBtn} onPress={handleSendText}>
-            <Icon name="send" size={20} color="#0B0E11" />
+          <TouchableOpacity
+            style={[styles.sendBtn, (cooldown > 0 || !text.trim()) && styles.sendBtnDisabled]}
+            onPress={handleSendText}
+            disabled={cooldown > 0 || !text.trim()}
+          >
+            {cooldown > 0 ? (
+              <Text style={styles.cooldownBtnText}>{cooldown}</Text>
+            ) : (
+              <Icon name="send" size={20} color="#0B0E11" />
+            )}
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
@@ -399,8 +449,15 @@ const styles = StyleSheet.create({
   inputBar: { flexDirection: 'row', alignItems: 'flex-end', padding: 8, backgroundColor: '#0B0E11', gap: 6 },
   iconBtn: { padding: 10, paddingBottom: 12 },
   inputWrapper: { flex: 1, flexDirection: 'row', alignItems: 'center', backgroundColor: '#1A2026', borderRadius: 24, paddingLeft: 16, paddingRight: 12, minHeight: 48 },
+  inputWrapperDisabled: { backgroundColor: '#111518', opacity: 0.6 },
   textInput: { flex: 1, minHeight: 48, maxHeight: 120, color: COLORS.white, fontSize: 16, paddingVertical: 12 },
   sendBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: COLORS.gold, alignItems: 'center', justifyContent: 'center' },
+  sendBtnDisabled: { backgroundColor: '#2A2A2A', opacity: 0.5 },
+  cooldownBtnText: { color: COLORS.white, fontSize: 14, fontWeight: '700' },
+  cooldownContainer: { position: 'absolute', top: -36, left: 52, right: 52, zIndex: 10 },
+  cooldownBarBg: { height: 4, backgroundColor: '#1A2026', borderRadius: 2, overflow: 'hidden', marginBottom: 4 },
+  cooldownBarFill: { height: 4, backgroundColor: COLORS.gold, borderRadius: 2 },
+  cooldownText: { fontSize: 11, color: COLORS.gold, textAlign: 'center', fontWeight: '600' },
 
   // Emoji Tray
   emojiTray: { backgroundColor: '#12161A', borderTopWidth: 1, borderTopColor: '#1E2329', paddingVertical: 8, paddingHorizontal: 4 },
