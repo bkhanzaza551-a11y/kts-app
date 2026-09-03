@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -9,11 +9,16 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
+  RefreshControl,
+  Alert,
+  Image,
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { launchImageLibrary } from 'react-native-image-picker';
 import { sendSupportMessage, loadSupportMessages } from '../../store/supportChatSlice';
+import client from '../../api/client';
 
 const COLORS = {
   bg: '#080A0C',
@@ -30,7 +35,10 @@ const COLORS = {
 export default function SupportChatScreen({ navigation, route }) {
   const insets = useSafeAreaInsets();
   const [input, setInput] = useState('');
+  const [refreshing, setRefreshing] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
   const flatListRef = useRef(null);
+  const pollRef = useRef(null);
   const dispatch = useDispatch();
 
   const { messages, loading, sending, ticketId } = useSelector((s) => s.supportChat);
@@ -44,30 +52,86 @@ export default function SupportChatScreen({ navigation, route }) {
     }
   }, [currentTicketId]);
 
+  // Real-time polling - every 10 seconds
+  useEffect(() => {
+    if (currentTicketId) {
+      pollRef.current = setInterval(() => {
+        dispatch(loadSupportMessages(currentTicketId));
+      }, 10000);
+    }
+    return () => {
+      if (pollRef.current) clearInterval(pollRef.current);
+    };
+  }, [currentTicketId]);
+
   useEffect(() => {
     if (messages.length > 0) {
       setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 120);
     }
   }, [messages.length]);
 
-  const handleSend = () => {
-    if (!input.trim() || !currentTicketId) return;
-    dispatch(sendSupportMessage({ ticketId: currentTicketId, message: input.trim() }));
-    setInput('');
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    if (currentTicketId) {
+      await dispatch(loadSupportMessages(currentTicketId));
+    }
+    setRefreshing(false);
+  }, [currentTicketId]);
+
+  const handlePickFile = () => {
+    launchImageLibrary({ mediaType: 'mixed', quality: 0.8, maxWidth: 1200, maxHeight: 1200 }, (response) => {
+      if (response.didCancel) return;
+      if (response.errorCode) {
+        Alert.alert('Error', response.errorMessage || 'Failed to pick file');
+        return;
+      }
+      if (response.assets && response.assets[0]) {
+        setSelectedFile(response.assets[0]);
+      }
+    });
+  };
+
+  const handleSend = async () => {
+    if ((!input.trim() && !selectedFile) || !currentTicketId) return;
+
+    const formData = new FormData();
+    formData.append('message', input.trim() || (selectedFile ? 'Sent an attachment' : ''));
+
+    if (selectedFile) {
+      const file = {
+        uri: selectedFile.uri,
+        type: selectedFile.type || 'image/jpeg',
+        name: selectedFile.fileName || 'attachment.jpg',
+      };
+      formData.append('attachment', file);
+    }
+
+    try {
+      const token = await (await import('../../utils/storage')).storage.getToken();
+      await client.post(`/support/tickets/${currentTicketId}/reply`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data', Authorization: `Bearer ${token}` },
+      });
+      setSelectedFile(null);
+      setInput('');
+      dispatch(loadSupportMessages(currentTicketId));
+    } catch (err) {
+      Alert.alert('Error', 'Failed to send message. Please try again.');
+    }
   };
 
   const renderMessage = ({ item }) => {
     const isUser = item.sender === 'user' || item.user_id;
-    const isAuto = item.id === 'auto-msg';
+    const isSystem = item.is_system;
+    const hasAttachment = item.attachment;
 
     return (
       <View style={[styles.messageRow, isUser ? styles.userRow : styles.supportRow]}>
         <View style={[
           styles.messageBubble,
           isUser ? styles.userBubble : styles.supportBubble,
-          isAuto && styles.autoBubble,
+          isSystem && styles.autoBubble,
         ]}>
-          {isAuto && (
+          {isSystem && (
             <View style={styles.autoBadge}>
               <Icon name="robot-outline" size={12} color={COLORS.gold} />
               <Text style={styles.autoBadgeText}>KTS Bot</Text>
@@ -76,6 +140,25 @@ export default function SupportChatScreen({ navigation, route }) {
           <Text style={[styles.messageText, isUser ? styles.userText : styles.supportText]}>
             {item.message}
           </Text>
+          {hasAttachment && (
+            <View style={styles.attachmentContainer}>
+              {hasAttachment.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
+                <Image
+                  source={{ uri: `https://kts-backend-production.up.railway.app/storage/${hasAttachment}` }}
+                  style={styles.attachmentImage}
+                  resizeMode="cover"
+                />
+              ) : (
+                <TouchableOpacity
+                  style={styles.fileAttachment}
+                  onPress={() => {/* open file */}}
+                >
+                  <Icon name="file-document-outline" size={20} color={COLORS.gold} />
+                  <Text style={styles.fileName}>{hasAttachment.split('/').pop()}</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          )}
           <Text style={[styles.timeText, isUser ? styles.userTime : styles.supportTime]}>
             {item.created_at ? new Date(item.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
           </Text>
@@ -104,8 +187,23 @@ export default function SupportChatScreen({ navigation, route }) {
         <View style={[styles.statusDot, { backgroundColor: '#4CAF50' }]} />
       </View>
 
+      {/* Selected File Preview */}
+      {selectedFile && (
+        <View style={styles.filePreview}>
+          <View style={styles.filePreviewContent}>
+            <Icon name="image-outline" size={20} color={COLORS.gold} />
+            <Text style={styles.filePreviewText} numberOfLines={1}>
+              {selectedFile.fileName || 'Attachment'}
+            </Text>
+          </View>
+          <TouchableOpacity onPress={() => setSelectedFile(null)}>
+            <Icon name="close-circle" size={20} color="#FF4444" />
+          </TouchableOpacity>
+        </View>
+      )}
+
       {/* Messages */}
-      {loading ? (
+      {loading && !refreshing ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={COLORS.gold} />
           <Text style={styles.loadingText}>Loading messages...</Text>
@@ -115,14 +213,25 @@ export default function SupportChatScreen({ navigation, route }) {
           ref={flatListRef}
           data={messages}
           renderItem={renderMessage}
-          keyExtractor={(item, index) => String(item.id || index)}
+          keyExtractor={(item, index) => String(item.id || `msg-${index}`)}
           contentContainerStyle={styles.messagesList}
           onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: false })}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={COLORS.gold}
+              colors={[COLORS.gold]}
+            />
+          }
         />
       )}
 
       {/* Input */}
       <View style={[styles.inputContainer, { paddingBottom: insets.bottom + 8 }]}>
+        <TouchableOpacity style={styles.attachBtn} onPress={handlePickFile}>
+          <Icon name="paperclip" size={22} color={COLORS.muted} />
+        </TouchableOpacity>
         <TextInput
           style={styles.input}
           value={input}
@@ -130,12 +239,12 @@ export default function SupportChatScreen({ navigation, route }) {
           placeholder="Type your message..."
           placeholderTextColor={COLORS.muted}
           multiline
-          maxLength={500}
+          maxLength={5000}
         />
         <TouchableOpacity
-          style={[styles.sendBtn, (!input.trim() || sending) && styles.sendBtnDisabled]}
+          style={[styles.sendBtn, ((!input.trim() && !selectedFile) || sending) && styles.sendBtnDisabled]}
           onPress={handleSend}
-          disabled={!input.trim() || sending}
+          disabled={(!input.trim() && !selectedFile) || sending}
         >
           {sending ? (
             <ActivityIndicator size="small" color="#000" />
@@ -185,6 +294,29 @@ const styles = StyleSheet.create({
   timeText: { fontSize: 10, marginTop: 4 },
   userTime: { color: '#0008', textAlign: 'right' },
   supportTime: { color: COLORS.muted },
+  attachmentContainer: { marginTop: 8 },
+  attachmentImage: { width: 200, height: 150, borderRadius: 8 },
+  fileAttachment: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    padding: 8,
+    borderRadius: 8,
+    gap: 6,
+  },
+  fileName: { color: COLORS.text, fontSize: 12 },
+  filePreview: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: COLORS.card,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
+  },
+  filePreviewContent: { flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 },
+  filePreviewText: { color: COLORS.text, fontSize: 13, flex: 1 },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'flex-end',
@@ -192,6 +324,12 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: COLORS.border,
     backgroundColor: COLORS.card,
+  },
+  attachBtn: {
+    width: 36,
+    height: 36,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   input: {
     flex: 1,

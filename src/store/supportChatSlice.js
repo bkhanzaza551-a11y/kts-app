@@ -1,8 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { supportChatApi } from '../api/supportChat';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-
-const TICKETS_KEY = '@kts_support_tickets';
 
 export const createSupportTicket = createAsyncThunk(
   'supportChat/createTicket',
@@ -10,7 +7,8 @@ export const createSupportTicket = createAsyncThunk(
     try {
       const res = await supportChatApi.createTicket(
         'AI Chatbot Support Request',
-        'User was redirected from AI chatbot. Needs human support.'
+        'User was redirected from AI chatbot. Needs human support.',
+        'ai_chatbot'
       );
       return res.data.data;
     } catch (err) {
@@ -45,9 +43,9 @@ export const loadSupportMessages = createAsyncThunk(
 
 export const sendSupportMessage = createAsyncThunk(
   'supportChat/sendMessage',
-  async ({ ticketId, message }, { rejectWithValue }) => {
+  async ({ ticketId, message, attachment }, { rejectWithValue }) => {
     try {
-      const res = await supportChatApi.sendReply(ticketId, message);
+      const res = await supportChatApi.sendReply(ticketId, message, attachment);
       return res.data.data;
     } catch (err) {
       return rejectWithValue(err.message || 'Failed to send message');
