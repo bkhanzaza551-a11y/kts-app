@@ -10,16 +10,14 @@ import { formatPrice, formatDate } from '../../utils/formatters';
 import { fetchBotTrades } from '../../store/botSlice';
 import { useCurrency } from '../../context/CurrencyContext';
 
-export const BotTradesScreen = ({ route }) => {
-  const { botId } = route.params || {};
+export const BotTradesScreen = () => {
   const dispatch = useDispatch();
   const { trades, isLoading } = useSelector(s => s.bots);
   const { formatAmount } = useCurrency();
-  const tradeList = trades[botId] || [];
 
   useEffect(() => {
-    dispatch(fetchBotTrades({ id: botId }));
-  }, [dispatch, botId]);
+    dispatch(fetchBotTrades());
+  }, [dispatch]);
 
   const renderTrade = ({ item }) => (
     <View style={styles.tradeCard}>
@@ -42,7 +40,7 @@ export const BotTradesScreen = ({ route }) => {
   return (
     <View style={styles.container}>
       <FlatList
-        data={tradeList}
+        data={trades}
         keyExtractor={(item, i) => String(item.id || i)}
         renderItem={renderTrade}
         ListEmptyComponent={!isLoading ? <EmptyState icon="📈" title="No Trades" message="No trade history yet" /> : null}

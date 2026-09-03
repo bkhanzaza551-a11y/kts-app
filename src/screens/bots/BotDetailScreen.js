@@ -7,69 +7,68 @@ import { SPACING, RADIUS } from '../../theme/spacing';
 import { Card } from '../../components/common/Card';
 import { Badge } from '../../components/common/Badge';
 import { Button } from '../../components/common/Button';
-import { fetchBotDetail, toggleAutoTrade, clearCurrentBot } from '../../store/botSlice';
+import { fetchBot, toggleAutoTrade, clearBot } from '../../store/botSlice';
 import { formatWinRate } from '../../utils/formatters';
 import { useCurrency } from '../../context/CurrencyContext';
 import { RiskDisclaimer } from '../../components/common/RiskDisclaimer';
 
-export const BotDetailScreen = ({ route, navigation }) => {
-  const { botId } = route.params || {};
+export const BotDetailScreen = ({ navigation }) => {
   const dispatch = useDispatch();
-  const { currentBot, isLoading, error } = useSelector(s => s.bots);
+  const { bot, isLoading, error } = useSelector(s => s.bots);
   const { formatAmount } = useCurrency();
 
   useEffect(() => {
-    dispatch(fetchBotDetail(botId));
-    return () => dispatch(clearCurrentBot());
-  }, [dispatch, botId]);
+    dispatch(fetchBot());
+    return () => dispatch(clearBot());
+  }, [dispatch]);
 
   if (isLoading) return <View style={styles.container}><Text style={styles.loading}>Loading...</Text></View>;
   if (error) return <View style={styles.container}><Text style={[styles.loading, { color: COLORS.red }]}>{error}</Text></View>;
-  if (!currentBot) return <View style={styles.container}><Text style={styles.loading}>Bot not found</Text></View>;
+  if (!bot) return <View style={styles.container}><Text style={styles.loading}>Bot not found</Text></View>;
 
-  const profitPct = currentBot.balance ? ((currentBot.total_profit / currentBot.balance) * 100).toFixed(1) : '0';
+  const profitPct = bot.balance ? ((bot.total_profit / bot.balance) * 100).toFixed(1) : '0';
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <View style={styles.headerRow}>
         <View style={{ flex: 1 }}>
-          <Text style={styles.name}>{currentBot.name}</Text>
-          <Text style={styles.mode}>{currentBot.mode?.toUpperCase()} MODE</Text>
+          <Text style={styles.name}>{bot.name}</Text>
+          <Text style={styles.mode}>{bot.mode?.toUpperCase()} MODE</Text>
         </View>
-        <Badge text={currentBot.status?.toUpperCase()} variant={currentBot.status} size="large" />
+        <Badge text={bot.status?.toUpperCase()} variant={bot.status} size="large" />
       </View>
 
       <Card style={styles.profitCard}>
         <Text style={styles.profitLabel}>Total Profit</Text>
-        <Text style={[styles.profitValue, { color: (currentBot.total_profit || 0) >= 0 ? COLORS.green : COLORS.red }]}>
-          {formatAmount(currentBot.total_profit)} ({profitPct}%)
+        <Text style={[styles.profitValue, { color: (bot.total_profit || 0) >= 0 ? COLORS.green : COLORS.red }]}>
+          {formatAmount(bot.total_profit)} ({profitPct}%)
         </Text>
       </Card>
 
       <Card>
         <Text style={styles.cardTitle}>Account Stats</Text>
         <View style={styles.statsGrid}>
-          <View style={styles.stat}><Text style={styles.statLabel}>Balance</Text><Text style={styles.statValue}>{formatAmount(currentBot.balance)}</Text></View>
-          <View style={styles.stat}><Text style={styles.statLabel}>Equity</Text><Text style={styles.statValue}>{formatAmount(currentBot.equity)}</Text></View>
-          <View style={styles.stat}><Text style={styles.statLabel}>Total Trades</Text><Text style={styles.statValue}>{currentBot.total_trades || 0}</Text></View>
-          <View style={styles.stat}><Text style={styles.statLabel}>Win Rate</Text><Text style={styles.statValue}>{formatWinRate(currentBot.winning_trades, currentBot.total_trades)}</Text></View>
+          <View style={styles.stat}><Text style={styles.statLabel}>Balance</Text><Text style={styles.statValue}>{formatAmount(bot.balance)}</Text></View>
+          <View style={styles.stat}><Text style={styles.statLabel}>Equity</Text><Text style={styles.statValue}>{formatAmount(bot.equity)}</Text></View>
+          <View style={styles.stat}><Text style={styles.statLabel}>Total Trades</Text><Text style={styles.statValue}>{bot.total_trades || 0}</Text></View>
+          <View style={styles.stat}><Text style={styles.statLabel}>Win Rate</Text><Text style={styles.statValue}>{formatWinRate(bot.winning_trades, bot.total_trades)}</Text></View>
         </View>
       </Card>
 
       <Card>
         <Text style={styles.cardTitle}>Configuration</Text>
-        <View style={styles.configRow}><Text style={styles.configLabel}>Lot Size</Text><Text style={styles.configValue}>{currentBot.lot_size}</Text></View>
-        <View style={styles.configRow}><Text style={styles.configLabel}>Take Profit</Text><Text style={styles.configValue}>{currentBot.take_profit_pips} pips</Text></View>
-        <View style={styles.configRow}><Text style={styles.configLabel}>Stop Loss</Text><Text style={styles.configValue}>{currentBot.stop_loss_pips} pips</Text></View>
-        <View style={styles.configRow}><Text style={styles.configLabel}>Max Daily Trades</Text><Text style={styles.configValue}>{currentBot.max_daily_trades}</Text></View>
-        <View style={styles.configRow}><Text style={styles.configLabel}>Auto Trade</Text><Badge text={currentBot.auto_trade ? 'ON' : 'OFF'} variant={currentBot.auto_trade ? 'active' : 'closed'} /></View>
+        <View style={styles.configRow}><Text style={styles.configLabel}>Lot Size</Text><Text style={styles.configValue}>{bot.lot_size || '0.01'}</Text></View>
+        <View style={styles.configRow}><Text style={styles.configLabel}>Take Profit</Text><Text style={styles.configValue}>{bot.take_profit_pips || '10'} pips</Text></View>
+        <View style={styles.configRow}><Text style={styles.configLabel}>Stop Loss</Text><Text style={styles.configValue}>{bot.stop_loss_pips || '5'} pips</Text></View>
+        <View style={styles.configRow}><Text style={styles.configLabel}>Max Daily Trades</Text><Text style={styles.configValue}>{bot.max_daily_trades || '10'}</Text></View>
+        <View style={styles.configRow}><Text style={styles.configLabel}>Auto Trade</Text><Badge text={bot.auto_trade ? 'ON' : 'OFF'} variant={bot.auto_trade ? 'active' : 'closed'} /></View>
       </Card>
 
       <View style={styles.actions}>
-        <Button title="Trade History" variant="outline" onPress={() => navigation.navigate('BotTrades', { botId })} />
-        <Button title={currentBot.auto_trade ? 'Disable Auto Trade' : 'Enable Auto Trade'}
-          variant={currentBot.auto_trade ? 'outline' : 'primary'}
-          onPress={() => dispatch(toggleAutoTrade(botId))} />
+        <Button title="Trade History" variant="outline" onPress={() => navigation.navigate('BotTrades')} />
+        <Button title={bot.auto_trade ? 'Disable Auto Trade' : 'Enable Auto Trade'}
+          variant={bot.auto_trade ? 'outline' : 'primary'}
+          onPress={() => dispatch(toggleAutoTrade())} />
       </View>
 
       <RiskDisclaimer style={{ marginTop: 20 }} />
@@ -98,4 +97,3 @@ const styles = StyleSheet.create({
   configValue: { ...TYPOGRAPHY.body2, color: COLORS.white, fontWeight: '600' },
   actions: { gap: SPACING.md, marginTop: SPACING.lg },
 });
-
