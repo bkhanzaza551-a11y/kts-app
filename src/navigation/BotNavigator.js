@@ -4,6 +4,7 @@ import { BotListScreen } from '../screens/bots/BotListScreen';
 import { BotDetailScreen } from '../screens/bots/BotDetailScreen';
 import { BotTradesScreen } from '../screens/bots/BotTradesScreen';
 import { BotPurchaseScreen } from '../screens/bots/BotPurchaseScreen';
+import { DemoAccountScreen } from '../screens/demo/DemoAccountScreen';
 import { COLORS } from '../theme/colors';
 import { TYPOGRAPHY } from '../theme/typography';
 
@@ -21,5 +22,6 @@ export const BotNavigator = () => (
     <Stack.Screen name="BotDetail" component={BotDetailScreen} options={{ title: 'Bot Detail' }} />
     <Stack.Screen name="BotTrades" component={BotTradesScreen} options={{ title: 'Trade History' }} />
     <Stack.Screen name="BotPurchase" component={BotPurchaseScreen} options={{ title: 'Purchase Bot' }} />
+    <Stack.Screen name="Demo" component={DemoAccountScreen} options={{ title: 'Demo Account' }} />
   </Stack.Navigator>
 );

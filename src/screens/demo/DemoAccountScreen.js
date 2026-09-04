@@ -20,7 +20,7 @@ export const DemoAccountScreen = ({ navigation }) => {
   const [errors, setErrors] = useState({});
   const [instructions, setInstructions] = useState(null);
 
-  useEffect(() => {
+useEffect(() => {
     // Simulated or fetched instructions
     client.get('/demo-account/instructions')
       .then(r => setInstructions(r.data.data))
@@ -37,6 +37,19 @@ export const DemoAccountScreen = ({ navigation }) => {
           ]
         });
       });
+
+    // Auto-fill demo account details from bot config
+    client.get('/bot')
+      .then(r => {
+        const data = r.data?.data;
+        if (data) {
+          setAccountNumber(prev => prev || (data.demo_account || ''));
+          setEmail(prev => prev || (data.demo_email || ''));
+          setPhone(prev => prev || (data.demo_phone || ''));
+          setDepositAmount(prev => prev || String(data.demo_deposit ?? '10000'));
+        }
+      })
+      .catch(() => {});
   }, []);
 
     const handleSubmit = async () => {

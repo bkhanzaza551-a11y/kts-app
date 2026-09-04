@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, TextInput, KeyboardAvoidingView, Platform, Linking, Alert } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -28,6 +28,21 @@ export const BotListScreen = ({ navigation }) => {
 
   const handleToggle = () => {
     dispatch(toggleAutoTrade());
+  };
+
+  const handleBuyWhatsApp = () => {
+    const number = bot?.whatsapp_number || '+923371244640';
+    const clean = number.replace(/[^0-9]/g, '');
+    const message = encodeURIComponent(
+      `Hi! I want to buy the KTS Trading Bot (${bot?.name || 'KTS10 Pips Bot'}). Please share the pricing and payment details. Thank you.`
+    );
+    Linking.openURL(`https://wa.me/${clean}?text=${message}`).catch(() =>
+      Alert.alert('Error', 'Unable to open WhatsApp. Make sure WhatsApp is installed.')
+    );
+  };
+
+  const handleDemoRequest = () => {
+    navigation.navigate('Demo');
   };
 
   const calculatedLotSize = useMemo(() => {
@@ -228,6 +243,17 @@ export const BotListScreen = ({ navigation }) => {
             <Icon name="chevron-right" size={20} color={COLORS.grey} />
           </TouchableOpacity>
 
+          {/* Buy / Demo CTA */}
+          <TouchableOpacity style={styles.buyBtn} onPress={handleBuyWhatsApp}>
+            <Icon name="whatsapp" size={22} color="#0B0E11" />
+            <Text style={styles.buyBtnText}>Buy This Bot</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.demoBtn} onPress={handleDemoRequest}>
+            <Icon name="monitor-dashboard" size={20} color={COLORS.gold} />
+            <Text style={styles.demoBtnText}>Try Demo Account</Text>
+          </TouchableOpacity>
+
           <RiskDisclaimer style={{ marginTop: 16 }} />
         </ScrollView>
       </View>
@@ -334,6 +360,22 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: '#1E2329',
   },
   tradeHistoryText: { flex: 1, fontSize: 15, color: COLORS.white, fontWeight: '600' },
+
+  // Buy / Demo CTA
+  buyBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    backgroundColor: COLORS.gold, borderRadius: 12, paddingVertical: 16,
+    marginBottom: 12, gap: 10, elevation: 4,
+    shadowColor: COLORS.gold, shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3, shadowRadius: 4,
+  },
+  buyBtnText: { fontSize: 16, color: '#0B0E11', fontWeight: '800', letterSpacing: 0.5 },
+  demoBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    backgroundColor: '#12161A', borderRadius: 12, paddingVertical: 15,
+    marginBottom: 4, gap: 10, borderWidth: 1, borderColor: 'rgba(255,215,0,0.4)',
+  },
+  demoBtnText: { fontSize: 15, color: COLORS.gold, fontWeight: '700' },
 
   // Empty
   emptyContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 60, paddingHorizontal: 20 },
