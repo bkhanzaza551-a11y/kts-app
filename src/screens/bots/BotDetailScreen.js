@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TextInput, KeyboardAvoidingView, Platform, TouchableOpacity, Linking, Alert } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { COLORS } from '../../theme/colors';
 import { TYPOGRAPHY } from '../../theme/typography';
 import { SPACING, RADIUS } from '../../theme/spacing';
@@ -31,6 +32,21 @@ export const BotDetailScreen = ({ navigation }) => {
     if (userBudget <= 0) return 0;
     return ((userBudget / baseBalance) * baseLotSize).toFixed(2);
   }, [budget, bot]);
+
+  const handleBuyWhatsApp = () => {
+    const number = bot?.whatsapp_number || '+923371244640';
+    const clean = number.replace(/[^0-9]/g, '');
+    const message = encodeURIComponent(
+      `Hi! I want to buy the KTS Trading Bot (${bot?.name || 'KTS10 Pips Bot'}). Please share the pricing and payment details. Thank you.`
+    );
+    Linking.openURL(`https://wa.me/${clean}?text=${message}`).catch(() =>
+      Alert.alert('Error', 'Unable to open WhatsApp. Make sure WhatsApp is installed.')
+    );
+  };
+
+  const handleDemoRequest = () => {
+    navigation.navigate('Demo');
+  };
 
   if (isLoading) return <View style={styles.container}><Text style={styles.loading}>Loading...</Text></View>;
   if (error) return <View style={styles.container}><Text style={[styles.loading, { color: COLORS.red }]}>{error}</Text></View>;
@@ -80,12 +96,29 @@ export const BotDetailScreen = ({ navigation }) => {
           </View>
         </Card>
 
+        {bot.error_message ? (
+          <View style={styles.errorCard}>
+            <Icon name="alert-circle-outline" size={20} color={COLORS.red} />
+            <Text style={styles.errorText}>{bot.error_message}</Text>
+          </View>
+        ) : null}
+
         <View style={styles.actions}>
           <Button title="Trade History" variant="outline" onPress={() => navigation.navigate('BotTrades')} />
           <Button title={bot.auto_trade ? 'Disable Auto Trade' : 'Enable Auto Trade'}
             variant={bot.auto_trade ? 'outline' : 'primary'}
             onPress={() => dispatch(toggleAutoTrade())} />
         </View>
+
+        <TouchableOpacity style={styles.buyBtn} onPress={handleBuyWhatsApp}>
+          <Icon name="whatsapp" size={22} color="#0B0E11" />
+          <Text style={styles.buyBtnText}>Buy This Bot</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.demoBtn} onPress={handleDemoRequest}>
+          <Icon name="monitor-dashboard" size={20} color={COLORS.gold} />
+          <Text style={styles.demoBtnText}>Try Demo Account</Text>
+        </TouchableOpacity>
 
         <RiskDisclaimer style={{ marginTop: 20 }} />
       </ScrollView>
@@ -120,4 +153,10 @@ const styles = StyleSheet.create({
   statLabel: { ...TYPOGRAPHY.caption, color: COLORS.grey },
   statValue: { ...TYPOGRAPHY.body1, color: COLORS.white, fontWeight: '600', marginTop: 4 },
   actions: { gap: SPACING.md, marginTop: SPACING.lg },
+  errorCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,68,68,0.1)', borderRadius: 12, padding: 12, marginTop: SPACING.lg, gap: 8, borderWidth: 1, borderColor: 'rgba(255,68,68,0.2)' },
+  errorText: { flex: 1, fontSize: 13, color: COLORS.red, lineHeight: 18 },
+  buyBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: COLORS.gold, borderRadius: 12, paddingVertical: 16, marginTop: SPACING.lg, gap: 10, elevation: 4, shadowColor: COLORS.gold, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.3, shadowRadius: 4 },
+  buyBtnText: { fontSize: 16, color: '#0B0E11', fontWeight: '800', letterSpacing: 0.5 },
+  demoBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#12161A', borderRadius: 12, paddingVertical: 15, marginTop: 12, gap: 10, borderWidth: 1, borderColor: 'rgba(255,215,0,0.4)' },
+  demoBtnText: { fontSize: 15, color: COLORS.gold, fontWeight: '700' },
 });

@@ -27,7 +27,9 @@ export const BotListScreen = ({ navigation }) => {
   };
 
   const handleToggle = () => {
-    dispatch(toggleAutoTrade());
+    dispatch(toggleAutoTrade()).unwrap().catch(e =>
+      Alert.alert('Error', e?.message || 'Failed to toggle auto-trade')
+    );
   };
 
   const handleBuyWhatsApp = () => {

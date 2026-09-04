@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, ScrollView, Alert, KeyboardAvoidingView, Platform, TouchableOpacity, Linking } from 'react-native';
 import { useSelector } from 'react-redux';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -18,14 +18,16 @@ export const DemoAccountScreen = ({ navigation }) => {
   const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
-  const [instructions, setInstructions] = useState(null);
+const [instructions, setInstructions] = useState(null);
+  const demoPrefillApplied = useRef(false);
 
-useEffect(() => {
-    // Simulated or fetched instructions
-    client.get('/demo-account/instructions')
-      .then(r => setInstructions(r.data.data))
+  useEffect(() => {
+    let cancelled = false;
+
+    const instructionsReq = client.get('/demo-account/instructions')
+      .then(r => { if (!cancelled) setInstructions(r.data.data); })
       .catch(() => {
-        // Fallback for demo purposes if backend fails
+        if (cancelled) return;
         setInstructions({
           title: "How to Create Demo Account",
           steps: [
@@ -38,18 +40,23 @@ useEffect(() => {
         });
       });
 
-    // Auto-fill demo account details from bot config
-    client.get('/bot')
+    const botReq = client.get('/bot')
       .then(r => {
+        if (cancelled || demoPrefillApplied.current) return;
+        demoPrefillApplied.current = true;
         const data = r.data?.data;
         if (data) {
-          setAccountNumber(prev => prev || (data.demo_account || ''));
-          setEmail(prev => prev || (data.demo_email || ''));
-          setPhone(prev => prev || (data.demo_phone || ''));
-          setDepositAmount(prev => prev || String(data.demo_deposit ?? '10000'));
+          setAccountNumber(data.demo_account || '');
+          setEmail(data.demo_email || '');
+          setPhone(data.demo_phone || '');
+          setDepositAmount(String(data.demo_deposit ?? '10000'));
         }
       })
       .catch(() => {});
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
     const handleSubmit = async () => {

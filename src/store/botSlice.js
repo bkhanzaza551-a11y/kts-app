@@ -34,7 +34,11 @@ const botSlice = createSlice({
       .addCase(fetchBot.rejected, (s, a) => { s.isLoading = false; s.error = a.payload; })
       .addCase(fetchBotTrades.fulfilled, (s, a) => { s.trades = a.payload.data?.data || a.payload.data || []; })
       .addCase(toggleAutoTrade.fulfilled, (s, a) => {
-        if (s.bot) s.bot.auto_trade = a.payload.data.auto_trade;
+        if (s.bot) {
+          s.bot.auto_trade = a.payload.data.auto_trade;
+        } else if (a.payload.data) {
+          s.bot = a.payload.data;
+        }
       })
       .addCase(updateBot.fulfilled, (s, a) => {
         if (a.payload.data) s.bot = a.payload.data;
