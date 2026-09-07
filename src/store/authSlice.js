@@ -119,12 +119,12 @@ const authSlice = createSlice({
       .addCase(register.fulfilled, (s, a) => {
         s.isLoading = false;
         s.error = null;
+        s.isOtpPending = false;
         const d = a.payload.data || a.payload;
         if (d.requires_email_verification) {
           s.isEmailVerificationPending = true;
           s.pendingEmail = d.email;
           s.user = d.user;
-          if (d.otp) s.pendingOtp = d.otp;
         } else if (d.token) {
           s.token = d.token; s.user = d.user; s.isLoggedIn = true;
           storage.setToken(d.token); storage.setUser(d.user);

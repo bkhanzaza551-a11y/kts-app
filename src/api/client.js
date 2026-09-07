@@ -42,6 +42,8 @@ client.interceptors.response.use(
     let message = 'Network connection issue. Please check your internet and try again.';
     if (error.response?.data?.message) {
       message = error.response.data.message;
+    } else if (error.response?.data?.data?.response) {
+      message = error.response.data.data.response;
     } else if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
       message = 'Request timed out. Please try again.';
     } else if (error.message && !error.message.includes('Network Error')) {

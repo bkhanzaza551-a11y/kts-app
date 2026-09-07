@@ -40,6 +40,9 @@ const botSlice = createSlice({
           s.bot = a.payload.data;
         }
       })
+      .addCase(toggleAutoTrade.rejected, (s, a) => {
+        s.error = a.payload;
+      })
       .addCase(updateBot.fulfilled, (s, a) => {
         if (a.payload.data) s.bot = a.payload.data;
       });

@@ -28,7 +28,9 @@ const educationSlice = createSlice({
       .addCase(fetchCourseDetail.pending, (s) => { s.isLoading = true; })
       .addCase(fetchCourseDetail.fulfilled, (s, a) => { s.isLoading = false; s.currentCourse = a.payload.data; })
       .addCase(fetchCourseDetail.rejected, (s, a) => { s.isLoading = false; s.error = a.payload; })
-      .addCase(fetchCategories.fulfilled, (s, a) => { s.categories = a.payload.data || []; });
+      .addCase(fetchCategories.pending, (s) => { s.isLoading = true; })
+      .addCase(fetchCategories.fulfilled, (s, a) => { s.isLoading = false; s.categories = a.payload.data || []; })
+      .addCase(fetchCategories.rejected, (s, a) => { s.isLoading = false; s.error = a.payload; });
   },
 });
 

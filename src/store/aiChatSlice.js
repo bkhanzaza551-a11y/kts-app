@@ -30,7 +30,7 @@ export const loadChatHistory = createAsyncThunk('aiChat/loadHistory', async (_, 
 export const fetchChatStatus = createAsyncThunk('aiChat/status', async (_, { rejectWithValue }) => {
   try {
     const res = await aiChatApi.status();
-    return res.data.data;
+    return res.data;
   } catch (err) {
     return rejectWithValue(err.message);
   }
