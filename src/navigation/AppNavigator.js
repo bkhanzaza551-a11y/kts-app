@@ -54,7 +54,10 @@ export const AppNavigator = () => {
     }
   }, [isLoggedIn]);
 
-  // Setup notification listeners
+  // Setup notification listeners when logged in
+  // NOTE: setupNotificationListeners does not return a cleanup function.
+  // This means listeners persist for the app lifetime, which is acceptable
+  // since they are app-level notification handlers that should always be active.
   useEffect(() => {
     const nav = navRef.current;
     if (nav && isLoggedIn) {

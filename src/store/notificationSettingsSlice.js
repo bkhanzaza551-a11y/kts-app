@@ -96,7 +96,7 @@ const notificationSettingsSlice = createSlice({
         if (s.settingsMap[slug]) {
           if (!s.enabledSlugs.includes(slug)) s.enabledSlugs.push(slug);
         } else {
-          s.enabledSlugs = s.enabledSlugs.filter((s) => s !== slug);
+          s.enabledSlugs = s.enabledSlugs.filter((item) => item !== slug);
         }
       })
       .addCase(toggleNotificationSetting.fulfilled, (s, a) => {
@@ -121,7 +121,7 @@ const notificationSettingsSlice = createSlice({
         if (s.settingsMap[slug]) {
           if (!s.enabledSlugs.includes(slug)) s.enabledSlugs.push(slug);
         } else {
-          s.enabledSlugs = s.enabledSlugs.filter((s) => s !== slug);
+          s.enabledSlugs = s.enabledSlugs.filter((item) => item !== slug);
         }
       })
       // Toggle all in category

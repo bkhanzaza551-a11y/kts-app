@@ -49,9 +49,9 @@ export const MoreNavigator = () => (
     <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} options={{ title: 'Change Password' }} />
     <Stack.Screen name="ChangeSecurityCode" component={ChangeSecurityCodeScreen} options={{ title: 'Change Security Code' }} />
     <Stack.Screen name="NotificationSettings" component={NotificationSettingsScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="NewsDetail" component={NewsDetailScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="Support" component={SupportScreen} options={{ headerShown: false }} />
-    </Stack.Navigator>
+    <Stack.Screen name="NewsDetail" component={NewsDetailScreen} options={{ headerShown: false }} />
+    <Stack.Screen name="Support" component={SupportScreen} options={{ headerShown: false }} />
+  </Stack.Navigator>
 );
 
 

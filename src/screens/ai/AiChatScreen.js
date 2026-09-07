@@ -157,7 +157,12 @@ export default function AiChatScreen({ navigation }) {
 
   const submitReport = (message, reason) => {
     triggerHaptic('light');
-    dispatch(reportMessage({ messageId: message.id, reason }));
+    // TODO: message.id is the FlatList array index, not a real server ID.
+    // The AI chat response does not return a unique message ID.
+    // Once the backend returns message IDs, use message.id here.
+    if (message.id != null) {
+      dispatch(reportMessage({ messageId: message.id, reason }));
+    }
     Alert.alert('Thank You', 'Your report has been submitted and will be reviewed.');
   };
 

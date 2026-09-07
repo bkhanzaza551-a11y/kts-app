@@ -47,7 +47,8 @@ const chatSlice = createSlice({
       .addCase(fetchMessages.fulfilled, (s, a) => {
         s.isLoadingMessages = false;
         const { roomSlug, data } = a.payload;
-        s.messages[roomSlug] = data.data?.data || data.data || [];
+        const messages = data?.data?.data ?? data?.data ?? [];
+        s.messages[roomSlug] = Array.isArray(messages) ? messages : [];
       })
       .addCase(sendMessage.fulfilled, (s, a) => {
         const { roomSlug, message } = a.payload;

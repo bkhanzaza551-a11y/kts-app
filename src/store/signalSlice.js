@@ -25,8 +25,9 @@ const signalSlice = createSlice({
       .addCase(fetchSignals.pending, (s) => { s.isLoading = true; })
       .addCase(fetchSignals.fulfilled, (s, a) => {
         s.isLoading = false;
-        const data = a.payload.data;
-        const list = data?.data || data || [];
+        const payload = a.payload;
+        const data = payload?.data ?? payload;
+        const list = data?.data || [];
         if (s.page === 1) s.items = list;
         else s.items = [...s.items, ...list];
         s.lastPage = data?.last_page ?? 1;

@@ -16,7 +16,9 @@ export const CourseDetailScreen = ({ route, navigation }) => {
   const { formatAmount } = useCurrency();
 
   useEffect(() => {
-    dispatch(fetchCourseDetail(courseId));
+    if (courseId) {
+      dispatch(fetchCourseDetail(courseId));
+    }
   }, [dispatch, courseId]);
 
   if (!course) return <View style={styles.container}><Text style={styles.loading}>{isLoading ? 'Loading...' : 'Course not found'}</Text></View>;
