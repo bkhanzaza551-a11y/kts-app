@@ -13,7 +13,8 @@ export const sendMessage = createAsyncThunk(
       const res = await aiChatApi.send(message, history);
       return res.data.data;
     } catch (err) {
-      return rejectWithValue(err.message || 'Failed to send message');
+      const errorMsg = err.response?.data?.message || err.response?.data?.error || err.message || 'Failed to send message';
+      return rejectWithValue(errorMsg);
     }
   }
 );

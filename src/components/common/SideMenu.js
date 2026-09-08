@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Animated, Dimensions, Pressable, Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -36,11 +36,11 @@ export const SideMenu = ({ isVisible, onClose }) => {
 
   const menuItems = [
     { icon: 'account-circle-outline', title: 'My Profile', screen: 'Profile' },
-    { icon: 'crown-outline', title: 'VIP Plans', screen: 'Payments' },
+    // { icon: 'crown-outline', title: 'VIP Plans', screen: 'Payments' },
     { icon: 'shield-check-outline', title: 'Security', screen: 'ChangePassword' },
     { icon: 'bell-outline', title: 'Notifications', screen: 'Notifications' },
     { icon: 'cog-outline', title: 'Settings', screen: 'MoreHome' },
-    { icon: 'help-circle-outline', title: 'Support & Help', screen: null },
+    { icon: 'help-circle-outline', title: 'Support & Help', screen: 'Support' },
   ];
 
   const handlePress = (item) => {

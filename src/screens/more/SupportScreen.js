@@ -1,19 +1,23 @@
-﻿import React, { useLayoutEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking } from 'react-native';
+import React, { useState, useLayoutEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking, Alert, ActivityIndicator } from 'react-native';
+import { useDispatch } from 'react-redux';
 import { COLORS } from '../../theme/colors';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { triggerHaptic } from '../../utils/haptics';
+import { createSupportTicket } from '../../store/supportChatSlice';
 
 const FAQ_ITEMS = [
-  { q: "How do I connect my MT5 account?", a: "Go to the Settings menu, select MT5 Bots, and enter your broker credentials provided during setup." },
-  { q: "What is the minimum deposit for the AI Bot?", a: "The minimum recommended balance to run our AI Bot safely is $500, but optimal performance is seen above $1000." },
-  { q: "How are the VIP Signals delivered?", a: "VIP Signals are pushed directly to your app via notifications and also available in the 'Markets' tab." },
-  { q: "I forgot my security code, what now?", a: "You can reset your security code from the Profile section using your email address and OTP verification." }
+  { q: "How do I connect my MT5 account?", a: "Go to the Bots menu, select MT5 Bots, and submit your broker account ID to receive your account-compiled bot file." },
+  { q: "What is the recommended balance for the KTS10 Bot?", a: "The minimum recommended balance to run the KTS10 Bot safely is $500, with optimal performance seen above $1000." },
+  { q: "How are the Market Signals delivered?", a: "Market Signals are delivered in real-time via instant push notifications and also available in the 'Markets' tab." },
+  { q: "How do I reset or change my account password?", a: "You can change your password directly from the Profile section or use 'Forgot Password' on the login screen to receive an email OTP." }
 ];
 
 export const SupportScreen = ({ navigation }) => {
   const insets = useSafeAreaInsets();
+  const dispatch = useDispatch();
+  const [isCreatingTicket, setIsCreatingTicket] = useState(false);
 
   useLayoutEffect(() => {
     navigation.setOptions({ headerShown: false });
@@ -21,8 +25,26 @@ export const SupportScreen = ({ navigation }) => {
 
   const handleContact = (type) => {
     triggerHaptic('light');
-    if (type === 'whatsapp') Linking.openURL('whatsapp://send?phone=+1234567890');
-    if (type === 'email') Linking.openURL('mailto:support@ktspipsbots.com');
+    if (type === 'whatsapp') Linking.openURL('https://wa.me/447441444444');
+    if (type === 'email') Linking.openURL('mailto:support@ktsmarkets.com');
+  };
+
+  const handleCreateTicket = async () => {
+    triggerHaptic('light');
+    setIsCreatingTicket(true);
+    try {
+      const result = await dispatch(createSupportTicket());
+      if (result.meta.requestStatus === 'fulfilled') {
+        navigation.navigate('SupportChat', { ticketId: result.payload.id });
+      } else {
+        Alert.alert('Support Ticket', 'Starting live support chat...');
+        navigation.navigate('SupportChat');
+      }
+    } catch (e) {
+      navigation.navigate('SupportChat');
+    } finally {
+      setIsCreatingTicket(false);
+    }
   };
 
   return (
@@ -77,9 +99,19 @@ export const SupportScreen = ({ navigation }) => {
         </View>
 
         {/* Submit Ticket */}
-        <TouchableOpacity style={styles.ticketBtn} onPress={() => triggerHaptic('light')}>
-          <Icon name="ticket-confirmation-outline" size={20} color="#0B0E11" />
-          <Text style={styles.ticketBtnText}>Submit a Ticket</Text>
+        <TouchableOpacity 
+          style={styles.ticketBtn} 
+          onPress={handleCreateTicket}
+          disabled={isCreatingTicket}
+        >
+          {isCreatingTicket ? (
+            <ActivityIndicator size="small" color="#0B0E11" />
+          ) : (
+            <>
+              <Icon name="ticket-confirmation-outline" size={20} color="#0B0E11" />
+              <Text style={styles.ticketBtnText}>Open Support Chat</Text>
+            </>
+          )}
         </TouchableOpacity>
 
       </ScrollView>

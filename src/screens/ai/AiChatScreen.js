@@ -70,15 +70,8 @@ export default function AiChatScreen({ navigation }) {
   const { messages, loading, error, needs_human_support } = useSelector((s) => s.aiChat);
   const { token, isLoggedIn } = useSelector((s) => s.auth);
 
-  // Animations
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(20)).current;
+  // Pulse Animation for AI Core
   const pulseScale = useRef(new Animated.Value(1)).current;
-
-  // Chips Stagger Animations
-  const chip1 = useRef(new Animated.Value(0)).current;
-  const chip2 = useRef(new Animated.Value(0)).current;
-  const chip3 = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     if (isLoggedIn && token) {
@@ -93,44 +86,25 @@ export default function AiChatScreen({ navigation }) {
   }, [messages.length, loading]);
 
   useEffect(() => {
-    if (messages.length === 0) {
-      Animated.parallel([
-        Animated.timing(fadeAnim, { toValue: 1, duration: 600, useNativeDriver: true }),
-        Animated.timing(slideAnim, {
-          toValue: 0,
-          duration: 600,
-          easing: Easing.out(Easing.cubic),
+    const pulseLoop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseScale, {
+          toValue: 1.08,
+          duration: 1600,
+          easing: Easing.inOut(Easing.ease),
           useNativeDriver: true,
         }),
-      ]).start();
-
-      const pulseLoop = Animated.loop(
-        Animated.sequence([
-          Animated.timing(pulseScale, {
-            toValue: 1.06,
-            duration: 1800,
-            easing: Easing.inOut(Easing.ease),
-            useNativeDriver: true,
-          }),
-          Animated.timing(pulseScale, {
-            toValue: 1.0,
-            duration: 1800,
-            easing: Easing.inOut(Easing.ease),
-            useNativeDriver: true,
-          }),
-        ])
-      );
-      pulseLoop.start();
-
-      Animated.stagger(120, [
-        Animated.timing(chip1, { toValue: 1, duration: 500, useNativeDriver: true }),
-        Animated.timing(chip2, { toValue: 1, duration: 500, useNativeDriver: true }),
-        Animated.timing(chip3, { toValue: 1, duration: 500, useNativeDriver: true }),
-      ]).start();
-
-      return () => pulseLoop.stop();
-    }
-  }, [messages.length]);
+        Animated.timing(pulseScale, {
+          toValue: 1.0,
+          duration: 1600,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ])
+    );
+    pulseLoop.start();
+    return () => pulseLoop.stop();
+  }, []);
 
   const handleSend = (textMsg) => {
     const messageText = typeof textMsg === 'string' ? textMsg : input;
@@ -215,64 +189,78 @@ export default function AiChatScreen({ navigation }) {
     );
   };
 
-  const suggestions = [
-    { text: 'Analyze XAUUSD market trend', anim: chip1, icon: 'chart-line' },
-    { text: 'How do MT5 bots execute trades?', anim: chip2, icon: 'robot-outline' },
-    { text: 'Explain Risk Management strategies', anim: chip3, icon: 'shield-check-outline' },
+  const quickPrompts = [
+    {
+      title: 'Analyze Gold (XAUUSD) Trend',
+      subtitle: 'SMC zones, trend bias & key breakout levels',
+      query: 'Analyze XAUUSD market trend and technical outlook',
+      icon: 'chart-timeline-variant-shimmer',
+      color: '#FFD700',
+    },
+    {
+      title: 'How does KTS10 Bot trade Gold?',
+      subtitle: 'Automated MT5 strategy & 1% profit target',
+      query: 'How does KTS10 Bot work and what are its key features?',
+      icon: 'robot',
+      color: '#00E5FF',
+    },
+    {
+      title: 'Major Forex Market Outlook',
+      subtitle: 'EURUSD, GBPUSD & DXY momentum',
+      query: 'Provide technical market analysis for EURUSD and GBPUSD',
+      icon: 'currency-usd',
+      color: '#00E676',
+    },
+    {
+      title: 'KTS Risk Management Formula',
+      subtitle: 'Configured 5% loss limit & capital safety',
+      query: 'Explain KTS Risk Management and 5% loss control rules',
+      icon: 'shield-check',
+      color: '#FF9100',
+    },
   ];
 
   const renderEmptyState = () => (
-    <Animated.View
-      style={[
-        styles.emptyContainer,
-        { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
-      ]}
-    >
+    <View style={styles.emptyContainer}>
       {/* Centered Glowing AI Avatar */}
       <View style={styles.orbWrapper}>
         <Animated.View style={[styles.orbGlow, { transform: [{ scale: pulseScale }] }]} />
         <View style={styles.orbCore}>
-          <Icon name="robot-outline" size={36} color="#FFD700" />
+          <Icon name="robot" size={38} color="#FFD700" />
         </View>
+      </View>
+
+      <View style={styles.aiTagBadge}>
+        <Icon name="sparkles" size={12} color="#FFD700" />
+        <Text style={styles.aiTagText}>KTS INTELLIGENCE AI</Text>
       </View>
 
       <Text style={styles.emptyTitle}>How can KTS Bot assist you?</Text>
       <Text style={styles.emptyText}>
-        I'm equipped with deep market knowledge. Ask about live setups, bots, or trading strategies.
+        Equipped with real-time market knowledge, Smart Money Concepts (SMC), and KTS10 Bot trading intelligence.
       </Text>
 
-      {/* Suggestion Chips */}
+      {/* Suggestion Cards */}
       <View style={styles.chipsContainer}>
-        {suggestions.map((item, i) => (
-          <Animated.View
+        {quickPrompts.map((item, i) => (
+          <TouchableOpacity
             key={i}
-            style={{
-              opacity: item.anim,
-              transform: [
-                {
-                  translateY: item.anim.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [15, 0],
-                  }),
-                },
-              ],
-            }}
+            style={styles.chip}
+            onPress={() => handleSend(item.query)}
+            activeOpacity={0.75}
           >
-            <TouchableOpacity
-              style={styles.chip}
-              onPress={() => handleSend(item.text)}
-              activeOpacity={0.75}
-            >
-              <View style={styles.chipIconBox}>
-                <Icon name={item.icon} size={16} color="#FFD700" />
-              </View>
-              <Text style={styles.chipText}>{item.text}</Text>
-              <Icon name="chevron-right" size={16} color="#475569" />
-            </TouchableOpacity>
-          </Animated.View>
+            <View style={[styles.chipIconBox, { borderColor: `${item.color}30` }]}>
+              <Icon name={item.icon} size={20} color={item.color} />
+            </View>
+            <View style={styles.chipContent}>
+              <Text style={styles.chipTitle}>{item.title}</Text>
+              <Text style={styles.chipSubtitle}>{item.subtitle}</Text>
+            </View>
+            <Icon name="arrow-top-right" size={18} color="#475569" />
+          </TouchableOpacity>
         ))}
       </View>
-    </Animated.View>
+    </View>
   );
 
   return (
@@ -580,20 +568,39 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255, 215, 0, 0.3)',
   },
 
+  aiTagBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 215, 0, 0.08)',
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 215, 0, 0.25)',
+    marginBottom: 10,
+    gap: 5,
+  },
+  aiTagText: {
+    color: '#FFD700',
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 0.8,
+  },
+
   emptyTitle: {
     color: '#FFFFFF',
     fontSize: 20,
     fontWeight: '700',
-    marginBottom: 8,
+    marginBottom: 6,
     textAlign: 'center',
   },
   emptyText: {
-    color: '#8A939E',
+    color: '#94A3B8',
     fontSize: 13,
     textAlign: 'center',
-    marginBottom: 28,
-    lineHeight: 20,
-    paddingHorizontal: 12,
+    marginBottom: 24,
+    lineHeight: 19,
+    paddingHorizontal: 16,
   },
 
   chipsContainer: {
@@ -603,27 +610,36 @@ const styles = StyleSheet.create({
   chip: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#101418',
-    paddingVertical: 14,
+    backgroundColor: '#0F1318',
+    paddingVertical: 12,
     paddingHorizontal: 14,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: '#1E2329',
+    borderColor: '#1E242C',
   },
   chipIconBox: {
-    width: 28,
-    height: 28,
-    borderRadius: 8,
-    backgroundColor: 'rgba(255, 215, 0, 0.08)',
+    width: 38,
+    height: 38,
+    borderRadius: 10,
+    backgroundColor: '#161B22',
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 10,
+    marginRight: 12,
+    borderWidth: 1,
   },
-  chipText: {
+  chipContent: {
     flex: 1,
-    color: '#E2E8F0',
+  },
+  chipTitle: {
+    color: '#F8FAFC',
     fontSize: 13,
-    fontWeight: '500',
+    fontWeight: '600',
+    marginBottom: 2,
+  },
+  chipSubtitle: {
+    color: '#64748B',
+    fontSize: 11,
+    fontWeight: '400',
   },
 
   inputContainer: {

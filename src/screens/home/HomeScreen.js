@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, RefreshControl, Modal } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSelector, useDispatch } from 'react-redux';
+import { useFocusEffect } from '@react-navigation/native';
 import { fetchNotifications, fetchUnreadCount } from '../../store/notificationSlice';
 import { fetchLatest } from '../../store/signalSlice';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -16,19 +17,21 @@ export const HomeScreen = ({ navigation }) => {
   const { user } = useSelector(s => s.auth);
   const dispatch = useDispatch();
   const { latest } = useSelector(s => s.signals);
-  const { items: notifs } = useSelector(s => s.notifications);
-  const unreadNewsCount = (notifs || []).filter(i => !i.is_read).length;
+  const { items: notifs, unreadCount } = useSelector(s => s.notifications);
+  const unreadNewsCount = unreadCount ?? (notifs || []).filter(i => !i.is_read).length;
   
   const [refreshing, setRefreshing] = useState(false);
   const [liveMarkets, setLiveMarkets] = useState([]);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showProfilePrompt, setShowProfilePrompt] = useState(false);
 
-  useEffect(() => {
-    dispatch(fetchNotifications());
-    dispatch(fetchUnreadCount());
-    dispatch(fetchLatest());
-  }, [dispatch]);
+  useFocusEffect(
+    useCallback(() => {
+      dispatch(fetchNotifications());
+      dispatch(fetchUnreadCount());
+      dispatch(fetchLatest());
+    }, [dispatch])
+  );
 
   useEffect(() => {
     if (user && !user.is_profile_completed && !user.demo_account_id) {
@@ -72,10 +75,10 @@ export const HomeScreen = ({ navigation }) => {
     { icon: 'chart-line', label: 'Signals', screen: 'Markets' },
     { icon: 'lightning-bolt', label: 'My Bots', screen: 'Bots' },
     { icon: 'robot-excited', label: 'AI Chat', screen: 'AI' },
+    { icon: 'chat-processing', label: 'Chat', screen: 'Chat' },
     { icon: 'school', label: 'Learn', screen: 'More', params: { screen: 'Education' } },
-    { icon: 'credit-card', label: 'Plans', screen: 'More', params: { screen: 'Payments' } },
     { icon: 'gamepad-variant', label: 'Demo', screen: 'More', params: { screen: 'Demo' } },
-    { icon: 'history', label: 'History', screen: 'More' },
+    { icon: 'headset', label: 'Support', screen: 'More', params: { screen: 'Support' } },
     { icon: 'dots-horizontal', label: 'More', screen: 'More' },
   ];
 
@@ -116,7 +119,7 @@ export const HomeScreen = ({ navigation }) => {
             <View style={styles.heroContent}>
               <View style={styles.heroTopRow}>
                  <Icon name="robot" size={20} color="#FFD700" />
-                 <Text style={styles.heroBadgeText}>KTS Intelligence</Text>
+                 <Text style={styles.heroBadgeText}>KTS Bot</Text>
               </View>
               <Text style={styles.heroTitle}>Automated Trading Active</Text>
               <Text style={styles.heroSub}>

@@ -10,6 +10,8 @@ export const demoApi = {
 export const notificationApi = {
   getNotifications: (params) => client.get('/notifications', { params }),
   getUnreadCount: () => client.get('/notifications/unread'),
+  markAsRead: (id) => client.post(`/notifications/${id}/read`),
+  markAllAsRead: () => client.post('/notifications/mark-all-read'),
 };
 
 export const deviceApi = {

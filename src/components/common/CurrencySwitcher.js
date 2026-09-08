@@ -29,8 +29,8 @@ export const CurrencySwitcher = ({ compact = false }) => {
           <View style={styles.overlay}>
             <View style={styles.sheet}>
               <View style={styles.handle} />
-              <Text style={styles.sheetTitle}>Select Currency</Text>
-              <Text style={styles.sheetSubtitle}>Changes prices across the entire app</Text>
+              <Text style={styles.sheetTitle}>Display Currency</Text>
+              <Text style={styles.sheetSubtitle}>Choose your preferred currency for prices & plans</Text>
 
               {Object.values(currencies).map((c) => (
                 <TouchableOpacity
@@ -82,8 +82,8 @@ export const CurrencySwitcher = ({ compact = false }) => {
         <View style={styles.overlay}>
           <View style={styles.sheet}>
             <View style={styles.handle} />
-            <Text style={styles.sheetTitle}>Select Currency</Text>
-            <Text style={styles.sheetSubtitle}>Changes prices across the entire app</Text>
+            <Text style={styles.sheetTitle}>Display Currency</Text>
+            <Text style={styles.sheetSubtitle}>Choose your preferred currency for prices & plans</Text>
 
             {Object.values(currencies).map((c) => (
               <TouchableOpacity

@@ -42,11 +42,13 @@ const formatTime = (dateString) => {
 };
 
 export const ChatMessageScreen = ({ route, navigation }) => {
-  const { roomSlug = 'general', roomName = 'Community Chat' } = route.params || {};
+  const { roomSlug = 'general', roomName = 'Global Chat' } = route.params || {};
   const dispatch = useDispatch();
   const { messages, stickers } = useSelector(s => s.chat);
   const { user } = useSelector(s => s.auth);
   const insets = useSafeAreaInsets();
+  
+  const displayRoomTitle = (roomName === 'VIP Signals' || roomName === 'Community Chat' || !roomName) ? 'Global Chat' : roomName;
 
   const [text, setText] = useState('');
   const [showStickers, setShowStickers] = useState(false);
@@ -93,90 +95,95 @@ export const ChatMessageScreen = ({ route, navigation }) => {
     }, 1000);
   };
 
+  const [selectedMsgForMod, setSelectedMsgForMod] = useState(null);
+  const [modSheetVisible, setModSheetVisible] = useState(false);
+  const [reportModalVisible, setReportModalVisible] = useState(false);
+  const [blockModalVisible, setBlockModalVisible] = useState(false);
+  const [guidelinesModalVisible, setGuidelinesModalVisible] = useState(false);
+  const [selectedReportReason, setSelectedReportReason] = useState('Spam / Promotion');
+  const [isReporting, setIsReporting] = useState(false);
+  const [isBlocking, setIsBlocking] = useState(false);
+  const [toastText, setToastText] = useState('');
+
+  const showToast = (msg) => {
+    setToastText(msg);
+    setTimeout(() => {
+      setToastText('');
+    }, 2800);
+  };
+
+  const REPORT_REASONS = [
+    { id: 'Spam / Promotion', label: 'Spam or Unauthorized Promotion', icon: 'bullhorn-outline' },
+    { id: 'Abuse / Harassment', label: 'Abuse, Harassment or Hate Speech', icon: 'account-alert-outline' },
+    { id: 'Financial Scam', label: 'Financial Scam or Impersonation', icon: 'cash-remove' },
+    { id: 'Inappropriate Content', label: 'Inappropriate / Explicit Content', icon: 'eye-off-outline' },
+    { id: 'Misleading Signals', label: 'Misleading / Fake Trading Signals', icon: 'chart-line-variant' },
+  ];
+
   const handleMessageLongPress = (item, isMe) => {
+    if (isMe) return;
     triggerHaptic('medium');
-    const senderName = item.user?.name || 'User';
-
-    if (isMe) {
-      return;
-    }
-
-    Alert.alert(
-      `Message from ${senderName}`,
-      "Community moderation options:",
-      [
-        {
-          text: "🚩 Report Message",
-          onPress: () => promptReportReason(item),
-        },
-        {
-          text: "🚫 Block User",
-          style: "destructive",
-          onPress: () => confirmBlockUser(item),
-        },
-        {
-          text: "Cancel",
-          style: "cancel",
-        }
-      ]
-    );
+    setSelectedMsgForMod(item);
+    setModSheetVisible(true);
   };
 
-  const promptReportReason = (item) => {
-    Alert.alert(
-      "Report Message",
-      "Please select a reason for reporting:",
-      [
-        { text: "Spam / Promotion", onPress: () => submitReport(item.id, "Spam / Promotion") },
-        { text: "Abuse / Harassment", onPress: () => submitReport(item.id, "Abuse / Harassment") },
-        { text: "Financial Scam / Fraud", onPress: () => submitReport(item.id, "Financial Scam") },
-        { text: "Inappropriate Content", onPress: () => submitReport(item.id, "Inappropriate Content") },
-        { text: "Cancel", style: "cancel" }
-      ]
-    );
+  const handleOpenReportModal = () => {
+    triggerHaptic('light');
+    setModSheetVisible(false);
+    setTimeout(() => {
+      setReportModalVisible(true);
+    }, 200);
   };
 
-  const submitReport = async (messageId, reason) => {
+  const handleOpenBlockModal = () => {
+    triggerHaptic('light');
+    setModSheetVisible(false);
+    setTimeout(() => {
+      setBlockModalVisible(true);
+    }, 200);
+  };
+
+  const submitReport = async () => {
+    if (!selectedMsgForMod) return;
+    setIsReporting(true);
+    triggerHaptic('light');
     try {
-      await chatApi.reportMessage(messageId, reason);
-      Alert.alert("Report Submitted", "Thank you. Our moderation team will review this message.");
+      await chatApi.reportMessage(selectedMsgForMod.id, selectedReportReason);
+      setReportModalVisible(false);
+      showToast('Thank you. Report submitted for review.');
+      triggerHaptic('success');
     } catch (e) {
-      Alert.alert("Report Submitted", "Thank you. Your report has been recorded.");
+      setReportModalVisible(false);
+      showToast('Report submitted successfully.');
+      triggerHaptic('success');
+    } finally {
+      setIsReporting(false);
+      setSelectedMsgForMod(null);
     }
   };
 
-  const confirmBlockUser = (item) => {
-    const targetUserId = item.user_id || item.user?.id;
-    const targetName = item.user?.name || 'User';
-
-    Alert.alert(
-      `Block ${targetName}?`,
-      `You will no longer see any messages from ${targetName}.`,
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Yes, Block User",
-          style: "destructive",
-          onPress: async () => {
-            if (targetUserId) {
-              setBlockedUserIds(prev => [...prev, String(targetUserId)]);
-              try {
-                await chatApi.blockUser(targetUserId);
-              } catch (e) {}
-              Alert.alert("User Blocked", `${targetName} has been blocked.`);
-            }
-          }
-        }
-      ]
-    );
+  const submitBlockUser = async () => {
+    if (!selectedMsgForMod) return;
+    const targetUserId = selectedMsgForMod.user_id || selectedMsgForMod.user?.id;
+    const targetName = selectedMsgForMod.user?.name || 'User';
+    
+    setIsBlocking(true);
+    triggerHaptic('warning');
+    if (targetUserId) {
+      setBlockedUserIds(prev => [...prev, String(targetUserId)]);
+      try {
+        await chatApi.blockUser(targetUserId);
+      } catch (e) {}
+    }
+    setIsBlocking(false);
+    setBlockModalVisible(false);
+    showToast(`${targetName} has been blocked.`);
+    setSelectedMsgForMod(null);
   };
 
   const showCommunityGuidelines = () => {
-    Alert.alert(
-      "Community Guidelines",
-      "1. Respect all traders and community members.\n2. No unauthorized links, advertising, or financial scams.\n3. Abusive or harassing content is strictly prohibited.\n4. Long-press any message to Report or Block users.",
-      [{ text: "Got it", style: "default" }]
-    );
+    triggerHaptic('light');
+    setGuidelinesModalVisible(true);
   };
 
   const handleSendText = () => {
@@ -271,7 +278,16 @@ export const ChatMessageScreen = ({ route, navigation }) => {
   return (
     <View style={styles.container}>
       <View style={[styles.navbar, { paddingTop: insets.top + 10 }]}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
+        <TouchableOpacity 
+          style={styles.backBtn} 
+          onPress={() => {
+            if (navigation.canGoBack()) {
+              navigation.goBack();
+            } else {
+              navigation.navigate('Home');
+            }
+          }}
+        >
           <Icon name="arrow-left" size={24} color={COLORS.white} />
         </TouchableOpacity>
 
@@ -281,11 +297,11 @@ export const ChatMessageScreen = ({ route, navigation }) => {
           onPress={showCommunityGuidelines}
         >
           <View style={styles.navAvatar}>
-            <Icon name={roomName.toLowerCase().includes('vip') ? 'crown' : 'forum'} size={20} color={COLORS.white} />
+            <Icon name="forum" size={20} color={COLORS.gold} />
           </View>
 
           <View style={styles.navTitleContainer}>
-            <Text style={styles.navTitle}>{roomName}</Text>
+            <Text style={styles.navTitle}>{displayRoomTitle}</Text>
             <Text style={styles.navSubtitle}>tap for community rules</Text>
           </View>
         </TouchableOpacity>
@@ -402,6 +418,243 @@ export const ChatMessageScreen = ({ route, navigation }) => {
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
+
+      {/* Toast Notification */}
+      {!!toastText && (
+        <View style={[styles.toastContainer, { top: insets.top + 60 }]}>
+          <Icon name="check-circle" size={18} color="#00C853" style={{ marginRight: 8 }} />
+          <Text style={styles.toastText}>{toastText}</Text>
+        </View>
+      )}
+
+      {/* MODERATION ACTION SHEET MODAL */}
+      <Modal
+        visible={modSheetVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setModSheetVisible(false)}
+      >
+        <TouchableOpacity 
+          style={styles.modalBackdrop} 
+          activeOpacity={1} 
+          onPress={() => setModSheetVisible(false)}
+        >
+          <TouchableOpacity activeOpacity={1} style={[styles.sheetContent, { paddingBottom: Math.max(insets.bottom, 20) }]}>
+            <View style={styles.sheetHandle} />
+
+            <View style={styles.sheetHeader}>
+              <View style={styles.sheetAvatar}>
+                <Text style={styles.sheetAvatarText}>
+                  {(selectedMsgForMod?.user?.name || 'U').charAt(0).toUpperCase()}
+                </Text>
+              </View>
+              <View style={styles.sheetHeaderText}>
+                <Text style={styles.sheetTitle}>Message Options</Text>
+                <Text style={styles.sheetSub}>From {selectedMsgForMod?.user?.name || 'User'}</Text>
+              </View>
+            </View>
+
+            {/* Message Quote Box */}
+            {selectedMsgForMod?.message ? (
+              <View style={styles.sheetQuoteBox}>
+                <Icon name="format-quote-open" size={18} color={COLORS.gold} style={{ marginRight: 6 }} />
+                <Text style={styles.sheetQuoteText} numberOfLines={2}>
+                  {selectedMsgForMod.message}
+                </Text>
+              </View>
+            ) : null}
+
+            {/* Action Items */}
+            <TouchableOpacity style={styles.actionCard} activeOpacity={0.7} onPress={handleOpenReportModal}>
+              <View style={[styles.actionIconBg, { backgroundColor: 'rgba(255, 152, 0, 0.15)' }]}>
+                <Icon name="flag-outline" size={22} color="#FF9800" />
+              </View>
+              <View style={styles.actionTextCol}>
+                <Text style={styles.actionTitle}>Report Message</Text>
+                <Text style={styles.actionSub}>Flag for spam, abuse, scam or inappropriate content</Text>
+              </View>
+              <Icon name="chevron-right" size={20} color="#666" />
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.actionCard} activeOpacity={0.7} onPress={handleOpenBlockModal}>
+              <View style={[styles.actionIconBg, { backgroundColor: 'rgba(255, 68, 68, 0.15)' }]}>
+                <Icon name="account-cancel-outline" size={22} color="#FF4444" />
+              </View>
+              <View style={styles.actionTextCol}>
+                <Text style={[styles.actionTitle, { color: '#FF4444' }]}>Block User</Text>
+                <Text style={styles.actionSub}>Hide all future messages from {selectedMsgForMod?.user?.name || 'this user'}</Text>
+              </View>
+              <Icon name="chevron-right" size={20} color="#666" />
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.sheetCancelBtn} activeOpacity={0.8} onPress={() => setModSheetVisible(false)}>
+              <Text style={styles.sheetCancelText}>Cancel</Text>
+            </TouchableOpacity>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
+
+      {/* REPORT REASONS MODAL */}
+      <Modal
+        visible={reportModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setReportModalVisible(false)}
+      >
+        <View style={styles.modalBackdropCenter}>
+          <View style={styles.centerCard}>
+            <View style={styles.centerCardHeader}>
+              <View style={[styles.centerIconBg, { backgroundColor: 'rgba(255, 152, 0, 0.15)' }]}>
+                <Icon name="flag" size={26} color="#FF9800" />
+              </View>
+              <Text style={styles.centerCardTitle}>Report Message</Text>
+              <Text style={styles.centerCardSub}>Why are you reporting this message?</Text>
+            </View>
+
+            <View style={styles.reasonsList}>
+              {REPORT_REASONS.map((r) => {
+                const isSelected = selectedReportReason === r.id;
+                return (
+                  <TouchableOpacity
+                    key={r.id}
+                    style={[styles.reasonItem, isSelected && styles.reasonItemSelected]}
+                    activeOpacity={0.7}
+                    onPress={() => setSelectedReportReason(r.id)}
+                  >
+                    <Icon name={r.icon} size={20} color={isSelected ? COLORS.gold : '#888'} style={{ marginRight: 10 }} />
+                    <Text style={[styles.reasonItemText, isSelected && styles.reasonItemTextSelected]}>
+                      {r.label}
+                    </Text>
+                    <Icon
+                      name={isSelected ? "radiobox-marked" : "radiobox-blank"}
+                      size={20}
+                      color={isSelected ? COLORS.gold : '#555'}
+                    />
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+
+            <View style={styles.dialogBtnRow}>
+              <TouchableOpacity
+                style={styles.dialogCancelBtn}
+                activeOpacity={0.8}
+                onPress={() => setReportModalVisible(false)}
+                disabled={isReporting}
+              >
+                <Text style={styles.dialogCancelText}>Cancel</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.dialogSubmitBtn, isReporting && { opacity: 0.6 }]}
+                activeOpacity={0.8}
+                onPress={submitReport}
+                disabled={isReporting}
+              >
+                {isReporting ? (
+                  <ActivityIndicator size="small" color="#0B0E11" />
+                ) : (
+                  <Text style={styles.dialogSubmitText}>Submit Report</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* BLOCK USER CONFIRMATION MODAL */}
+      <Modal
+        visible={blockModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setBlockModalVisible(false)}
+      >
+        <View style={styles.modalBackdropCenter}>
+          <View style={styles.centerCard}>
+            <View style={styles.centerCardHeader}>
+              <View style={[styles.centerIconBg, { backgroundColor: 'rgba(255, 68, 68, 0.15)' }]}>
+                <Icon name="account-cancel" size={28} color="#FF4444" />
+              </View>
+              <Text style={styles.centerCardTitle}>Block {selectedMsgForMod?.user?.name || 'User'}?</Text>
+              <Text style={styles.centerCardSub}>
+                You will no longer see any messages or activity from this user in community rooms.
+              </Text>
+            </View>
+
+            <View style={styles.dialogBtnRow}>
+              <TouchableOpacity
+                style={styles.dialogCancelBtn}
+                activeOpacity={0.8}
+                onPress={() => setBlockModalVisible(false)}
+                disabled={isBlocking}
+              >
+                <Text style={styles.dialogCancelText}>Cancel</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.dialogBlockBtn, isBlocking && { opacity: 0.6 }]}
+                activeOpacity={0.8}
+                onPress={submitBlockUser}
+                disabled={isBlocking}
+              >
+                {isBlocking ? (
+                  <ActivityIndicator size="small" color="#FFF" />
+                ) : (
+                  <Text style={styles.dialogBlockText}>Yes, Block User</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* COMMUNITY GUIDELINES MODAL */}
+      <Modal
+        visible={guidelinesModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setGuidelinesModalVisible(false)}
+      >
+        <View style={styles.modalBackdropCenter}>
+          <View style={styles.centerCard}>
+            <View style={styles.centerCardHeader}>
+              <View style={[styles.centerIconBg, { backgroundColor: 'rgba(255, 215, 0, 0.15)' }]}>
+                <Icon name="shield-check" size={28} color={COLORS.gold} />
+              </View>
+              <Text style={styles.centerCardTitle}>Community Guidelines</Text>
+              <Text style={styles.centerCardSub}>Rules for a respectful trading community</Text>
+            </View>
+
+            <View style={styles.guidelinesBox}>
+              <View style={styles.ruleRow}>
+                <Icon name="check-circle-outline" size={18} color={COLORS.gold} style={styles.ruleIcon} />
+                <Text style={styles.ruleText}>Respect all traders and maintain professional discussions.</Text>
+              </View>
+              <View style={styles.ruleRow}>
+                <Icon name="close-circle-outline" size={18} color="#FF4444" style={styles.ruleIcon} />
+                <Text style={styles.ruleText}>No spam, unauthorized links, or investment scams.</Text>
+              </View>
+              <View style={styles.ruleRow}>
+                <Icon name="close-circle-outline" size={18} color="#FF4444" style={styles.ruleIcon} />
+                <Text style={styles.ruleText}>Abuse, harassment or foul language is strictly prohibited.</Text>
+              </View>
+              <View style={styles.ruleRow}>
+                <Icon name="gesture-tap-hold" size={18} color="#2196F3" style={styles.ruleIcon} />
+                <Text style={styles.ruleText}>Long-press any message anytime to Report or Block users.</Text>
+              </View>
+            </View>
+
+            <TouchableOpacity
+              style={styles.dialogFullBtn}
+              activeOpacity={0.8}
+              onPress={() => setGuidelinesModalVisible(false)}
+            >
+              <Text style={styles.dialogFullBtnText}>I Understand & Agree</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
     </View>
   );
 };
@@ -471,4 +724,64 @@ const styles = StyleSheet.create({
   stickerItem: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 10, aspectRatio: 1 },
   stickerItemEmoji: { fontSize: 40 },
   noStickers: { color: '#666', textAlign: 'center', marginTop: 40 },
+
+  // Toast
+  toastContainer: { position: 'absolute', alignSelf: 'center', flexDirection: 'row', alignItems: 'center', backgroundColor: '#1A2026', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 24, borderWidth: 1, borderColor: '#00C853', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 12, zIndex: 999 },
+  toastText: { color: COLORS.white, fontSize: 13, fontWeight: '600' },
+
+  // Modal Backdrop
+  modalBackdrop: { flex: 1, backgroundColor: 'rgba(0, 0, 0, 0.75)', justifyContent: 'flex-end' },
+  modalBackdropCenter: { flex: 1, backgroundColor: 'rgba(0, 0, 0, 0.75)', justifyContent: 'center', alignItems: 'center', padding: 20 },
+
+  // Bottom Sheet
+  sheetContent: { backgroundColor: '#12161A', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, borderTopWidth: 1, borderColor: '#1E2329' },
+  sheetHandle: { width: 38, height: 4, borderRadius: 2, backgroundColor: '#333', alignSelf: 'center', marginBottom: 16 },
+  sheetHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 14 },
+  sheetAvatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#1E2329', alignItems: 'center', justifyContent: 'center', marginRight: 12, borderWidth: 1, borderColor: 'rgba(255, 215, 0, 0.3)' },
+  sheetAvatarText: { fontSize: 18, color: COLORS.gold, fontWeight: '800' },
+  sheetHeaderText: { flex: 1 },
+  sheetTitle: { fontSize: 17, color: COLORS.white, fontWeight: '700' },
+  sheetSub: { fontSize: 13, color: '#888', marginTop: 2 },
+  sheetQuoteBox: { flexDirection: 'row', backgroundColor: '#0A0C0E', padding: 12, borderRadius: 12, marginBottom: 16, borderWidth: 1, borderColor: '#1A1E24' },
+  sheetQuoteText: { flex: 1, color: '#AAA', fontSize: 13, fontStyle: 'italic', lineHeight: 18 },
+
+  // Action Cards
+  actionCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#181D23', padding: 14, borderRadius: 14, marginBottom: 10, borderWidth: 1, borderColor: '#222831' },
+  actionIconBg: { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center', marginRight: 12 },
+  actionTextCol: { flex: 1 },
+  actionTitle: { fontSize: 15, color: COLORS.white, fontWeight: '700' },
+  actionSub: { fontSize: 12, color: '#777', marginTop: 2 },
+  sheetCancelBtn: { backgroundColor: '#1A2026', paddingVertical: 14, borderRadius: 14, alignItems: 'center', marginTop: 6 },
+  sheetCancelText: { color: COLORS.white, fontSize: 15, fontWeight: '700' },
+
+  // Center Cards
+  centerCard: { width: '100%', maxWidth: 360, backgroundColor: '#12161A', borderRadius: 20, padding: 20, borderWidth: 1, borderColor: '#1E2329' },
+  centerCardHeader: { alignItems: 'center', marginBottom: 16 },
+  centerIconBg: { width: 56, height: 56, borderRadius: 28, alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
+  centerCardTitle: { fontSize: 18, color: COLORS.white, fontWeight: '800', textAlign: 'center' },
+  centerCardSub: { fontSize: 13, color: '#888', textAlign: 'center', marginTop: 4, lineHeight: 18 },
+
+  // Reasons List
+  reasonsList: { marginBottom: 16 },
+  reasonItem: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#181D23', padding: 12, borderRadius: 12, marginBottom: 8, borderWidth: 1, borderColor: '#222831' },
+  reasonItemSelected: { backgroundColor: 'rgba(255, 215, 0, 0.08)', borderColor: COLORS.gold },
+  reasonItemText: { flex: 1, fontSize: 13, color: '#CCC', fontWeight: '500' },
+  reasonItemTextSelected: { color: COLORS.white, fontWeight: '700' },
+
+  // Dialog Buttons
+  dialogBtnRow: { flexDirection: 'row', gap: 10 },
+  dialogCancelBtn: { flex: 1, backgroundColor: '#1A2026', paddingVertical: 12, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  dialogCancelText: { color: '#AAA', fontSize: 14, fontWeight: '600' },
+  dialogSubmitBtn: { flex: 1.5, backgroundColor: COLORS.gold, paddingVertical: 12, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  dialogSubmitText: { color: '#0B0E11', fontSize: 14, fontWeight: '800' },
+  dialogBlockBtn: { flex: 1.5, backgroundColor: '#FF4444', paddingVertical: 12, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  dialogBlockText: { color: COLORS.white, fontSize: 14, fontWeight: '800' },
+  dialogFullBtn: { backgroundColor: COLORS.gold, paddingVertical: 13, borderRadius: 12, alignItems: 'center', marginTop: 8 },
+  dialogFullBtnText: { color: '#0B0E11', fontSize: 15, fontWeight: '800' },
+
+  // Guidelines
+  guidelinesBox: { backgroundColor: '#181D23', padding: 14, borderRadius: 14, marginBottom: 16, borderWidth: 1, borderColor: '#222831' },
+  ruleRow: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 10 },
+  ruleIcon: { marginRight: 8, marginTop: 1 },
+  ruleText: { flex: 1, fontSize: 13, color: '#DDD', lineHeight: 18 }
 });

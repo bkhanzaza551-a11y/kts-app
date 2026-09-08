@@ -10,6 +10,7 @@ import { NotificationScreen } from '../screens/notifications/NotificationScreen'
 import { NotificationSettingsScreen } from '../screens/notifications/NotificationSettingsScreen';
 import { NewsDetailScreen } from '../screens/notifications/NewsDetailScreen';
 import { SupportScreen } from '../screens/more/SupportScreen';
+import SupportChatScreen from '../screens/support/SupportChatScreen';
 import { EducationScreen } from '../screens/education/EducationScreen';
 import { CourseDetailScreen } from '../screens/education/CourseDetailScreen';
 import { DemoAccountScreen } from '../screens/demo/DemoAccountScreen';
@@ -34,7 +35,7 @@ const screenOptions = {
 export const MoreNavigator = () => (
   <Stack.Navigator screenOptions={screenOptions}>
     <Stack.Screen name="MoreHome" component={MoreScreen} options={{ headerShown: false }} />
-    <Stack.Screen name="Profile" component={ProfileScreen} options={{ title: 'Profile' }} />
+    <Stack.Screen name="Profile" component={ProfileScreen} options={{ headerShown: false }} />
     <Stack.Screen name="EditProfile" component={EditProfileScreen} options={{ title: 'Edit Profile' }} />
     <Stack.Screen name="ProfileOnboarding" component={ProfileOnboardingScreen} options={{ headerShown: false }} />
     <Stack.Screen name="Notifications" component={NotificationScreen} options={{ title: 'Notifications' }} />
@@ -47,12 +48,9 @@ export const MoreNavigator = () => (
     <Stack.Screen name="PaymentHistory" component={PaymentHistoryScreen} options={{ title: 'Payment History' }} />
     <Stack.Screen name="Legal" component={LegalScreen} options={{ title: 'Legal' }} />
     <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} options={{ title: 'Change Password' }} />
-    <Stack.Screen name="ChangeSecurityCode" component={ChangeSecurityCodeScreen} options={{ title: 'Change Security Code' }} />
     <Stack.Screen name="NotificationSettings" component={NotificationSettingsScreen} options={{ headerShown: false }} />
     <Stack.Screen name="NewsDetail" component={NewsDetailScreen} options={{ headerShown: false }} />
     <Stack.Screen name="Support" component={SupportScreen} options={{ headerShown: false }} />
+    <Stack.Screen name="SupportChat" component={SupportChatScreen} options={{ headerShown: false }} />
   </Stack.Navigator>
 );
-
-
-

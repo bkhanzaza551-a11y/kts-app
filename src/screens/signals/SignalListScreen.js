@@ -55,10 +55,28 @@ export const SignalListScreen = ({ navigation }) => {
     ? items.filter(s => s.categories?.some(c => c.id === selectedCategory))
     : items;
 
+  const cleanTitle = (item) => {
+    if (!item.title) return `${formatSymbol(item.symbol)} Setup`;
+    const upper = item.title.toUpperCase().trim();
+    if (upper.startsWith('BUY ') || upper.startsWith('SELL ')) {
+      return `${formatSymbol(item.symbol)} Order`;
+    }
+    return item.title;
+  };
+
+  const formatSymbol = (sym) => {
+    if (!sym) return '';
+    if (sym.includes('/')) return sym;
+    if (sym.length === 6) return sym.substring(0, 3) + '/' + sym.substring(3);
+    if (sym.includes('USDT')) return sym.replace('USDT', '/USDT');
+    return sym;
+  };
+
   const renderSignal = ({ item }) => {
     const isBuy = item.direction?.toLowerCase() === 'buy';
     const isWin = item.result?.toLowerCase() === 'win';
     const isLoss = item.result?.toLowerCase() === 'loss';
+    const formattedSym = formatSymbol(item.symbol);
 
     return (
       <TouchableOpacity 
@@ -69,18 +87,29 @@ export const SignalListScreen = ({ navigation }) => {
         <View style={styles.cardHeader}>
           <View style={styles.headerLeft}>
             <View style={styles.symbolBadge}>
-              <Text style={styles.symbolText}>{formatSymbol(item.symbol)}</Text>
+              <Text style={styles.symbolText}>{formattedSym}</Text>
             </View>
-            <View>
-              <Text style={styles.cardTitle}>{item.title}</Text>
+            <View style={styles.titleWrapper}>
+              <Text style={styles.cardTitle} numberOfLines={1} ellipsizeMode="tail">
+                {cleanTitle(item)}
+              </Text>
               <Text style={styles.cardTime}>
                 {item.created_at ? new Date(item.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Just now'}
               </Text>
             </View>
           </View>
-          <View style={[styles.directionBadge, { backgroundColor: isBuy ? 'rgba(0,200,83,0.1)' : 'rgba(255,68,68,0.1)' }]}>
+          <View style={[styles.directionBadge, { 
+            backgroundColor: isBuy ? 'rgba(0,200,83,0.12)' : 'rgba(255,68,68,0.12)',
+            borderColor: isBuy ? 'rgba(0,200,83,0.3)' : 'rgba(255,68,68,0.3)',
+          }]}>
+            <Icon 
+              name={isBuy ? 'arrow-top-right' : 'arrow-bottom-right'} 
+              size={13} 
+              color={isBuy ? COLORS.green : COLORS.red} 
+              style={{ marginRight: 4 }} 
+            />
             <Text style={[styles.directionText, { color: isBuy ? COLORS.green : COLORS.red }]}>
-              {isBuy ? '▲ BUY' : '▼ SELL'}
+              {isBuy ? 'BUY' : 'SELL'}
             </Text>
           </View>
         </View>
@@ -111,7 +140,7 @@ export const SignalListScreen = ({ navigation }) => {
           </View>
           
           {item.result && item.result !== 'pending' && (
-            <View style={[styles.resultPill, { backgroundColor: isWin ? 'rgba(0,200,83,0.1)' : isLoss ? 'rgba(255,68,68,0.1)' : 'rgba(33,150,243,0.1)' }]}>
+            <View style={[styles.resultPill, { backgroundColor: isWin ? 'rgba(0,200,83,0.12)' : isLoss ? 'rgba(255,68,68,0.12)' : 'rgba(33,150,243,0.12)' }]}>
               <Text style={[styles.resultPillText, { color: isWin ? COLORS.green : isLoss ? COLORS.red : COLORS.blue }]}>
                 {item.result.toUpperCase()}
               </Text>
@@ -126,13 +155,6 @@ export const SignalListScreen = ({ navigation }) => {
         </View>
       </TouchableOpacity>
     );
-  };
-
-    const formatSymbol = (sym) => {
-    if (!sym) return '';
-    if (sym.length === 6) return sym.substring(0, 3) + '/' + sym.substring(3);
-    if (sym.includes('USDT')) return sym.replace('USDT', '/USDT');
-    return sym;
   };
 
   const renderHeader = () => (
@@ -242,15 +264,16 @@ const styles = StyleSheet.create({
   list: { flexGrow: 1, paddingHorizontal: 16, paddingBottom: 100 },
 
   card: { backgroundColor: COLORS.card, borderRadius: 16, padding: 16, marginBottom: 16, borderWidth: 1, borderColor: COLORS.border, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 8, elevation: 5 },
-  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 },
-  headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
-  symbolBadge: { backgroundColor: COLORS.goldMuted, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6, borderWidth: 1, borderColor: 'rgba(255,215,0,0.3)' },
-  symbolText: { fontSize: 13, color: COLORS.gold, fontWeight: '800' },
-  cardTitle: { fontSize: 15, color: COLORS.white, fontWeight: '700' },
-  cardTime: { fontSize: 11, color: COLORS.grey, marginTop: 4 },
+  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
+  headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1, marginRight: 8 },
+  titleWrapper: { flex: 1 },
+  symbolBadge: { backgroundColor: COLORS.goldMuted, borderRadius: 8, paddingHorizontal: 9, paddingVertical: 5, borderWidth: 1, borderColor: 'rgba(255,215,0,0.3)' },
+  symbolText: { fontSize: 12, color: COLORS.gold, fontWeight: '800' },
+  cardTitle: { fontSize: 14, color: COLORS.white, fontWeight: '700' },
+  cardTime: { fontSize: 11, color: COLORS.grey, marginTop: 2 },
   
-  directionBadge: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12 },
-  directionText: { fontSize: 12, fontWeight: '800', letterSpacing: 0.5 },
+  directionBadge: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 10, borderWidth: 1 },
+  directionText: { fontSize: 11, fontWeight: '800', letterSpacing: 0.5 },
 
   priceRow: { flexDirection: 'row', justifyContent: 'space-between', backgroundColor: COLORS.bg, borderRadius: 12, padding: 12, alignItems: 'center', borderWidth: 1, borderColor: COLORS.border },
   priceCol: { flex: 1, alignItems: 'center' },
