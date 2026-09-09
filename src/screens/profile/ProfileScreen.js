@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Image, ActivityIndicator } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Image, ActivityIndicator, RefreshControl } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { logout } from '../../store/authSlice';
+import { logout, loadProfile } from '../../store/authSlice';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { authApi } from '../../api/auth';
 import { RiskDisclaimer } from '../../components/common/RiskDisclaimer';
@@ -28,12 +28,48 @@ export const ProfileScreen = ({ navigation }) => {
   const { user } = useSelector(s => s.auth);
   const insets = useSafeAreaInsets();
   const [isDeleting, setIsDeleting] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+
+  useEffect(() => {
+    dispatch(loadProfile());
+  }, [dispatch]);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await dispatch(loadProfile());
+    setRefreshing(false);
+  };
 
   const displayName = user?.name?.trim() 
     ? user.name 
     : (user?.email ? user.email.split('@')[0] : 'KTS Trader');
 
   const initials = (displayName.charAt(0) || 'K').toUpperCase();
+
+  // Dynamic Badge Calculation (Assigned by SuperAdmin / Admin)
+  const isVerifiedUser = Boolean(user?.is_verified);
+  const badgeTitle = user?.chat_badge || user?.badge || (isVerifiedUser ? 'VERIFIED TRADER' : null);
+  const badgeColorKey = user?.badge_color || 'warning';
+
+  const getBadgeTheme = (colorKey) => {
+    switch (colorKey) {
+      case 'success':
+        return { bg: 'rgba(0, 200, 83, 0.12)', border: 'rgba(0, 200, 83, 0.3)', text: '#00C853', icon: 'check-decagram' };
+      case 'primary':
+        return { bg: 'rgba(56, 189, 248, 0.12)', border: 'rgba(56, 189, 248, 0.3)', text: '#38BDF8', icon: 'shield-check' };
+      case 'danger':
+        return { bg: 'rgba(239, 68, 68, 0.12)', border: 'rgba(239, 68, 68, 0.3)', text: '#EF4444', icon: 'fire' };
+      case 'info':
+        return { bg: 'rgba(6, 182, 212, 0.12)', border: 'rgba(6, 182, 212, 0.3)', text: '#06B6D4', icon: 'lightning-bolt' };
+      case 'secondary':
+        return { bg: 'rgba(148, 163, 184, 0.12)', border: 'rgba(148, 163, 184, 0.3)', text: '#94A3B8', icon: 'account-badge' };
+      case 'warning':
+      default:
+        return { bg: 'rgba(255, 215, 0, 0.1)', border: 'rgba(255, 215, 0, 0.25)', text: '#FFD700', icon: 'crown' };
+    }
+  };
+
+  const badgeTheme = getBadgeTheme(badgeColorKey);
 
   const handleLogout = () => {
     triggerHaptic('light');
@@ -176,6 +212,7 @@ export const ProfileScreen = ({ navigation }) => {
       <ScrollView 
         contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 40 }]}
         showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#FFD700" colors={['#FFD700']} />}
       >
         {/* User Hero Card */}
         <View style={styles.profileCard}>
@@ -188,23 +225,32 @@ export const ProfileScreen = ({ navigation }) => {
                 <Text style={styles.avatarText}>{initials}</Text>
               )}
             </View>
-            <View style={styles.verifiedBadge}>
-              <Icon name="check-decagram" size={18} color="#00C853" />
-            </View>
+            {isVerifiedUser && (
+              <View style={styles.verifiedBadge}>
+                <Icon name="check-decagram" size={18} color="#00C853" />
+              </View>
+            )}
           </View>
 
           <View style={styles.userInfo}>
-            <Text style={styles.userName} numberOfLines={1}>{displayName}</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Text style={styles.userName} numberOfLines={1}>{displayName}</Text>
+              {isVerifiedUser && (
+                <Icon name="check-decagram" size={16} color="#00C853" style={{ marginLeft: 6 }} />
+              )}
+            </View>
             <View style={styles.emailRow}>
               <Icon name="email-outline" size={13} color={COLORS.greyDark} />
               <Text style={styles.userEmail} numberOfLines={1}>{user?.email || 'user@ktsmarkets.com'}</Text>
             </View>
 
             <View style={styles.tagsRow}>
-              <View style={styles.tierBadge}>
-                <Icon name="crown" size={12} color="#FFD700" />
-                <Text style={styles.tierText}>KTS TRADER</Text>
-              </View>
+              {Boolean(badgeTitle) && (
+                <View style={[styles.tierBadge, { backgroundColor: badgeTheme.bg, borderColor: badgeTheme.border }]}>
+                  <Icon name={badgeTheme.icon} size={12} color={badgeTheme.text} />
+                  <Text style={[styles.tierText, { color: badgeTheme.text }]}>{badgeTitle}</Text>
+                </View>
+              )}
               {user?.city && (
                 <View style={styles.locationBadge}>
                   <Icon name="map-marker-outline" size={12} color={COLORS.grey} />

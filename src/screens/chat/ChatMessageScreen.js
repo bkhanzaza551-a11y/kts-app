@@ -41,6 +41,42 @@ const formatTime = (dateString) => {
   return new Date(dateString).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
 };
 
+const getChatBadgeStyle = (badgeColor) => {
+  switch (badgeColor) {
+    case 'success':
+      return { backgroundColor: 'rgba(0, 200, 83, 0.15)', borderColor: 'rgba(0, 200, 83, 0.4)' };
+    case 'primary':
+      return { backgroundColor: 'rgba(56, 189, 248, 0.15)', borderColor: 'rgba(56, 189, 248, 0.4)' };
+    case 'danger':
+      return { backgroundColor: 'rgba(239, 68, 68, 0.15)', borderColor: 'rgba(239, 68, 68, 0.4)' };
+    case 'info':
+      return { backgroundColor: 'rgba(6, 182, 212, 0.15)', borderColor: 'rgba(6, 182, 212, 0.4)' };
+    case 'secondary':
+      return { backgroundColor: 'rgba(148, 163, 184, 0.15)', borderColor: 'rgba(148, 163, 184, 0.4)' };
+    case 'warning':
+    default:
+      return { backgroundColor: 'rgba(255, 215, 0, 0.15)', borderColor: 'rgba(255, 215, 0, 0.4)' };
+  }
+};
+
+const getChatBadgeTextStyle = (badgeColor) => {
+  switch (badgeColor) {
+    case 'success':
+      return { color: '#00C853' };
+    case 'primary':
+      return { color: '#38BDF8' };
+    case 'danger':
+      return { color: '#EF4444' };
+    case 'info':
+      return { color: '#06B6D4' };
+    case 'secondary':
+      return { color: '#94A3B8' };
+    case 'warning':
+    default:
+      return { color: '#FFD700' };
+  }
+};
+
 export const ChatMessageScreen = ({ route, navigation }) => {
   const { roomSlug = 'general', roomName = 'Global Chat' } = route.params || {};
   const dispatch = useDispatch();
@@ -249,7 +285,21 @@ export const ChatMessageScreen = ({ route, navigation }) => {
               isLastInGroup && !isMe && styles.bubbleThemTail,
             ]}
           >
-            {!isMe && <Text style={styles.senderName}>{item.user?.name || 'User'}</Text>}
+            {!isMe && (
+              <View style={styles.senderHeader}>
+                <Text style={styles.senderName}>{item.user?.name || 'User'}</Text>
+                {Boolean(item.user?.is_verified) && (
+                  <Icon name="check-decagram" size={13} color="#00C853" style={styles.verifiedTick} />
+                )}
+                {Boolean(item.user?.badge) && (
+                  <View style={[styles.chatBadgeChip, getChatBadgeStyle(item.user?.badge_color)]}>
+                    <Text style={[styles.chatBadgeText, getChatBadgeTextStyle(item.user?.badge_color)]}>
+                      {item.user.badge}
+                    </Text>
+                  </View>
+                )}
+              </View>
+            )}
 
             {item.type === 'sticker' ? (
               item.sticker?.image_url ? (
@@ -688,7 +738,11 @@ const styles = StyleSheet.create({
   bubbleMeTail: { borderBottomRightRadius: 4 },
   bubbleThemTail: { borderBottomLeftRadius: 4 },
 
-  senderName: { fontSize: 13, color: '#2196F3', fontWeight: '800', marginBottom: 2 },
+  senderHeader: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 4, marginBottom: 4 },
+  senderName: { fontSize: 13, color: '#38BDF8', fontWeight: '800' },
+  verifiedTick: { marginLeft: 2, marginRight: 2 },
+  chatBadgeChip: { paddingHorizontal: 6, paddingVertical: 1.5, borderRadius: 6, borderWidth: 1, marginLeft: 2 },
+  chatBadgeText: { fontSize: 9.5, fontWeight: '800', letterSpacing: 0.3 },
   messageText: { fontSize: 15, color: COLORS.white, lineHeight: 22 },
   messageTextMe: { color: '#0B0E11', fontWeight: '500' },
   stickerEmoji: { fontSize: 48 },
