@@ -1,12 +1,11 @@
-﻿import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Switch, ActivityIndicator } from 'react-native';
+import React, { useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, Switch, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { COLORS } from '../../theme/colors';
 import { fetchNotificationSettings, toggleNotificationSetting, toggleAllCategory } from '../../store/notificationSettingsSlice';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { triggerHaptic } from '../../utils/haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { TouchableOpacity } from 'react-native-gesture-handler';
 
 const CATEGORY_NAMES = {
   signals: 'Signals', bots: 'MT5 Bots', payments: 'Payments', chat: 'Chat',
