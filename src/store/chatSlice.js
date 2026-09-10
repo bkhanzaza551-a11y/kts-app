@@ -34,25 +34,42 @@ const chatSlice = createSlice({
   reducers: {
     addMessage: (s, a) => {
       const { roomSlug, message } = a.payload;
-      if (s.messages[roomSlug]) s.messages[roomSlug].push(message);
+      if (!s.messages[roomSlug]) s.messages[roomSlug] = [];
+      s.messages[roomSlug].push(message);
     },
     clearMessages: (s, a) => { if (s.messages[a.payload]) s.messages[a.payload] = [] },
   },
   extraReducers: (builder) => {
     builder
       .addCase(fetchRooms.pending, (s) => { s.isLoadingRooms = true; })
-      .addCase(fetchRooms.fulfilled, (s, a) => { s.isLoadingRooms = false; s.rooms = a.payload.data || []; })
+      .addCase(fetchRooms.fulfilled, (s, a) => { s.isLoadingRooms = false; s.rooms = a.payload?.data || (Array.isArray(a.payload) ? a.payload : []); })
       .addCase(fetchRooms.rejected, (s, a) => { s.isLoadingRooms = false; s.error = a.payload; })
       .addCase(fetchMessages.pending, (s) => { s.isLoadingMessages = true; })
       .addCase(fetchMessages.fulfilled, (s, a) => {
         s.isLoadingMessages = false;
         const { roomSlug, data } = a.payload;
-        const messages = data?.data?.data ?? data?.data ?? [];
-        s.messages[roomSlug] = Array.isArray(messages) ? messages : [];
+        const fetchedMessages = data?.data?.data ?? data?.data ?? (Array.isArray(data) ? data : []);
+        if (Array.isArray(fetchedMessages)) {
+          s.messages[roomSlug] = fetchedMessages;
+        }
+      })
+      .addCase(fetchMessages.rejected, (s, a) => {
+        s.isLoadingMessages = false;
+        s.error = a.payload;
       })
       .addCase(sendMessage.fulfilled, (s, a) => {
         const { roomSlug, message } = a.payload;
-        if (s.messages[roomSlug] && message?.data) s.messages[roomSlug].push(message.data);
+        if (!s.messages[roomSlug]) s.messages[roomSlug] = [];
+        const newMsg = message?.data || message;
+        if (newMsg && newMsg.id) {
+          // Remove any temporary message with matching content
+          s.messages[roomSlug] = s.messages[roomSlug].filter(
+            m => !String(m.id).startsWith('temp-')
+          );
+          if (!s.messages[roomSlug].some(m => m.id === newMsg.id)) {
+            s.messages[roomSlug].push(newMsg);
+          }
+        }
       })
       .addCase(fetchStickers.fulfilled, (s, a) => {
         const packs = a.payload.data || [];

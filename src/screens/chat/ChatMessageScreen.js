@@ -5,7 +5,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { COLORS } from '../../theme/colors';
 import { TYPOGRAPHY } from '../../theme/typography';
 import { SPACING, RADIUS } from '../../theme/spacing';
-import { fetchMessages, sendMessage, fetchStickers } from '../../store/chatSlice';
+import { fetchMessages, sendMessage, fetchStickers, addMessage } from '../../store/chatSlice';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { triggerHaptic } from '../../utils/haptics';
 import { chatApi } from '../../api/chat';
@@ -101,12 +101,30 @@ export const ChatMessageScreen = ({ route, navigation }) => {
   );
   const displayMessages = [...roomMessages].reverse();
 
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
   useEffect(() => {
     navigation.setOptions({ headerShown: false });
     dispatch(fetchMessages({ roomSlug, page: 1 }));
     dispatch(fetchStickers());
-    return () => { if (cooldownTimer.current) clearInterval(cooldownTimer.current); };
+
+    // Auto poll messages every 4 seconds
+    const pollInterval = setInterval(() => {
+      dispatch(fetchMessages({ roomSlug, page: 1 }));
+    }, 4000);
+
+    return () => {
+      clearInterval(pollInterval);
+      if (cooldownTimer.current) clearInterval(cooldownTimer.current);
+    };
   }, [dispatch, roomSlug, navigation]);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    triggerHaptic('light');
+    await dispatch(fetchMessages({ roomSlug, page: 1 }));
+    setIsRefreshing(false);
+  };
 
   useEffect(() => {
     if (cooldown > 0) {
@@ -118,7 +136,7 @@ export const ChatMessageScreen = ({ route, navigation }) => {
 
   const startCooldown = () => {
     if (cooldownTimer.current) clearInterval(cooldownTimer.current);
-    setCooldown(10);
+    setCooldown(8);
     cooldownTimer.current = setInterval(() => {
       setCooldown(prev => {
         if (prev <= 1) {
@@ -222,20 +240,72 @@ export const ChatMessageScreen = ({ route, navigation }) => {
     setGuidelinesModalVisible(true);
   };
 
-  const handleSendText = () => {
+  const handleSendText = async () => {
     if (!text.trim() || cooldown > 0) return;
-    triggerHaptic('light');
-    dispatch(sendMessage({ roomSlug, data: { message: text.trim(), type: 'text' } }));
+    const msgToSend = text.trim();
     setText('');
+    triggerHaptic('light');
     startCooldown();
+
+    // Add optimistic message so user sees message instantly
+    const tempId = 'temp-' + Date.now();
+    const optimisticMsg = {
+      id: tempId,
+      user_id: user?.id,
+      type: 'text',
+      message: msgToSend,
+      created_at: new Date().toISOString(),
+      user: {
+        id: user?.id,
+        name: user?.name || 'You',
+        avatar: user?.avatar,
+        badge: user?.chat_badge || user?.badge,
+        badge_color: user?.badge_color || 'primary',
+        is_verified: user?.is_verified,
+      },
+    };
+    dispatch(addMessage({ roomSlug, message: optimisticMsg }));
+
+    try {
+      await dispatch(sendMessage({ roomSlug, data: { message: msgToSend, type: 'text' } })).unwrap();
+    } catch (e) {
+      showToast('Failed to send. Please try again.');
+    }
   };
 
-  const handleSendSticker = (sticker) => {
+  const handleSendSticker = async (sticker) => {
     if (cooldown > 0) return;
     triggerHaptic('light');
-    dispatch(sendMessage({ roomSlug, data: { type: 'sticker', sticker_id: sticker.id } }));
     setShowStickers(false);
     startCooldown();
+
+    const tempId = 'temp-' + Date.now();
+    const optimisticMsg = {
+      id: tempId,
+      user_id: user?.id,
+      type: 'sticker',
+      sticker: {
+        id: sticker.id,
+        name: sticker.name,
+        image_url: sticker.image_url,
+      },
+      created_at: new Date().toISOString(),
+      user: {
+        id: user?.id,
+        name: user?.name || 'You',
+        avatar: user?.avatar,
+        badge: user?.chat_badge || user?.badge,
+        badge_color: user?.badge_color || 'primary',
+        is_verified: user?.is_verified,
+      },
+    };
+    dispatch(addMessage({ roomSlug, message: optimisticMsg }));
+
+    try {
+      await dispatch(sendMessage({ roomSlug, data: { type: 'sticker', sticker_id: sticker.id } })).unwrap();
+    } catch (e) {
+      showToast('Failed to send sticker.');
+    }
   };
 
   const toggleStickers = () => {
@@ -371,6 +441,8 @@ export const ChatMessageScreen = ({ route, navigation }) => {
             contentContainerStyle={styles.list}
             showsVerticalScrollIndicator={false}
             inverted
+            refreshing={isRefreshing}
+            onRefresh={handleRefresh}
           />
         </View>
 
