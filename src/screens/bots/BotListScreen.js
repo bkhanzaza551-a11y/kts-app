@@ -48,11 +48,11 @@ export const BotListScreen = ({ navigation }) => {
   };
 
   const calculatedLotSize = useMemo(() => {
-    if (!bot) return 0;
+    if (!bot) return '0.00';
     const baseBalance = parseFloat(bot.base_balance) || 100;
-    const baseLotSize = parseFloat(bot.base_lot_size) || 0.1;
+    const baseLotSize = parseFloat(bot.base_lot_size) || 0.01;
     const userBudget = parseFloat(budget) || 0;
-    if (userBudget <= 0) return 0;
+    if (userBudget <= 0) return '0.00';
     return ((userBudget / baseBalance) * baseLotSize).toFixed(2);
   }, [budget, bot]);
 
@@ -103,7 +103,7 @@ export const BotListScreen = ({ navigation }) => {
 
   const isActive = bot.status?.toLowerCase() === 'active';
   const baseBalance = parseFloat(bot.base_balance) || 100;
-  const baseLotSize = parseFloat(bot.base_lot_size) || 0.1;
+  const baseLotSize = parseFloat(bot.base_lot_size) || 0.01;
   const tp = bot.take_profit_pips || 10;
   const sl = bot.stop_loss_pips || 5;
 
