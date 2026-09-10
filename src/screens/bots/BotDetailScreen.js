@@ -48,6 +48,32 @@ export const BotDetailScreen = ({ navigation }) => {
     navigation.navigate('Demo');
   };
 
+  const handleDownloadBotFile = async () => {
+    if (!bot?.bot_file_access?.has_access) {
+      Alert.alert(
+        'Access Restricted',
+        bot?.bot_file_access?.reason || 'You need an approved Demo or Real Account to download this bot file.',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Submit Account Request', onPress: handleDemoRequest },
+        ]
+      );
+      return;
+    }
+
+    try {
+      const url = await botApi.getDownloadUrl();
+      const supported = await Linking.canOpenURL(url).catch(() => true);
+      if (supported) {
+        await Linking.openURL(url);
+      } else {
+        Alert.alert('Download Error', 'Unable to start file download on your device.');
+      }
+    } catch (err) {
+      Alert.alert('Download Error', err.message || 'Unable to download file.');
+    }
+  };
+
   if (isLoading) return <View style={styles.container}><Text style={styles.loading}>Loading...</Text></View>;
   if (error) return <View style={styles.container}><Text style={[styles.loading, { color: COLORS.red }]}>{error}</Text></View>;
   if (!bot) return <View style={styles.container}><Text style={styles.loading}>Bot not found</Text></View>;
@@ -55,6 +81,8 @@ export const BotDetailScreen = ({ navigation }) => {
   const isActive = bot.status?.toLowerCase() === 'active';
   const baseBalance = parseFloat(bot.base_balance) || 100;
   const baseLotSize = parseFloat(bot.base_lot_size) || 0.1;
+  const botFile = bot.bot_file;
+  const fileAccess = bot.bot_file_access;
 
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
@@ -66,6 +94,72 @@ export const BotDetailScreen = ({ navigation }) => {
           </View>
           <Badge text={bot.status?.toUpperCase()} variant={bot.status} size="large" />
         </View>
+
+        {/* Bot File / EA Executable Download Card */}
+        <Card style={styles.fileCard}>
+          <View style={styles.fileHeader}>
+            <View style={styles.fileIconWrapper}>
+              <Icon name="file-code-outline" size={24} color={COLORS.gold} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.fileTitle}>Bot Software File</Text>
+              <Text style={styles.fileSubtitle}>
+                {botFile?.file_name ? `${botFile.file_name} (${botFile.file_size || 'Ready'})` : 'Official EA / Executable'}
+              </Text>
+            </View>
+            {fileAccess?.has_access ? (
+              <View style={styles.accessBadgeApproved}>
+                <Icon name="check-circle" size={13} color="#00C087" />
+                <Text style={styles.accessBadgeApprovedText}>UNLOCKED</Text>
+              </View>
+            ) : (
+              <View style={styles.accessBadgeLocked}>
+                <Icon name="lock" size={13} color="#FF9800" />
+                <Text style={styles.accessBadgeLockedText}>LOCKED</Text>
+              </View>
+            )}
+          </View>
+
+          {botFile?.available ? (
+            <View style={styles.fileBody}>
+              {fileAccess?.has_access ? (
+                <>
+                  <Text style={styles.fileDescText}>
+                    Your account has been approved by admin. You can download the trading bot software file directly to your device.
+                  </Text>
+                  <TouchableOpacity style={styles.downloadBtn} onPress={handleDownloadBotFile}>
+                    <Icon name="download" size={20} color="#0B0E11" />
+                    <Text style={styles.downloadBtnText}>
+                      Download Bot File ({botFile.file_type || 'EXE / EX5'})
+                    </Text>
+                  </TouchableOpacity>
+                </>
+              ) : (
+                <>
+                  <View style={styles.lockedNoticeBox}>
+                    <Icon name="information-outline" size={18} color="#FFB300" style={{ marginTop: 2 }} />
+                    <Text style={styles.lockedNoticeText}>
+                      {fileAccess?.reason || 'Download access requires an approved Demo or Real Account request.'}
+                    </Text>
+                  </View>
+
+                  <TouchableOpacity style={styles.unlockBtn} onPress={handleDemoRequest}>
+                    <Icon name="shield-account-outline" size={18} color={COLORS.gold} />
+                    <Text style={styles.unlockBtnText}>
+                      {fileAccess?.status === 'pending' ? 'View Request Status' : 'Request Account Approval'}
+                    </Text>
+                  </TouchableOpacity>
+                </>
+              )}
+            </View>
+          ) : (
+            <View style={styles.fileBody}>
+              <Text style={styles.noFileText}>
+                The official bot software file will be uploaded soon by Superadmin. You will be able to download it once available.
+              </Text>
+            </View>
+          )}
+        </Card>
 
         <Card style={styles.estCard}>
           <Text style={styles.estTitle}>Profit Estimation</Text>
@@ -133,6 +227,26 @@ const styles = StyleSheet.create({
   headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: SPACING.xl },
   name: { ...TYPOGRAPHY.h1, color: COLORS.white },
   mode: { ...TYPOGRAPHY.body3, color: COLORS.gold, marginTop: 4 },
+
+  fileCard: { marginBottom: SPACING.lg, backgroundColor: '#13181E', borderWidth: 1, borderColor: '#222B35' },
+  fileHeader: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  fileIconWrapper: { width: 44, height: 44, borderRadius: 12, backgroundColor: 'rgba(255,215,0,0.1)', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: 'rgba(255,215,0,0.2)' },
+  fileTitle: { fontSize: 16, fontWeight: '700', color: COLORS.white },
+  fileSubtitle: { fontSize: 13, color: COLORS.grey, marginTop: 2 },
+  accessBadgeApproved: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(0,192,135,0.15)', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8, borderWidth: 1, borderColor: 'rgba(0,192,135,0.3)' },
+  accessBadgeApprovedText: { fontSize: 11, fontWeight: '800', color: '#00C087', letterSpacing: 0.5 },
+  accessBadgeLocked: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(255,152,0,0.15)', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8, borderWidth: 1, borderColor: 'rgba(255,152,0,0.3)' },
+  accessBadgeLockedText: { fontSize: 11, fontWeight: '800', color: '#FF9800', letterSpacing: 0.5 },
+  fileBody: { marginTop: 14, paddingTop: 14, borderTopWidth: 1, borderTopColor: '#1F2730' },
+  fileDescText: { fontSize: 13, color: '#A0AEC0', lineHeight: 19, marginBottom: 12 },
+  downloadBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: COLORS.gold, borderRadius: 12, paddingVertical: 14, gap: 8, elevation: 3, shadowColor: COLORS.gold, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.25, shadowRadius: 4 },
+  downloadBtnText: { fontSize: 15, color: '#0B0E11', fontWeight: '800', letterSpacing: 0.3 },
+  lockedNoticeBox: { flexDirection: 'row', alignItems: 'flex-start', backgroundColor: 'rgba(255,179,0,0.08)', borderRadius: 10, padding: 12, gap: 10, borderWidth: 1, borderColor: 'rgba(255,179,0,0.2)', marginBottom: 12 },
+  lockedNoticeText: { flex: 1, fontSize: 13, color: '#E2E8F0', lineHeight: 18 },
+  unlockBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#1C232B', borderRadius: 12, paddingVertical: 13, gap: 8, borderWidth: 1, borderColor: 'rgba(255,215,0,0.4)' },
+  unlockBtnText: { fontSize: 14, color: COLORS.gold, fontWeight: '700' },
+  noFileText: { fontSize: 13, color: '#718096', fontStyle: 'italic', textAlign: 'center', paddingVertical: 6 },
+
   estCard: { marginBottom: SPACING.lg },
   estTitle: { fontSize: 16, color: COLORS.white, fontWeight: '700', marginBottom: 12 },
   estRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: COLORS.darkBorder },
@@ -160,3 +274,4 @@ const styles = StyleSheet.create({
   demoBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#12161A', borderRadius: 12, paddingVertical: 15, marginTop: 12, gap: 10, borderWidth: 1, borderColor: 'rgba(255,215,0,0.4)' },
   demoBtnText: { fontSize: 15, color: COLORS.gold, fontWeight: '700' },
 });
+
