@@ -29,6 +29,8 @@ local.properties
 .cxx/
 *.keystore
 !debug.keystore
+!ktsmarkets-release.keystore
+
 
 # Node
 node_modules/
