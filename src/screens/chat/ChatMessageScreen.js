@@ -374,7 +374,7 @@ export const ChatMessageScreen = ({ route, navigation }) => {
             {item.type === 'sticker' ? (
               item.sticker?.image_url ? (
                 <Image
-                  source={{ uri: item.sticker.image_url.startsWith('http') ? item.sticker.image_url : `https://kts-backend-production.up.railway.app/storage/${item.sticker.image_url}` }}
+                  source={{ uri: item.sticker.image_url.startsWith('http') ? item.sticker.image_url : `https://kts-backend.vercel.app/storage/${item.sticker.image_url}` }}
                   style={styles.stickerImage}
                   resizeMode="contain"
                 />
@@ -473,7 +473,7 @@ export const ChatMessageScreen = ({ route, navigation }) => {
                   <TouchableOpacity style={styles.stickerItem} onPress={() => handleSendSticker(item)}>
                     {item.image_url ? (
                       <Image
-                        source={{ uri: item.image_url.startsWith('http') ? item.image_url : `https://kts-backend-production.up.railway.app/storage/${item.image_url}` }}
+                        source={{ uri: item.image_url.startsWith('http') ? item.image_url : `https://kts-backend.vercel.app/storage/${item.image_url}` }}
                         style={styles.stickerThumb}
                         resizeMode="contain"
                       />

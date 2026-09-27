@@ -150,7 +150,7 @@ export default function SupportChatScreen({ navigation, route }) {
             <View style={styles.attachmentContainer}>
               {(typeof hasAttachment === 'string' ? hasAttachment : hasAttachment?.url || '').match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
                 <Image
-                  source={{ uri: `https://kts-backend-production.up.railway.app/storage/${typeof hasAttachment === 'string' ? hasAttachment : hasAttachment?.url || ''}` }}
+                  source={{ uri: `https://kts-backend.vercel.app/storage/${typeof hasAttachment === 'string' ? hasAttachment : hasAttachment?.url || ''}` }}
                   style={styles.attachmentImage}
                   resizeMode="cover"
                 />
