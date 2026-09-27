@@ -8,7 +8,7 @@ export const botApi = {
   updateBot: (data) => client.put('/bot', data),
   getDownloadUrl: async () => {
     const token = await storage.getToken();
-    const base = 'https://kts-backend-production.up.railway.app/api/v1/bot/download';
+    const base = 'https://kts-backend.vercel.app/api/v1/bot/download';
     return token ? `${base}?token=${token}` : base;
   },
 };
