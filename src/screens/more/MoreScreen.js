@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useDispatch, useSelector } from 'react-redux';
@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { triggerHaptic } from '../../utils/haptics';
 import { toggleHaptic } from '../../store/appSettingsSlice';
 import { AnimatedScreen } from '../../components/common/AnimatedScreen';
+import { InteractiveTourGuide } from '../../components/common/InteractiveTourGuide';
 
 const COLORS = {
   bg: '#0B0E11',
@@ -21,6 +22,7 @@ const COLORS = {
 export const MoreScreen = ({ navigation }) => {
   const insets = useSafeAreaInsets();
   const dispatch = useDispatch();
+  const [showTour, setShowTour] = useState(false);
   const hapticEnabled = useSelector(state => state.appSettings?.hapticEnabled ?? true);
   
   const sections = [
@@ -34,6 +36,7 @@ export const MoreScreen = ({ navigation }) => {
     { 
       title: 'Learning & Practice', 
       items: [
+        { icon: 'compass-outline', iconColor: '#FFD700', label: 'Feature Guider Tour', isTour: true },
         { icon: 'school-outline', iconColor: '#2196F3', label: 'Trading Academy', screen: 'Education' },
         { icon: 'monitor-dashboard', iconColor: '#00BCD4', label: 'Demo Account', screen: 'Demo' },
       ]
@@ -65,6 +68,10 @@ export const MoreScreen = ({ navigation }) => {
 
   const handleNav = (item) => {
     triggerHaptic('light');
+    if (item.isTour) {
+      setShowTour(true);
+      return;
+    }
     if (item.isToggle) {
       dispatch(toggleHaptic());
       return;
@@ -127,8 +134,17 @@ export const MoreScreen = ({ navigation }) => {
           </View>
         ))}
 
-        <Text style={styles.version}>KTS Markets v1.0.0</Text>
+        <Text style={styles.version}>KTS Markets v1.0.2</Text>
       </ScrollView>
+
+      <InteractiveTourGuide
+        visible={showTour}
+        onClose={() => setShowTour(false)}
+        onNavigateFeature={(screen, params) => {
+          if (params) navigation.navigate(screen, params);
+          else navigation.navigate(screen);
+        }}
+      />
     </AnimatedScreen>
   );
 };

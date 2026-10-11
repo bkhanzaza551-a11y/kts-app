@@ -10,7 +10,7 @@ import { triggerHaptic } from '../../utils/haptics';
 const { width, height } = Dimensions.get('window');
 const MENU_WIDTH = width * 0.75;
 
-export const SideMenu = ({ isVisible, onClose }) => {
+export const SideMenu = ({ isVisible, onClose, onStartTour }) => {
   const insets = useSafeAreaInsets();
   const dispatch = useDispatch();
   const navigation = useNavigation();
@@ -36,7 +36,7 @@ export const SideMenu = ({ isVisible, onClose }) => {
 
   const menuItems = [
     { icon: 'account-circle-outline', title: 'My Profile', screen: 'Profile' },
-    // { icon: 'crown-outline', title: 'VIP Plans', screen: 'Payments' },
+    { icon: 'compass-outline', title: 'Feature Guider Tour', isTour: true },
     { icon: 'shield-check-outline', title: 'Security', screen: 'ChangePassword' },
     { icon: 'bell-outline', title: 'Notifications', screen: 'Notifications' },
     { icon: 'cog-outline', title: 'Settings', screen: 'MoreHome' },
@@ -46,6 +46,12 @@ export const SideMenu = ({ isVisible, onClose }) => {
   const handlePress = (item) => {
     triggerHaptic('light');
     onClose();
+    if (item.isTour) {
+      if (onStartTour) {
+        setTimeout(onStartTour, 150);
+      }
+      return;
+    }
     if (item.screen) {
       setTimeout(() => {
         navigation.navigate('More', { screen: item.screen });

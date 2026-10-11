@@ -11,6 +11,8 @@ import { CurrencySwitcher } from '../../components/common/CurrencySwitcher';
 import { SideMenu } from '../../components/common/SideMenu';
 import { AnimatedScreen } from '../../components/common/AnimatedScreen';
 import { RiskDisclaimer } from '../../components/common/RiskDisclaimer';
+import { InteractiveTourGuide } from '../../components/common/InteractiveTourGuide';
+import { storage } from '../../utils/storage';
 
 export const HomeScreen = ({ navigation }) => {
   const insets = useSafeAreaInsets();
@@ -24,6 +26,25 @@ export const HomeScreen = ({ navigation }) => {
   const [liveMarkets, setLiveMarkets] = useState([]);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showProfilePrompt, setShowProfilePrompt] = useState(false);
+  const [showTour, setShowTour] = useState(false);
+
+  useEffect(() => {
+    let timer;
+    const checkTour = async () => {
+      try {
+        const hasSeen = await storage.hasSeenTour();
+        if (!hasSeen) {
+          timer = setTimeout(() => {
+            setShowTour(true);
+          }, 900);
+        }
+      } catch (e) {
+        // ignore
+      }
+    };
+    checkTour();
+    return () => { if (timer) clearTimeout(timer); };
+  }, []);
 
   useFocusEffect(
     useCallback(() => {
@@ -103,6 +124,14 @@ export const HomeScreen = ({ navigation }) => {
               </View>
             </View>
             <View style={styles.headerRight}>
+              <TouchableOpacity
+                style={styles.guideIconBtn}
+                onPress={() => setShowTour(true)}
+                activeOpacity={0.7}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Icon name="compass-outline" size={20} color="#FFD700" />
+              </TouchableOpacity>
               <CurrencySwitcher compact />
               <TouchableOpacity style={styles.notifBtn} onPress={() => navigation.navigate('More', { screen: 'Notifications' })}>
                 <Icon name="bell-outline" size={22} color="#FFFFFF" />
@@ -251,7 +280,22 @@ export const HomeScreen = ({ navigation }) => {
       </ScrollView>
 
             {/* RENDER CUSTOM SLIDING DRAWER AT ROOT */}
-      <SideMenu isVisible={isMenuOpen} onClose={() => setIsMenuOpen(false)} navigation={navigation} />
+      <SideMenu
+        isVisible={isMenuOpen}
+        onClose={() => setIsMenuOpen(false)}
+        navigation={navigation}
+        onStartTour={() => setShowTour(true)}
+      />
+
+      {/* Interactive Feature Guider / Onboarding Tour */}
+      <InteractiveTourGuide
+        visible={showTour}
+        onClose={() => setShowTour(false)}
+        onNavigateFeature={(screen, params) => {
+          if (params) navigation.navigate(screen, params);
+          else navigation.navigate(screen);
+        }}
+      />
 
       {/* Profile Completion Prompt */}
       <Modal visible={showProfilePrompt} transparent animationType="fade">
@@ -295,7 +339,17 @@ const styles = StyleSheet.create({
   menuBtn: { width: 42, height: 42, borderRadius: 12, backgroundColor: '#1A1E24', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#2A2E35' },
   greeting: { fontSize: 16, color: '#FFFFFF', fontWeight: '700' },
   date: { fontSize: 12, color: '#A0A0A0', marginTop: 2 },
-  headerRight: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  headerRight: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  guideIconBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255, 215, 0, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 215, 0, 0.35)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   notifBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#1A1E24', alignItems: 'center', justifyContent: 'center', position: 'relative' },
   notifBadge: { position: 'absolute', top: -2, right: -4, backgroundColor: '#FF4444', borderRadius: 10, minWidth: 18, height: 18, alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderColor: '#0B0E11', paddingHorizontal: 3 },
   notifBadgeText: { color: '#FFF', fontSize: 9, fontWeight: '800' },

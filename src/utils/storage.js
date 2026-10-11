@@ -6,6 +6,7 @@ const KEYS = {
   ONBOARDED: '@kts_onboarded',
   THEME: '@kts_theme',
   CURRENCY: '@kts_currency',
+  TOUR_COMPLETED: '@kts_tour_completed',
 };
 
 export const storage = {
@@ -26,6 +27,13 @@ export const storage = {
   },
   setOnboarded: () => AsyncStorage.setItem(KEYS.ONBOARDED, 'true'),
 
+  hasSeenTour: async () => {
+    const val = await AsyncStorage.getItem(KEYS.TOUR_COMPLETED);
+    return val === 'true';
+  },
+  setTourCompleted: () => AsyncStorage.setItem(KEYS.TOUR_COMPLETED, 'true'),
+  resetTour: () => AsyncStorage.removeItem(KEYS.TOUR_COMPLETED),
+
   getCurrency: async () => {
     const val = await AsyncStorage.getItem(KEYS.CURRENCY);
     return val || 'USD';
@@ -34,7 +42,7 @@ export const storage = {
 
   clearAuth: () => AsyncStorage.multiRemove([KEYS.TOKEN, KEYS.USER]),
 
-  clearAll: () => AsyncStorage.multiRemove([KEYS.TOKEN, KEYS.USER, KEYS.ONBOARDED, KEYS.CURRENCY, KEYS.THEME]),
+  clearAll: () => AsyncStorage.multiRemove([KEYS.TOKEN, KEYS.USER, KEYS.ONBOARDED, KEYS.CURRENCY, KEYS.THEME, KEYS.TOUR_COMPLETED]),
 };
 
 export default storage;
