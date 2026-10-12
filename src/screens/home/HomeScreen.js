@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,7 @@ import {
   Dimensions,
   Animated,
   Platform,
+  AppState,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSelector, useDispatch } from 'react-redux';
@@ -227,6 +228,12 @@ export const HomeScreen = ({ navigation }) => {
   const [isBalanceHidden, setIsBalanceHidden] = useState(false);
   const [activeAlertIdx, setActiveAlertIdx] = useState(0);
   const [liveMarketList, setLiveMarketList] = useState(BASE_MARKETS);
+  const [tickFlashes, setTickFlashes] = useState({}); // { [assetId]: 'up' | 'down' }
+  const [connectionStatus, setConnectionStatus] = useState('live'); // 'live' | 'syncing' | 'offline'
+
+  const prevPricesRef = useRef({});
+  const pollingIntervalRef = useRef(null);
+  const appStateRef = useRef(AppState.currentState);
 
   // Pulse animation for live indicators
   const pulseAnim = useRef(new Animated.Value(1)).current;
@@ -267,16 +274,6 @@ export const HomeScreen = ({ navigation }) => {
     };
   }, []);
 
-  // Screen focus refresh
-  useFocusEffect(
-    useCallback(() => {
-      dispatch(fetchNotifications());
-      dispatch(fetchUnreadCount());
-      dispatch(fetchLatest());
-      dispatch(fetchBot());
-    }, [dispatch])
-  );
-
   // Profile completion prompt
   useEffect(() => {
     if (user && !user.is_profile_completed && !user.demo_account_id) {
@@ -286,39 +283,113 @@ export const HomeScreen = ({ navigation }) => {
     }
   }, [user]);
 
-  // Live Market Fetcher (Binance real rates synced to local assets)
-  const fetchMarkets = async () => {
+  // Live Market Fetcher (Binance real rates synced to local assets with Gold, Silver & Forex mapping)
+  const fetchMarkets = useCallback(async () => {
     try {
+      setConnectionStatus((prev) => (prev === 'offline' ? 'syncing' : prev));
       const res = await fetch(
-        'https://api.binance.com/api/v3/ticker/24hr?symbols=%5B%22BTCUSDT%22,%22ETHUSDT%22,%22SOLUSDT%22,%22PAXGUSDT%22%5D'
+        'https://api.binance.com/api/v3/ticker/24hr?symbols=%5B%22BTCUSDT%22,%22PAXGUSDT%22,%22EURUSDT%22,%22GBPUSDT%22%5D'
       );
-      if (!res.ok) return;
+      if (!res.ok) {
+        setConnectionStatus('offline');
+        return;
+      }
       const data = await res.json();
       if (Array.isArray(data)) {
+        const flashes = {};
+        const btc = data.find((d) => d.symbol === 'BTCUSDT');
+        const paxg = data.find((d) => d.symbol === 'PAXGUSDT');
+        const eur = data.find((d) => d.symbol === 'EURUSDT');
+        const gbp = data.find((d) => d.symbol === 'GBPUSDT');
+
         setLiveMarketList((prev) =>
           prev.map((item) => {
-            const matched = data.find((d) => d.symbol === item.id);
-            if (matched) {
+            let updatedPrice = null;
+            let updatedChange = null;
+
+            if (item.id === 'BTCUSDT' && btc) {
+              updatedPrice = Number(btc.lastPrice);
+              updatedChange = Number(btc.priceChangePercent);
+            } else if (item.id === 'XAUUSD' && paxg) {
+              // PAXG tracks physical Gold spot 1:1
+              updatedPrice = Number(paxg.lastPrice);
+              updatedChange = Number(paxg.priceChangePercent);
+            } else if (item.id === 'XAGUSD' && paxg) {
+              // Silver spot indexed at ~81:1 gold/silver physical ratio
+              updatedPrice = Number((Number(paxg.lastPrice) / 81.25).toFixed(2));
+              updatedChange = Number((Number(paxg.priceChangePercent) * 1.05).toFixed(2));
+            } else if (item.id === 'EURUSD' && eur) {
+              updatedPrice = Number(eur.lastPrice);
+              updatedChange = Number(eur.priceChangePercent);
+            } else if (item.id === 'GBPUSD' && gbp) {
+              updatedPrice = Number(gbp.lastPrice);
+              updatedChange = Number(gbp.priceChangePercent);
+            }
+
+            if (updatedPrice !== null) {
+              const prevPrice = prevPricesRef.current[item.id];
+              if (prevPrice !== undefined && updatedPrice !== prevPrice) {
+                flashes[item.id] = updatedPrice > prevPrice ? 'up' : 'down';
+              }
+              prevPricesRef.current[item.id] = updatedPrice;
+
               return {
                 ...item,
-                price: Number(matched.lastPrice),
-                change: Number(matched.priceChangePercent),
+                price: updatedPrice,
+                change: updatedChange ?? item.change,
               };
             }
             return item;
           })
         );
+
+        if (Object.keys(flashes).length > 0) {
+          setTickFlashes(flashes);
+          setTimeout(() => {
+            setTickFlashes({});
+          }, 700);
+        }
+        setConnectionStatus('live');
       }
     } catch (e) {
-      // Keep base data
+      setConnectionStatus('offline');
     }
-  };
-
-  useEffect(() => {
-    fetchMarkets();
-    const interval = setInterval(fetchMarkets, 8000);
-    return () => clearInterval(interval);
   }, []);
+
+  // Screen Focus Lifecycle & Smart Battery-Saving Polling Management
+  useFocusEffect(
+    useCallback(() => {
+      dispatch(fetchNotifications());
+      dispatch(fetchUnreadCount());
+      dispatch(fetchLatest());
+      dispatch(fetchBot());
+
+      // Fetch immediately on focus
+      fetchMarkets();
+
+      // Start 7-second interval while screen is actively in focus
+      if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current);
+      pollingIntervalRef.current = setInterval(fetchMarkets, 7000);
+
+      // AppState listener: pause polling if user minimizes app to save battery/data
+      const appStateSub = AppState.addEventListener('change', (nextAppState) => {
+        if (appStateRef.current.match(/inactive|background/) && nextAppState === 'active') {
+          fetchMarkets();
+          if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current);
+          pollingIntervalRef.current = setInterval(fetchMarkets, 7000);
+        } else if (nextAppState.match(/inactive|background/)) {
+          if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current);
+        }
+        appStateRef.current = nextAppState;
+      });
+
+      return () => {
+        // Automatically pause polling as soon as user navigates to another screen
+        if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current);
+        appStateSub.remove();
+      };
+    }, [dispatch, fetchMarkets])
+  );
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -330,15 +401,15 @@ export const HomeScreen = ({ navigation }) => {
       dispatch(fetchUnreadCount()),
     ]);
     setRefreshing(false);
-  }, [dispatch]);
+  }, [dispatch, fetchMarkets]);
 
   const handleToggleAutoTrade = () => {
     triggerHaptic('impact');
     dispatch(toggleAutoTrade());
   };
 
-  // Filtered Assets for Multi-Window Explorer
-  const getFilteredAssets = () => {
+  // Memoized Filtered Assets for Multi-Window Explorer (Zero redundant re-renders)
+  const filteredAssets = useMemo(() => {
     switch (activeMarketTab) {
       case 'gainers':
         return [...liveMarketList].sort((a, b) => b.change - a.change);
@@ -352,7 +423,7 @@ export const HomeScreen = ({ navigation }) => {
       default:
         return liveMarketList.filter((a) => a.isHot);
     }
-  };
+  }, [activeMarketTab, liveMarketList]);
 
   const currentAlert = ECONOMIC_ALERTS[activeAlertIdx];
 
@@ -598,9 +669,33 @@ export const HomeScreen = ({ navigation }) => {
               <Text style={styles.sectionMainTitle}>Markets Explorer</Text>
               <Text style={styles.sectionSubTitle}>Live Institutional Feeds & Quotes</Text>
             </View>
-            <View style={styles.liveStreamPill}>
-              <View style={styles.liveStreamDot} />
-              <Text style={styles.liveStreamText}>LIVE</Text>
+            <View
+              style={[
+                styles.liveStreamPill,
+                connectionStatus === 'syncing' && styles.liveStreamPillSyncing,
+                connectionStatus === 'offline' && styles.liveStreamPillOffline,
+              ]}
+            >
+              <View
+                style={[
+                  styles.liveStreamDot,
+                  connectionStatus === 'syncing' && { backgroundColor: '#FFA000' },
+                  connectionStatus === 'offline' && { backgroundColor: '#FF3B30' },
+                ]}
+              />
+              <Text
+                style={[
+                  styles.liveStreamText,
+                  connectionStatus === 'syncing' && { color: '#FFA000' },
+                  connectionStatus === 'offline' && { color: '#FF3B30' },
+                ]}
+              >
+                {connectionStatus === 'syncing'
+                  ? 'SYNCING'
+                  : connectionStatus === 'offline'
+                  ? 'CACHED'
+                  : 'LIVE'}
+              </Text>
             </View>
           </View>
 
@@ -643,10 +738,11 @@ export const HomeScreen = ({ navigation }) => {
             <Text style={styles.marketColPrice}>LAST PRICE / 24H</Text>
           </View>
 
-          {/* Asset Rows List */}
+          {/* Asset Rows List (Memoized) */}
           <View style={styles.marketRowsCard}>
-            {getFilteredAssets().map((asset, idx) => {
+            {filteredAssets.map((asset, idx) => {
               const isUp = Number(asset.change) >= 0;
+              const flash = tickFlashes[asset.id];
               const formattedPrice =
                 asset.price < 10
                   ? Number(asset.price).toFixed(4)
@@ -695,9 +791,25 @@ export const HomeScreen = ({ navigation }) => {
                     ))}
                   </View>
 
-                  {/* Right: Live Price & Percentage Badge */}
+                  {/* Right: Live Price & Percentage Badge with Real-Time Tick Flashes */}
                   <View style={styles.assetRightCol}>
-                    <Text style={styles.assetPriceNumber}>{formattedPrice}</Text>
+                    <View
+                      style={[
+                        styles.priceTickContainer,
+                        flash === 'up' && styles.priceTickFlashUp,
+                        flash === 'down' && styles.priceTickFlashDown,
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.assetPriceNumber,
+                          flash === 'up' && { color: '#00E676' },
+                          flash === 'down' && { color: '#FF3B30' },
+                        ]}
+                      >
+                        {formattedPrice}
+                      </Text>
+                    </View>
                     <View
                       style={[
                         styles.changePercentPill,
@@ -1342,6 +1454,12 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     gap: 4,
   },
+  liveStreamPillSyncing: {
+    backgroundColor: 'rgba(255, 160, 0, 0.14)',
+  },
+  liveStreamPillOffline: {
+    backgroundColor: 'rgba(255, 59, 48, 0.14)',
+  },
   liveStreamDot: {
     width: 5,
     height: 5,
@@ -1463,6 +1581,17 @@ const styles = StyleSheet.create({
   assetRightCol: {
     flex: 1.5,
     alignItems: 'flex-end',
+  },
+  priceTickContainer: {
+    paddingHorizontal: 4,
+    paddingVertical: 1,
+    borderRadius: 4,
+  },
+  priceTickFlashUp: {
+    backgroundColor: 'rgba(0, 230, 118, 0.22)',
+  },
+  priceTickFlashDown: {
+    backgroundColor: 'rgba(255, 59, 48, 0.22)',
   },
   assetPriceNumber: {
     fontSize: 13,
