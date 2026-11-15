@@ -24,7 +24,8 @@ const TabIcon = ({ name, focused }) => (
 
 export const MainTabNavigator = () => (
   <Tab.Navigator screenOptions={{
-    headerShown: false,
+    headerShown: false,
+    tabBarHideOnKeyboard: true,
     tabBarStyle: {
       backgroundColor: '#0B0E11', // Deep Binance dark
       borderTopWidth: 0,

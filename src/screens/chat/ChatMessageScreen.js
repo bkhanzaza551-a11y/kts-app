@@ -102,6 +102,30 @@ export const ChatMessageScreen = ({ route, navigation }) => {
   const displayMessages = [...roomMessages].reverse();
 
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
+
+  useEffect(() => {
+    const showSub = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
+      () => setIsKeyboardVisible(true)
+    );
+    const hideSub = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
+      () => setIsKeyboardVisible(false)
+    );
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (isKeyboardVisible) {
+      setTimeout(() => {
+        flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
+      }, 100);
+    }
+  }, [isKeyboardVisible]);
 
   useEffect(() => {
     navigation.setOptions({ headerShown: false });
@@ -431,7 +455,7 @@ export const ChatMessageScreen = ({ route, navigation }) => {
         </TouchableOpacity>
       </View>
 
-      <KeyboardAvoidingView style={styles.keyboardView} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <KeyboardAvoidingView style={styles.keyboardView} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <View style={styles.chatArea}>
           <FlatList
             ref={flatListRef}
@@ -490,7 +514,7 @@ export const ChatMessageScreen = ({ route, navigation }) => {
         )}
 
         {/* Input Bar */}
-        <View style={[styles.inputBar, { paddingBottom: Math.max(insets.bottom, 12) }]}>
+        <View style={[styles.inputBar, { paddingBottom: isKeyboardVisible ? 8 : Math.max(insets.bottom, 12) }]}>
           {/* Cooldown Timer Bar */}
           {cooldown > 0 && (
             <View style={styles.cooldownContainer}>
