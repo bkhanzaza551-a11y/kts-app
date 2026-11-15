@@ -60,6 +60,40 @@ const TypingIndicator = () => {
   );
 };
 
+const cleanMobileMessageText = (rawText) => {
+  if (!rawText) return '';
+  let text = String(rawText);
+  // Remove markdown horizontal rules
+  text = text.replace(/^[ \t]*[-=_]{3,}[ \t]*$/gm, '');
+  // Remove markdown table divider rows
+  text = text.replace(/^[ \t]*\|?[ \t]*(:?-+:?[ \t]*\|)+[ \t]*(:?-+:?[ \t]*)?\|?[ \t]*$/gm, '');
+  // Transform table rows into clean bullet points
+  text = text.replace(/^[ \t]*\|(.+)\|[ \t]*$/gm, (_, p1) => {
+    const cols = p1.split('|').map(c => c.trim()).filter(Boolean);
+    if (cols.length === 0) return '';
+    if (cols.length === 1) return `• ${cols[0]}`;
+    if (cols.length === 2) return `• ${cols[0]}: ${cols[1]}`;
+    const main = cols[0];
+    const type = cols[1] || '';
+    const price = cols[2] || '';
+    const desc = cols[3] || '';
+    let out = `• ${main}`;
+    if (price) out += ` (${price})`;
+    if (type) out += ` - ${type}`;
+    if (desc) out += `\n  ${desc}`;
+    return out;
+  });
+  // Clean markdown headers
+  text = text.replace(/^[ \t]*#{1,6}[ \t]*/gm, '');
+  // Remove all asterisks (* and **) completely
+  text = text.replace(/\*\*/g, '').replace(/\*/g, '');
+  // Remove backticks
+  text = text.replace(/`/g, '');
+  // Normalize extra newlines
+  text = text.replace(/\n{3,}/g, '\n\n');
+  return text.trim();
+};
+
 export default function AiChatScreen({ navigation }) {
   const insets = useSafeAreaInsets();
   const [input, setInput] = useState('');
@@ -152,7 +186,8 @@ export default function AiChatScreen({ navigation }) {
 
   const renderMessage = ({ item }) => {
     const isUser = item.role === 'user' || item.sender === 'user';
-    const messageContent = item.content || item.text || item.message || '';
+    const rawContent = item.content || item.text || item.message || '';
+    const messageContent = isUser ? rawContent : cleanMobileMessageText(rawContent);
     const showSupportButton = item.needs_human_support && !isUser;
 
     return (
