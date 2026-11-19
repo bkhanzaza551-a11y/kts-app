@@ -33,12 +33,12 @@ const screenOptions = {
 };
 
 export const MoreNavigator = () => (
-  <Stack.Navigator screenOptions={screenOptions}>
+  <Stack.Navigator initialRouteName="MoreHome" screenOptions={screenOptions}>
     <Stack.Screen name="MoreHome" component={MoreScreen} options={{ headerShown: false }} />
     <Stack.Screen name="Profile" component={ProfileScreen} options={{ headerShown: false }} />
     <Stack.Screen name="EditProfile" component={EditProfileScreen} options={{ title: 'Edit Profile' }} />
     <Stack.Screen name="ProfileOnboarding" component={ProfileOnboardingScreen} options={{ headerShown: false }} />
-    <Stack.Screen name="Notifications" component={NotificationScreen} options={{ title: 'Notifications' }} />
+    <Stack.Screen name="Notifications" component={NotificationScreen} options={{ headerShown: false }} />
     <Stack.Screen name="Education" component={EducationScreen} options={{ title: 'Education' }} />
     <Stack.Screen name="CourseDetail" component={CourseDetailScreen} options={{ title: 'Course Detail' }} />
     <Stack.Screen name="Demo" component={DemoAccountScreen} options={{ title: 'Demo Account' }} />

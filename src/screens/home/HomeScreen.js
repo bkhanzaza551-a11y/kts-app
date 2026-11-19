@@ -245,7 +245,7 @@ export const HomeScreen = ({ navigation }) => {
         Animated.timing(pulseAnim, { toValue: 1, duration: 800, useNativeDriver: true }),
       ])
     ).start();
-  }, []);
+  }, [pulseAnim]);
 
   // Cycle economic alerts
   useEffect(() => {
@@ -493,7 +493,7 @@ export const HomeScreen = ({ navigation }) => {
 
               <TouchableOpacity
                 style={styles.notificationButton}
-                onPress={() => navigation.navigate('More', { screen: 'Notifications' })}
+                onPress={() => navigation.navigate('Notifications')}
                 activeOpacity={0.7}
               >
                 <Icon name="bell-outline" size={21} color="#FFFFFF" />
@@ -513,7 +513,7 @@ export const HomeScreen = ({ navigation }) => {
           {/* ============================================================== */}
           <TouchableOpacity
             style={styles.economicAlertBar}
-            onPress={() => navigation.navigate('More', { screen: 'Notifications' })}
+            onPress={() => navigation.navigate('Notifications')}
             activeOpacity={0.85}
           >
             <View style={[styles.alertTag, { backgroundColor: currentAlert.tagColor + '20' }]}>
